@@ -1,0 +1,22 @@
+{
+  "schema": "pcb-component/1",
+  "name": "isource",
+  "description": "Virtual current source for simulation only (no footprint); current flows from + to - through the source",
+  "pins": [
+    {
+      "name": "+"
+    },
+    {
+      "name": "-"
+    }
+  ],
+  "parameters": {
+    "value": {
+      "default": "DC 1m",
+      "description": "SPICE source specification"
+    }
+  },
+  "spice": {
+    "template": "I{ref} {pin:+} {pin:-} {value}"
+  }
+}

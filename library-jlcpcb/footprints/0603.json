@@ -1,0 +1,64 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "0603",
+  "description": "Chip resistor/capacitor 0603 (1608 metric), IPC nominal pads; compatible with JLCPCB SMT assembly",
+  "pads": [
+    {
+      "name": "1",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -0.775,
+        0
+      ],
+      "size": [
+        0.9,
+        0.95
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "2",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        0.775,
+        0
+      ],
+      "size": [
+        0.9,
+        0.95
+      ],
+      "corner_radius": 0.2
+    }
+  ],
+  "silkscreen": [],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -1.48,
+            -0.73
+          ],
+          [
+            1.48,
+            -0.73
+          ],
+          [
+            1.48,
+            0.73
+          ],
+          [
+            -1.48,
+            0.73
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    1.4
+  ]
+}

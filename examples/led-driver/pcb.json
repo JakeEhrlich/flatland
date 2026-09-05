@@ -1,0 +1,638 @@
+{
+  "schema": "pcb-project/1",
+  "name": "led-driver",
+  "component_indexes": [
+    {
+      "url": "../../library/index.json"
+    }
+  ],
+  "stackup": {
+    "copper_layers": [
+      "B.Cu"
+    ],
+    "board_thickness": 1.6,
+    "copper_thickness": 0.035
+  },
+  "design_rules": {
+    "trace_width": 0.25,
+    "clearance": 0.2,
+    "via_drill": 0.4,
+    "via_diameter": 0.8,
+    "mask_expansion": 0.05,
+    "paste_shrink": 0,
+    "silk_width": 0.15,
+    "silk_text_size": 1,
+    "edge_clearance": 0.3,
+    "hole_annular_ring": 0.5,
+    "thermal_spoke_width": 0.3
+  },
+  "outline": [
+    {
+      "line": {
+        "from": [
+          2,
+          0
+        ],
+        "to": [
+          38,
+          0
+        ]
+      }
+    },
+    {
+      "arc": {
+        "from": [
+          38,
+          0
+        ],
+        "to": [
+          40,
+          2
+        ],
+        "center": [
+          38,
+          2
+        ],
+        "clockwise": false
+      }
+    },
+    {
+      "line": {
+        "from": [
+          40,
+          2
+        ],
+        "to": [
+          40,
+          28
+        ]
+      }
+    },
+    {
+      "arc": {
+        "from": [
+          40,
+          28
+        ],
+        "to": [
+          38,
+          30
+        ],
+        "center": [
+          38,
+          28
+        ],
+        "clockwise": false
+      }
+    },
+    {
+      "line": {
+        "from": [
+          38,
+          30
+        ],
+        "to": [
+          2,
+          30
+        ]
+      }
+    },
+    {
+      "arc": {
+        "from": [
+          2,
+          30
+        ],
+        "to": [
+          0,
+          28
+        ],
+        "center": [
+          2,
+          28
+        ],
+        "clockwise": false
+      }
+    },
+    {
+      "line": {
+        "from": [
+          0,
+          28
+        ],
+        "to": [
+          0,
+          2
+        ]
+      }
+    },
+    {
+      "arc": {
+        "from": [
+          0,
+          2
+        ],
+        "to": [
+          2,
+          0
+        ],
+        "center": [
+          2,
+          2
+        ],
+        "clockwise": false
+      }
+    }
+  ],
+  "components": {
+    "J1": {
+      "component": "battery-9v",
+      "placement": {
+        "at": [
+          4,
+          20
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "J2": {
+      "component": "header-1x02",
+      "placement": {
+        "at": [
+          4,
+          10
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      },
+      "note": "SIG/GND in"
+    },
+    "R1": {
+      "component": "resistor-axial",
+      "parameters": {
+        "value": "10k"
+      },
+      "placement": {
+        "at": [
+          17,
+          7
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "R2": {
+      "component": "resistor-axial",
+      "parameters": {
+        "value": "330",
+        "tc1": "200e-6"
+      },
+      "placement": {
+        "at": [
+          21,
+          25
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "Q1": {
+      "component": "npn-2n2222",
+      "placement": {
+        "at": [
+          27,
+          9
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D1": {
+      "component": "led-5mm",
+      "placement": {
+        "at": [
+          31,
+          20
+        ],
+        "rotation": 90.0,
+        "side": "top"
+      }
+    },
+    "C1": {
+      "component": "capacitor-electrolytic",
+      "parameters": {
+        "value": "100u"
+      },
+      "placement": {
+        "at": [
+          11,
+          22
+        ],
+        "rotation": 90.0,
+        "side": "top"
+      }
+    },
+    "V1": {
+      "component": "vsource",
+      "parameters": {
+        "value": "PULSE(0 5 0 1u 1u 1m 2m)"
+      }
+    }
+  },
+  "nets": {
+    "VIN": {
+      "pins": [
+        "J1.+",
+        "R2.1",
+        "C1.+"
+      ]
+    },
+    "GND": {
+      "pins": [
+        "J1.-",
+        "Q1.E",
+        "C1.-",
+        "J2.2",
+        "V1.-"
+      ]
+    },
+    "LED_A": {
+      "pins": [
+        "R2.2",
+        "D1.A"
+      ]
+    },
+    "LED_K": {
+      "pins": [
+        "D1.K",
+        "Q1.C"
+      ]
+    },
+    "SIG": {
+      "pins": [
+        "J2.1",
+        "R1.1",
+        "V1.+"
+      ]
+    },
+    "BASE": {
+      "pins": [
+        "R1.2",
+        "Q1.B"
+      ]
+    }
+  },
+  "holes": [
+    {
+      "at": [
+        3,
+        3
+      ],
+      "drill": 2.2,
+      "plated": false
+    },
+    {
+      "at": [
+        37,
+        27
+      ],
+      "drill": 2.2,
+      "plated": false
+    }
+  ],
+  "pours": [
+    {
+      "name": "gnd",
+      "layer": "B.Cu",
+      "net": "GND",
+      "edges": [
+        {
+          "line": {
+            "from": [
+              2,
+              0
+            ],
+            "to": [
+              38,
+              0
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              38,
+              0
+            ],
+            "to": [
+              40,
+              2
+            ],
+            "center": [
+              38,
+              2
+            ],
+            "clockwise": false
+          }
+        },
+        {
+          "line": {
+            "from": [
+              40,
+              2
+            ],
+            "to": [
+              40,
+              28
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              40,
+              28
+            ],
+            "to": [
+              38,
+              30
+            ],
+            "center": [
+              38,
+              28
+            ],
+            "clockwise": false
+          }
+        },
+        {
+          "line": {
+            "from": [
+              38,
+              30
+            ],
+            "to": [
+              2,
+              30
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              2,
+              30
+            ],
+            "to": [
+              0,
+              28
+            ],
+            "center": [
+              2,
+              28
+            ],
+            "clockwise": false
+          }
+        },
+        {
+          "line": {
+            "from": [
+              0,
+              28
+            ],
+            "to": [
+              0,
+              2
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              0,
+              2
+            ],
+            "to": [
+              2,
+              0
+            ],
+            "center": [
+              2,
+              2
+            ],
+            "clockwise": false
+          }
+        }
+      ]
+    }
+  ],
+  "traces": [
+    {
+      "layer": "B.Cu",
+      "net": "VIN",
+      "width": 0.25,
+      "points": [
+        [
+          4,
+          20
+        ],
+        [
+          5.1767,
+          20
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "B.Cu",
+      "net": "VIN",
+      "width": 0.25,
+      "points": [
+        [
+          11,
+          21
+        ],
+        [
+          6.1767,
+          21
+        ],
+        [
+          5.1767,
+          20
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "B.Cu",
+      "net": "VIN",
+      "width": 0.25,
+      "points": [
+        [
+          11,
+          21
+        ],
+        [
+          13.19,
+          21
+        ],
+        [
+          17.19,
+          25
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "B.Cu",
+      "net": "LED_A",
+      "width": 0.25,
+      "points": [
+        [
+          31,
+          18.73
+        ],
+        [
+          24.81,
+          24.92
+        ],
+        [
+          24.81,
+          25
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "B.Cu",
+      "net": "LED_K",
+      "width": 0.25,
+      "points": [
+        [
+          31,
+          21.27
+        ],
+        [
+          31,
+          20.0433
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "B.Cu",
+      "net": "LED_K",
+      "width": 0.25,
+      "points": [
+        [
+          31,
+          20.0433
+        ],
+        [
+          31.46,
+          20.0433
+        ],
+        [
+          32.2729,
+          19.2304
+        ],
+        [
+          32.2729,
+          18.2209
+        ],
+        [
+          25.73,
+          11.678
+        ],
+        [
+          25.73,
+          9
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "B.Cu",
+      "net": "SIG",
+      "width": 0.25,
+      "points": [
+        [
+          13.19,
+          7
+        ],
+        [
+          10.19,
+          10
+        ],
+        [
+          4,
+          10
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "B.Cu",
+      "net": "BASE",
+      "width": 0.25,
+      "points": [
+        [
+          27,
+          9
+        ],
+        [
+          27,
+          8.829
+        ],
+        [
+          25.171,
+          7
+        ],
+        [
+          20.81,
+          7
+        ]
+      ],
+      "routed": true
+    }
+  ],
+  "simulations": {
+    "op": {
+      "analysis": {
+        "type": "op"
+      },
+      "probes": [
+        "v(LED_A)",
+        "v(LED_K)",
+        "i(VJ1)"
+      ]
+    },
+    "blink": {
+      "analysis": {
+        "type": "tran",
+        "step": "10u",
+        "stop": "6m"
+      },
+      "probes": [
+        "v(SIG)",
+        "v(LED_K)",
+        "@d1[id]"
+      ]
+    },
+    "thermal": {
+      "analysis": {
+        "type": "temp_sweep",
+        "start": -40.0,
+        "stop": 100.0,
+        "step": 5.0
+      },
+      "probes": [
+        "@d1[id]",
+        "@r2[p]"
+      ],
+      "parameters": {
+        "V1.value": "DC 5"
+      }
+    }
+  }
+}

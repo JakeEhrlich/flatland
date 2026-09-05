@@ -1,0 +1,64 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "R_Axial_7.62mm",
+  "description": "Axial resistor, 7.62 mm (300 mil) lead pitch, horizontal",
+  "pads": [
+    {
+      "name": "1",
+      "type": "through_hole",
+      "shape": "circle",
+      "at": [
+        -3.81,
+        0
+      ],
+      "size": [
+        1.6,
+        1.6
+      ],
+      "drill": 0.8
+    },
+    {
+      "name": "2",
+      "type": "through_hole",
+      "shape": "circle",
+      "at": [
+        3.81,
+        0
+      ],
+      "size": [
+        1.6,
+        1.6
+      ],
+      "drill": 0.8
+    }
+  ],
+  "silkscreen": [],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -4.9,
+            -1.5
+          ],
+          [
+            4.9,
+            -1.5
+          ],
+          [
+            4.9,
+            1.5
+          ],
+          [
+            -4.9,
+            1.5
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    2.2
+  ]
+}

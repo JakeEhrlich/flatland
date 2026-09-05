@@ -1,0 +1,32 @@
+{
+  "schema": "pcb-component/1",
+  "name": "battery-9v",
+  "description": "9 V battery connector (2-pin header footprint) modelled as a 9 V source with internal resistance",
+  "footprint": {
+    "url": "../footprints/PinHeader_1x02_P2.54mm.json",
+    "blake3": "2135b95169157663a77590d04ea431ef66c0529c75e7bcc57613cae90b1394c6"
+  },
+  "pins": [
+    {
+      "name": "+",
+      "pad": "1"
+    },
+    {
+      "name": "-",
+      "pad": "2"
+    }
+  ],
+  "parameters": {
+    "voltage": {
+      "default": "9",
+      "description": "open-circuit voltage"
+    },
+    "resistance": {
+      "default": "1.5",
+      "description": "internal resistance in ohms"
+    }
+  },
+  "spice": {
+    "template": "V{ref} {ref}_int {pin:-} DC {voltage}\nR{ref}_int {ref}_int {pin:+} {resistance}"
+  }
+}

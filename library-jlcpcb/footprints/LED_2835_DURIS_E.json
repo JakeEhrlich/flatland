@@ -1,0 +1,78 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "LED_2835_DURIS_E",
+  "description": "OSRAM DURIS E 2835 (GW JTLxS1) recommended solder pads: cathode 2.12x2.10 (wide, package mark side, -x), anode 0.92x2.10 (+x), 0.5 mm gap",
+  "pads": [
+    {
+      "name": "K",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -0.71,
+        0
+      ],
+      "size": [
+        2.12,
+        2.1
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "A",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        1.31,
+        0
+      ],
+      "size": [
+        0.92,
+        2.1
+      ],
+      "corner_radius": 0.15
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          -2.3,
+          -1.4
+        ],
+        "to": [
+          -2.3,
+          1.4
+        ],
+        "width": 0.15
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -2.5,
+            -1.6
+          ],
+          [
+            2.4,
+            -1.6
+          ],
+          [
+            2.4,
+            1.6
+          ],
+          [
+            -2.5,
+            1.6
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    2.3
+  ]
+}

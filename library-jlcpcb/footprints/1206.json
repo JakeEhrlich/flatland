@@ -1,0 +1,64 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "1206",
+  "description": "Chip resistor/capacitor 1206 (3216 metric), IPC nominal pads",
+  "pads": [
+    {
+      "name": "1",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -1.45,
+        0
+      ],
+      "size": [
+        1.15,
+        1.8
+      ],
+      "corner_radius": 0.25
+    },
+    {
+      "name": "2",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        1.45,
+        0
+      ],
+      "size": [
+        1.15,
+        1.8
+      ],
+      "corner_radius": 0.25
+    }
+  ],
+  "silkscreen": [],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -2.3,
+            -1.15
+          ],
+          [
+            2.3,
+            -1.15
+          ],
+          [
+            2.3,
+            1.15
+          ],
+          [
+            -2.3,
+            1.15
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    1.8
+  ]
+}

@@ -1,0 +1,2202 @@
+{
+  "schema": "pcb-project/1",
+  "name": "led-panel",
+  "component_indexes": [
+    {
+      "url": "../../library-jlcpcb/index.json"
+    },
+    {
+      "url": "../../library/index.json"
+    }
+  ],
+  "stackup": {
+    "copper_layers": [
+      "F.Cu"
+    ],
+    "board_thickness": 1.6,
+    "copper_thickness": 0.035
+  },
+  "design_rules": {
+    "trace_width": 0.4,
+    "clearance": 0.3,
+    "via_drill": 0.4,
+    "via_diameter": 0.8,
+    "pour_clearance": 0.35,
+    "mask_expansion": 0.05,
+    "paste_shrink": 0,
+    "silk_width": 0.15,
+    "silk_text_size": 0.8,
+    "edge_clearance": 0.5,
+    "hole_annular_ring": 0.5,
+    "thermal_spoke_width": 0.4,
+    "net_classes": {
+      "led": {
+        "trace_width": 2,
+        "clearance": 0.3
+      },
+      "bus": {
+        "trace_width": 1.2,
+        "clearance": 0.3
+      }
+    }
+  },
+  "outline": [
+    {
+      "line": {
+        "from": [
+          2,
+          0
+        ],
+        "to": [
+          58,
+          0
+        ]
+      }
+    },
+    {
+      "arc": {
+        "from": [
+          58,
+          0
+        ],
+        "to": [
+          60,
+          2
+        ],
+        "center": [
+          58,
+          2
+        ],
+        "clockwise": false
+      }
+    },
+    {
+      "line": {
+        "from": [
+          60,
+          2
+        ],
+        "to": [
+          60,
+          58
+        ]
+      }
+    },
+    {
+      "arc": {
+        "from": [
+          60,
+          58
+        ],
+        "to": [
+          58,
+          60
+        ],
+        "center": [
+          58,
+          58
+        ],
+        "clockwise": false
+      }
+    },
+    {
+      "line": {
+        "from": [
+          58,
+          60
+        ],
+        "to": [
+          2,
+          60
+        ]
+      }
+    },
+    {
+      "arc": {
+        "from": [
+          2,
+          60
+        ],
+        "to": [
+          0,
+          58
+        ],
+        "center": [
+          2,
+          58
+        ],
+        "clockwise": false
+      }
+    },
+    {
+      "line": {
+        "from": [
+          0,
+          58
+        ],
+        "to": [
+          0,
+          2
+        ]
+      }
+    },
+    {
+      "arc": {
+        "from": [
+          0,
+          2
+        ],
+        "to": [
+          2,
+          0
+        ],
+        "center": [
+          2,
+          2
+        ],
+        "clockwise": false
+      }
+    }
+  ],
+  "components": {
+    "D1": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          55,
+          12
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "D2": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          48,
+          12
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "D3": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          41,
+          12
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "D4": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          34,
+          12
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "D5": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          27,
+          12
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "D6": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          20,
+          12
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "D7": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          13,
+          12
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "D8": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          6,
+          12
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "D9": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          6,
+          21
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D10": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          13,
+          21
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D11": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          20,
+          21
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D12": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          27,
+          21
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D13": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          34,
+          21
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D14": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          41,
+          21
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D15": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          48,
+          21
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D16": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          55,
+          21
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D17": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          6,
+          30
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D18": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          13,
+          30
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D19": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          20,
+          30
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D20": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          27,
+          30
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D21": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          34,
+          30
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D22": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          41,
+          30
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D23": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          48,
+          30
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D24": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          55,
+          30
+        ],
+        "rotation": 180.0,
+        "side": "top"
+      }
+    },
+    "D25": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          55,
+          39
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "D26": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          48,
+          39
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "D27": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          41,
+          39
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "D28": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          34,
+          39
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "D29": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          27,
+          39
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "D30": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          20,
+          39
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "D31": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          13,
+          39
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "D32": {
+      "component": "led-duris-e-2835-cri90",
+      "placement": {
+        "at": [
+          6,
+          39
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "J1": {
+      "component": "wago-2060-452",
+      "placement": {
+        "at": [
+          9.5,
+          4.5
+        ],
+        "rotation": 0.0,
+        "side": "top",
+        "label_at": [
+          1.25,
+          0
+        ],
+        "label_size": 0.7
+      },
+      "note": "54V IN"
+    },
+    "J2": {
+      "component": "wago-2060-452",
+      "placement": {
+        "at": [
+          46,
+          4.5
+        ],
+        "rotation": 180.0,
+        "side": "top",
+        "label_at": [
+          1.25,
+          0
+        ],
+        "label_size": 0.7
+      },
+      "note": "Pi PWM"
+    },
+    "C1": {
+      "component": "capacitor-1206",
+      "parameters": {
+        "value": "1u",
+        "lcsc": "C13832"
+      },
+      "placement": {
+        "at": [
+          18.5,
+          8.6
+        ],
+        "rotation": 270.0,
+        "side": "top",
+        "label_at": [
+          0,
+          3.1
+        ],
+        "label_size": 0.7
+      },
+      "note": "54V"
+    },
+    "CC1": {
+      "component": "al5809-60",
+      "placement": {
+        "at": [
+          54,
+          52
+        ],
+        "rotation": 0.0,
+        "side": "top",
+        "label_at": [
+          0,
+          1.5
+        ],
+        "label_size": 0.7
+      }
+    },
+    "CC2": {
+      "component": "al5809-60",
+      "placement": {
+        "at": [
+          54,
+          49
+        ],
+        "rotation": 0.0,
+        "side": "top",
+        "label_at": [
+          0,
+          1.5
+        ],
+        "label_size": 0.7
+      }
+    },
+    "CC3": {
+      "component": "al5809-60",
+      "placement": {
+        "at": [
+          54,
+          46
+        ],
+        "rotation": 0.0,
+        "side": "top",
+        "label_at": [
+          0,
+          1.5
+        ],
+        "label_size": 0.7
+      }
+    },
+    "CC4": {
+      "component": "al5809-60",
+      "placement": {
+        "at": [
+          6,
+          52
+        ],
+        "rotation": 180.0,
+        "side": "top",
+        "label_at": [
+          0,
+          1.5
+        ],
+        "label_size": 0.7
+      }
+    },
+    "CC5": {
+      "component": "al5809-60",
+      "placement": {
+        "at": [
+          6,
+          49
+        ],
+        "rotation": 180.0,
+        "side": "top",
+        "label_at": [
+          0,
+          1.5
+        ],
+        "label_size": 0.7
+      }
+    },
+    "CC6": {
+      "component": "al5809-60",
+      "placement": {
+        "at": [
+          6,
+          46
+        ],
+        "rotation": 180.0,
+        "side": "top",
+        "label_at": [
+          0,
+          1.5
+        ],
+        "label_size": 0.7
+      }
+    },
+    "Q1": {
+      "component": "mosfet-aod482",
+      "placement": {
+        "at": [
+          30,
+          51
+        ],
+        "rotation": 180.0,
+        "side": "top",
+        "label_at": [
+          10.5,
+          -1
+        ]
+      },
+      "note": "PWM switch"
+    },
+    "RIN": {
+      "component": "jlcpcb:resistor-0603",
+      "parameters": {
+        "value": "1k",
+        "lcsc": "C21190"
+      },
+      "placement": {
+        "at": [
+          35,
+          57.5
+        ],
+        "rotation": 270.0,
+        "side": "top",
+        "label_at": [
+          0,
+          3
+        ],
+        "label_size": 0.7
+      }
+    },
+    "RPD": {
+      "component": "jlcpcb:resistor-0603",
+      "parameters": {
+        "value": "100k",
+        "lcsc": "C25803"
+      },
+      "placement": {
+        "at": [
+          35,
+          53.5
+        ],
+        "rotation": 270.0,
+        "side": "top",
+        "label_at": [
+          0,
+          3.2
+        ],
+        "label_size": 0.7
+      }
+    },
+    "VS": {
+      "component": "vsource",
+      "parameters": {
+        "value": "DC 54"
+      }
+    },
+    "VP": {
+      "component": "vsource",
+      "parameters": {
+        "value": "PULSE(0 3.3 0 100n 100n 1.5m 5m)"
+      }
+    }
+  },
+  "nets": {
+    "VIN": {
+      "pins": [
+        "J1.1",
+        "C1.1",
+        "D1.A",
+        "D17.A",
+        "VS.+"
+      ],
+      "class": "bus"
+    },
+    "GND": {
+      "pins": [
+        "J1.2",
+        "C1.2",
+        "Q1.S",
+        "RPD.2",
+        "J2.2",
+        "VS.-",
+        "VP.-"
+      ]
+    },
+    "LA1": {
+      "pins": [
+        "D1.K",
+        "D2.A"
+      ],
+      "class": "led"
+    },
+    "LA2": {
+      "pins": [
+        "D2.K",
+        "D3.A"
+      ],
+      "class": "led"
+    },
+    "LA3": {
+      "pins": [
+        "D3.K",
+        "D4.A"
+      ],
+      "class": "led"
+    },
+    "LA4": {
+      "pins": [
+        "D4.K",
+        "D5.A"
+      ],
+      "class": "led"
+    },
+    "LA5": {
+      "pins": [
+        "D5.K",
+        "D6.A"
+      ],
+      "class": "led"
+    },
+    "LA6": {
+      "pins": [
+        "D6.K",
+        "D7.A"
+      ],
+      "class": "led"
+    },
+    "LA7": {
+      "pins": [
+        "D7.K",
+        "D8.A"
+      ],
+      "class": "led"
+    },
+    "LA8": {
+      "pins": [
+        "D8.K",
+        "D9.A"
+      ],
+      "class": "led"
+    },
+    "LA9": {
+      "pins": [
+        "D9.K",
+        "D10.A"
+      ],
+      "class": "led"
+    },
+    "LA10": {
+      "pins": [
+        "D10.K",
+        "D11.A"
+      ],
+      "class": "led"
+    },
+    "LA11": {
+      "pins": [
+        "D11.K",
+        "D12.A"
+      ],
+      "class": "led"
+    },
+    "LA12": {
+      "pins": [
+        "D12.K",
+        "D13.A"
+      ],
+      "class": "led"
+    },
+    "LA13": {
+      "pins": [
+        "D13.K",
+        "D14.A"
+      ],
+      "class": "led"
+    },
+    "LA14": {
+      "pins": [
+        "D14.K",
+        "D15.A"
+      ],
+      "class": "led"
+    },
+    "LA15": {
+      "pins": [
+        "D15.K",
+        "D16.A"
+      ],
+      "class": "led"
+    },
+    "STR_A": {
+      "pins": [
+        "D16.K",
+        "CC1.IN",
+        "CC2.IN",
+        "CC3.IN"
+      ],
+      "class": "bus"
+    },
+    "LB1": {
+      "pins": [
+        "D17.K",
+        "D18.A"
+      ],
+      "class": "led"
+    },
+    "LB2": {
+      "pins": [
+        "D18.K",
+        "D19.A"
+      ],
+      "class": "led"
+    },
+    "LB3": {
+      "pins": [
+        "D19.K",
+        "D20.A"
+      ],
+      "class": "led"
+    },
+    "LB4": {
+      "pins": [
+        "D20.K",
+        "D21.A"
+      ],
+      "class": "led"
+    },
+    "LB5": {
+      "pins": [
+        "D21.K",
+        "D22.A"
+      ],
+      "class": "led"
+    },
+    "LB6": {
+      "pins": [
+        "D22.K",
+        "D23.A"
+      ],
+      "class": "led"
+    },
+    "LB7": {
+      "pins": [
+        "D23.K",
+        "D24.A"
+      ],
+      "class": "led"
+    },
+    "LB8": {
+      "pins": [
+        "D24.K",
+        "D25.A"
+      ],
+      "class": "led"
+    },
+    "LB9": {
+      "pins": [
+        "D25.K",
+        "D26.A"
+      ],
+      "class": "led"
+    },
+    "LB10": {
+      "pins": [
+        "D26.K",
+        "D27.A"
+      ],
+      "class": "led"
+    },
+    "LB11": {
+      "pins": [
+        "D27.K",
+        "D28.A"
+      ],
+      "class": "led"
+    },
+    "LB12": {
+      "pins": [
+        "D28.K",
+        "D29.A"
+      ],
+      "class": "led"
+    },
+    "LB13": {
+      "pins": [
+        "D29.K",
+        "D30.A"
+      ],
+      "class": "led"
+    },
+    "LB14": {
+      "pins": [
+        "D30.K",
+        "D31.A"
+      ],
+      "class": "led"
+    },
+    "LB15": {
+      "pins": [
+        "D31.K",
+        "D32.A"
+      ],
+      "class": "led"
+    },
+    "STR_B": {
+      "pins": [
+        "D32.K",
+        "CC4.IN",
+        "CC5.IN",
+        "CC6.IN"
+      ],
+      "class": "bus"
+    },
+    "SW": {
+      "pins": [
+        "CC1.OUT",
+        "CC2.OUT",
+        "CC3.OUT",
+        "CC4.OUT",
+        "CC5.OUT",
+        "CC6.OUT",
+        "Q1.D"
+      ],
+      "class": "bus"
+    },
+    "PWM": {
+      "pins": [
+        "J2.1",
+        "RIN.1",
+        "VP.+"
+      ]
+    },
+    "PWM_G": {
+      "pins": [
+        "RIN.2",
+        "RPD.1",
+        "Q1.G"
+      ]
+    }
+  },
+  "pours": [
+    {
+      "name": "gnd",
+      "layer": "F.Cu",
+      "net": "GND",
+      "edges": [
+        {
+          "line": {
+            "from": [
+              2,
+              0
+            ],
+            "to": [
+              58,
+              0
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              58,
+              0
+            ],
+            "to": [
+              60,
+              2
+            ],
+            "center": [
+              58,
+              2
+            ],
+            "clockwise": false
+          }
+        },
+        {
+          "line": {
+            "from": [
+              60,
+              2
+            ],
+            "to": [
+              60,
+              58
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              60,
+              58
+            ],
+            "to": [
+              58,
+              60
+            ],
+            "center": [
+              58,
+              58
+            ],
+            "clockwise": false
+          }
+        },
+        {
+          "line": {
+            "from": [
+              58,
+              60
+            ],
+            "to": [
+              2,
+              60
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              2,
+              60
+            ],
+            "to": [
+              0,
+              58
+            ],
+            "center": [
+              2,
+              58
+            ],
+            "clockwise": false
+          }
+        },
+        {
+          "line": {
+            "from": [
+              0,
+              58
+            ],
+            "to": [
+              0,
+              2
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              0,
+              2
+            ],
+            "to": [
+              2,
+              0
+            ],
+            "center": [
+              2,
+              2
+            ],
+            "clockwise": false
+          }
+        }
+      ]
+    }
+  ],
+  "traces": [
+    {
+      "layer": "F.Cu",
+      "net": "VIN",
+      "width": 1,
+      "points": [
+        [
+          4,
+          6.5
+        ],
+        [
+          3.25,
+          6.5
+        ],
+        [
+          2.5,
+          7.25
+        ],
+        [
+          2.5,
+          29
+        ],
+        [
+          3.5,
+          30
+        ],
+        [
+          4.7,
+          30
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "VIN",
+      "width": 0.8,
+      "points": [
+        [
+          16,
+          6.5
+        ],
+        [
+          16.35,
+          6.5
+        ],
+        [
+          16.7,
+          6.85
+        ],
+        [
+          16.7,
+          9.2
+        ],
+        [
+          17.7,
+          10.2
+        ],
+        [
+          56.6,
+          10.2
+        ],
+        [
+          57.5,
+          11.1
+        ],
+        [
+          57.5,
+          11.4
+        ],
+        [
+          56.9,
+          12
+        ],
+        [
+          56.3,
+          12
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LA1",
+      "width": 2,
+      "points": [
+        [
+          54.29,
+          12
+        ],
+        [
+          49.31,
+          12
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LA2",
+      "width": 2,
+      "points": [
+        [
+          47.29,
+          12
+        ],
+        [
+          42.31,
+          12
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LA3",
+      "width": 2,
+      "points": [
+        [
+          40.29,
+          12
+        ],
+        [
+          35.31,
+          12
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LA4",
+      "width": 2,
+      "points": [
+        [
+          33.29,
+          12
+        ],
+        [
+          28.31,
+          12
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LA5",
+      "width": 2,
+      "points": [
+        [
+          26.29,
+          12
+        ],
+        [
+          21.31,
+          12
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LA6",
+      "width": 2,
+      "points": [
+        [
+          19.29,
+          12
+        ],
+        [
+          14.31,
+          12
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LA7",
+      "width": 2,
+      "points": [
+        [
+          12.29,
+          12
+        ],
+        [
+          7.31,
+          12
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LA9",
+      "width": 2,
+      "points": [
+        [
+          6.71,
+          21
+        ],
+        [
+          11.69,
+          21
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LA10",
+      "width": 2,
+      "points": [
+        [
+          13.71,
+          21
+        ],
+        [
+          18.69,
+          21
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LA11",
+      "width": 2,
+      "points": [
+        [
+          20.71,
+          21
+        ],
+        [
+          25.69,
+          21
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LA12",
+      "width": 2,
+      "points": [
+        [
+          27.71,
+          21
+        ],
+        [
+          32.69,
+          21
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LA13",
+      "width": 2,
+      "points": [
+        [
+          34.71,
+          21
+        ],
+        [
+          39.69,
+          21
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LA14",
+      "width": 2,
+      "points": [
+        [
+          41.71,
+          21
+        ],
+        [
+          46.69,
+          21
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LA15",
+      "width": 2,
+      "points": [
+        [
+          48.71,
+          21
+        ],
+        [
+          53.69,
+          21
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LB1",
+      "width": 2,
+      "points": [
+        [
+          6.71,
+          30
+        ],
+        [
+          11.69,
+          30
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LB2",
+      "width": 2,
+      "points": [
+        [
+          13.71,
+          30
+        ],
+        [
+          18.69,
+          30
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LB3",
+      "width": 2,
+      "points": [
+        [
+          20.71,
+          30
+        ],
+        [
+          25.69,
+          30
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LB4",
+      "width": 2,
+      "points": [
+        [
+          27.71,
+          30
+        ],
+        [
+          32.69,
+          30
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LB5",
+      "width": 2,
+      "points": [
+        [
+          34.71,
+          30
+        ],
+        [
+          39.69,
+          30
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LB6",
+      "width": 2,
+      "points": [
+        [
+          41.71,
+          30
+        ],
+        [
+          46.69,
+          30
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LB7",
+      "width": 2,
+      "points": [
+        [
+          48.71,
+          30
+        ],
+        [
+          53.69,
+          30
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LB9",
+      "width": 2,
+      "points": [
+        [
+          54.29,
+          39
+        ],
+        [
+          49.31,
+          39
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LB10",
+      "width": 2,
+      "points": [
+        [
+          47.29,
+          39
+        ],
+        [
+          42.31,
+          39
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LB11",
+      "width": 2,
+      "points": [
+        [
+          40.29,
+          39
+        ],
+        [
+          35.31,
+          39
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LB12",
+      "width": 2,
+      "points": [
+        [
+          33.29,
+          39
+        ],
+        [
+          28.31,
+          39
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LB13",
+      "width": 2,
+      "points": [
+        [
+          26.29,
+          39
+        ],
+        [
+          21.31,
+          39
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LB14",
+      "width": 2,
+      "points": [
+        [
+          19.29,
+          39
+        ],
+        [
+          14.31,
+          39
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LB15",
+      "width": 2,
+      "points": [
+        [
+          12.29,
+          39
+        ],
+        [
+          7.31,
+          39
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LA8",
+      "width": 0.8,
+      "points": [
+        [
+          4.75,
+          12
+        ],
+        [
+          4.75,
+          21
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LB8",
+      "width": 0.8,
+      "points": [
+        [
+          56.31,
+          30
+        ],
+        [
+          56.31,
+          39
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "STR_A",
+      "width": 1.2,
+      "points": [
+        [
+          55.7,
+          21
+        ],
+        [
+          56.8,
+          21
+        ],
+        [
+          57.8,
+          22
+        ],
+        [
+          57.8,
+          51
+        ],
+        [
+          56.8,
+          52
+        ],
+        [
+          55.525,
+          52
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "STR_A",
+      "width": 1.2,
+      "points": [
+        [
+          57.8,
+          49
+        ],
+        [
+          55.525,
+          49
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "STR_A",
+      "width": 1.2,
+      "points": [
+        [
+          57.8,
+          46
+        ],
+        [
+          55.525,
+          46
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "STR_B",
+      "width": 1.2,
+      "points": [
+        [
+          5.3,
+          39
+        ],
+        [
+          4.5,
+          39
+        ],
+        [
+          3.7,
+          39.8
+        ],
+        [
+          3.7,
+          51.6125
+        ],
+        [
+          4.0875,
+          52
+        ],
+        [
+          4.475,
+          52
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "STR_B",
+      "width": 1.2,
+      "points": [
+        [
+          3.7,
+          49
+        ],
+        [
+          4.475,
+          49
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "STR_B",
+      "width": 1.2,
+      "points": [
+        [
+          3.7,
+          46
+        ],
+        [
+          4.475,
+          46
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "SW",
+      "width": 1.2,
+      "points": [
+        [
+          52.475,
+          46
+        ],
+        [
+          51.4875,
+          46
+        ],
+        [
+          50.5,
+          46.9875
+        ],
+        [
+          50.5,
+          51.0125
+        ],
+        [
+          51.4875,
+          52
+        ],
+        [
+          52.475,
+          52
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "SW",
+      "width": 1.2,
+      "points": [
+        [
+          52.475,
+          49
+        ],
+        [
+          50.5,
+          49
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "SW",
+      "width": 2,
+      "points": [
+        [
+          50.5,
+          49
+        ],
+        [
+          32.5,
+          49
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "SW",
+      "width": 1.2,
+      "points": [
+        [
+          7.525,
+          46
+        ],
+        [
+          8.5125,
+          46
+        ],
+        [
+          9.5,
+          46.9875
+        ],
+        [
+          9.5,
+          51.0125
+        ],
+        [
+          8.5125,
+          52
+        ],
+        [
+          7.525,
+          52
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "SW",
+      "width": 1.2,
+      "points": [
+        [
+          7.525,
+          49
+        ],
+        [
+          9.5,
+          49
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "SW",
+      "width": 2,
+      "points": [
+        [
+          9.5,
+          49
+        ],
+        [
+          27.5,
+          49
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "PWM",
+      "width": 0.4,
+      "points": [
+        [
+          50,
+          2.5
+        ],
+        [
+          57.8,
+          2.5
+        ],
+        [
+          59.3,
+          4
+        ],
+        [
+          59.3,
+          57.6
+        ],
+        [
+          57.8,
+          59.1
+        ],
+        [
+          35.4125,
+          59.1
+        ],
+        [
+          35,
+          58.6875
+        ],
+        [
+          35,
+          58.275
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "PWM_G",
+      "width": 0.4,
+      "points": [
+        [
+          35,
+          56.725
+        ],
+        [
+          35,
+          54.275
+        ]
+      ]
+    },
+    {
+      "layer": "F.Cu",
+      "net": "PWM_G",
+      "width": 0.4,
+      "points": [
+        [
+          35,
+          56
+        ],
+        [
+          33.2,
+          56
+        ],
+        [
+          32.28,
+          55.7
+        ]
+      ]
+    }
+  ],
+  "simulations": {
+    "op": {
+      "analysis": {
+        "type": "op"
+      },
+      "probes": [
+        "v(STR_A)",
+        "v(STR_B)",
+        "v(SW)",
+        "i(VS)"
+      ],
+      "parameters": {
+        "VP.value": "DC 3.3"
+      }
+    },
+    "line": {
+      "analysis": {
+        "type": "dc",
+        "source": "VS",
+        "start": "45",
+        "stop": "58",
+        "step": "0.25"
+      },
+      "probes": [
+        "i(VS)",
+        "v(STR_A)",
+        "v(SW)"
+      ],
+      "parameters": {
+        "VP.value": "DC 3.3"
+      }
+    },
+    "pwm": {
+      "analysis": {
+        "type": "tran",
+        "step": "20u",
+        "stop": "20m"
+      },
+      "probes": [
+        "v(PWM)",
+        "i(VS)",
+        "v(SW)",
+        "@d1[id]"
+      ]
+    },
+    "thermal": {
+      "analysis": {
+        "type": "temp_sweep",
+        "start": -20.0,
+        "stop": 85.0,
+        "step": 5.0
+      },
+      "probes": [
+        "i(VS)",
+        "v(STR_A)",
+        "v(SW)"
+      ],
+      "parameters": {
+        "VP.value": "DC 3.3"
+      }
+    },
+    "mismatch": {
+      "analysis": {
+        "type": "op"
+      },
+      "probes": [
+        "i(VS)",
+        "i(VD1_trim)",
+        "i(VD17_trim)",
+        "v(STR_A)",
+        "v(STR_B)",
+        "v(SW)",
+        "@d1[p]",
+        "@d17[p]"
+      ],
+      "parameters": {
+        "VP.value": "DC 3.3",
+        "CC1.current": "63m",
+        "CC2.current": "63m",
+        "CC3.current": "63m",
+        "CC4.current": "57m",
+        "CC5.current": "57m",
+        "CC6.current": "57m",
+        "D1.vf_trim": "0.009",
+        "D2.vf_trim": "-0.023",
+        "D3.vf_trim": "0.022",
+        "D4.vf_trim": "0.001",
+        "D5.vf_trim": "0.04",
+        "D6.vf_trim": "-0.039",
+        "D7.vf_trim": "0.023",
+        "D8.vf_trim": "-0.027",
+        "D9.vf_trim": "-0.02",
+        "D10.vf_trim": "0.042",
+        "D11.vf_trim": "-0.037",
+        "D12.vf_trim": "0.006",
+        "D13.vf_trim": "-0.046",
+        "D14.vf_trim": "-0.049",
+        "D15.vf_trim": "0.041",
+        "D16.vf_trim": "-0.028",
+        "D17.vf_trim": "0.019",
+        "D18.vf_trim": "-0.034",
+        "D19.vf_trim": "0.049",
+        "D20.vf_trim": "0.014",
+        "D21.vf_trim": "0.035",
+        "D22.vf_trim": "0.043",
+        "D23.vf_trim": "0.008",
+        "D24.vf_trim": "-0.04",
+        "D25.vf_trim": "-0.01",
+        "D26.vf_trim": "0.013",
+        "D27.vf_trim": "0.023",
+        "D28.vf_trim": "0.017",
+        "D29.vf_trim": "-0.038",
+        "D30.vf_trim": "0.009",
+        "D31.vf_trim": "0.007",
+        "D32.vf_trim": "-0.045"
+      }
+    },
+    "worst-bin": {
+      "analysis": {
+        "type": "dc",
+        "source": "VS",
+        "start": "50",
+        "stop": "58",
+        "step": "0.25"
+      },
+      "probes": [
+        "i(VD1_trim)",
+        "i(VD17_trim)",
+        "v(STR_A)",
+        "v(STR_B)"
+      ],
+      "parameters": {
+        "VP.value": "DC 3.3",
+        "D1.vf_trim": "0.36",
+        "D2.vf_trim": "0.36",
+        "D3.vf_trim": "0.36",
+        "D4.vf_trim": "0.36",
+        "D5.vf_trim": "0.36",
+        "D6.vf_trim": "0.36",
+        "D7.vf_trim": "0.36",
+        "D8.vf_trim": "0.36",
+        "D9.vf_trim": "0.36",
+        "D10.vf_trim": "0.36",
+        "D11.vf_trim": "0.36",
+        "D12.vf_trim": "0.36",
+        "D13.vf_trim": "0.36",
+        "D14.vf_trim": "0.36",
+        "D15.vf_trim": "0.36",
+        "D16.vf_trim": "0.36",
+        "D17.vf_trim": "0.36",
+        "D18.vf_trim": "0.36",
+        "D19.vf_trim": "0.36",
+        "D20.vf_trim": "0.36",
+        "D21.vf_trim": "0.36",
+        "D22.vf_trim": "0.36",
+        "D23.vf_trim": "0.36",
+        "D24.vf_trim": "0.36",
+        "D25.vf_trim": "0.36",
+        "D26.vf_trim": "0.36",
+        "D27.vf_trim": "0.36",
+        "D28.vf_trim": "0.36",
+        "D29.vf_trim": "0.36",
+        "D30.vf_trim": "0.36",
+        "D31.vf_trim": "0.36",
+        "D32.vf_trim": "0.36"
+      }
+    },
+    "worst-bin-hot": {
+      "analysis": {
+        "type": "dc",
+        "source": "VS",
+        "start": "50",
+        "stop": "58",
+        "step": "0.25"
+      },
+      "temperature": 85.0,
+      "probes": [
+        "i(VD1_trim)",
+        "i(VD17_trim)",
+        "v(STR_A)",
+        "v(STR_B)"
+      ],
+      "parameters": {
+        "VP.value": "DC 3.3",
+        "D1.vf_trim": "0.36",
+        "D2.vf_trim": "0.36",
+        "D3.vf_trim": "0.36",
+        "D4.vf_trim": "0.36",
+        "D5.vf_trim": "0.36",
+        "D6.vf_trim": "0.36",
+        "D7.vf_trim": "0.36",
+        "D8.vf_trim": "0.36",
+        "D9.vf_trim": "0.36",
+        "D10.vf_trim": "0.36",
+        "D11.vf_trim": "0.36",
+        "D12.vf_trim": "0.36",
+        "D13.vf_trim": "0.36",
+        "D14.vf_trim": "0.36",
+        "D15.vf_trim": "0.36",
+        "D16.vf_trim": "0.36",
+        "D17.vf_trim": "0.36",
+        "D18.vf_trim": "0.36",
+        "D19.vf_trim": "0.36",
+        "D20.vf_trim": "0.36",
+        "D21.vf_trim": "0.36",
+        "D22.vf_trim": "0.36",
+        "D23.vf_trim": "0.36",
+        "D24.vf_trim": "0.36",
+        "D25.vf_trim": "0.36",
+        "D26.vf_trim": "0.36",
+        "D27.vf_trim": "0.36",
+        "D28.vf_trim": "0.36",
+        "D29.vf_trim": "0.36",
+        "D30.vf_trim": "0.36",
+        "D31.vf_trim": "0.36",
+        "D32.vf_trim": "0.36"
+      }
+    }
+  }
+}

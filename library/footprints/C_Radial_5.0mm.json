@@ -1,0 +1,89 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "C_Radial_5.0mm",
+  "description": "Radial electrolytic capacitor, 5.0 mm diameter, 2.0 mm pitch; pad 1 is +",
+  "pads": [
+    {
+      "name": "1",
+      "type": "through_hole",
+      "shape": "rect",
+      "at": [
+        -1.0,
+        0
+      ],
+      "size": [
+        1.6,
+        1.6
+      ],
+      "drill": 0.8
+    },
+    {
+      "name": "2",
+      "type": "through_hole",
+      "shape": "circle",
+      "at": [
+        1.0,
+        0
+      ],
+      "size": [
+        1.6,
+        1.6
+      ],
+      "drill": 0.8
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          -3.7,
+          2.4
+        ],
+        "to": [
+          -2.9,
+          2.4
+        ]
+      }
+    },
+    {
+      "line": {
+        "from": [
+          -3.3,
+          2.0
+        ],
+        "to": [
+          -3.3,
+          2.8
+        ]
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -4.0,
+            -3.0
+          ],
+          [
+            3.0,
+            -3.0
+          ],
+          [
+            3.0,
+            3.0
+          ],
+          [
+            -4.0,
+            3.0
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    3.6
+  ]
+}

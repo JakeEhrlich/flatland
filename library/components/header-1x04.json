@@ -1,0 +1,23 @@
+{
+  "schema": "pcb-component/1",
+  "name": "header-1x04",
+  "description": "1x4 pin header, 2.54 mm (no SPICE model)",
+  "footprint": {
+    "url": "../footprints/PinHeader_1x04_P2.54mm.json",
+    "blake3": "ba6a103effe1564d202cf854105585475fea7621a31f3459f153e42619494859"
+  },
+  "pins": [
+    {
+      "name": "1"
+    },
+    {
+      "name": "2"
+    },
+    {
+      "name": "3"
+    },
+    {
+      "name": "4"
+    }
+  ]
+}

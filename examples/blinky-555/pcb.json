@@ -1,0 +1,974 @@
+{
+  "schema": "pcb-project/1",
+  "name": "blinky-555",
+  "component_indexes": [
+    {
+      "url": "../../library-jlcpcb/index.json"
+    },
+    {
+      "url": "../../library/index.json"
+    }
+  ],
+  "stackup": {
+    "copper_layers": [
+      "F.Cu",
+      "B.Cu"
+    ],
+    "board_thickness": 1.6,
+    "copper_thickness": 0.035
+  },
+  "design_rules": {
+    "trace_width": 0.25,
+    "clearance": 0.15,
+    "via_drill": 0.3,
+    "via_diameter": 0.6,
+    "mask_expansion": 0.05,
+    "paste_shrink": 0,
+    "silk_width": 0.15,
+    "silk_text_size": 0.8,
+    "edge_clearance": 0.3,
+    "hole_annular_ring": 0.5,
+    "thermal_spoke_width": 0.3
+  },
+  "outline": [
+    {
+      "line": {
+        "from": [
+          1.5,
+          0
+        ],
+        "to": [
+          18.5,
+          0
+        ]
+      }
+    },
+    {
+      "arc": {
+        "from": [
+          18.5,
+          0
+        ],
+        "to": [
+          20,
+          1.5
+        ],
+        "center": [
+          18.5,
+          1.5
+        ],
+        "clockwise": false
+      }
+    },
+    {
+      "line": {
+        "from": [
+          20,
+          1.5
+        ],
+        "to": [
+          20,
+          14.5
+        ]
+      }
+    },
+    {
+      "arc": {
+        "from": [
+          20,
+          14.5
+        ],
+        "to": [
+          18.5,
+          16
+        ],
+        "center": [
+          18.5,
+          14.5
+        ],
+        "clockwise": false
+      }
+    },
+    {
+      "line": {
+        "from": [
+          18.5,
+          16
+        ],
+        "to": [
+          1.5,
+          16
+        ]
+      }
+    },
+    {
+      "arc": {
+        "from": [
+          1.5,
+          16
+        ],
+        "to": [
+          0,
+          14.5
+        ],
+        "center": [
+          1.5,
+          14.5
+        ],
+        "clockwise": false
+      }
+    },
+    {
+      "line": {
+        "from": [
+          0,
+          14.5
+        ],
+        "to": [
+          0,
+          1.5
+        ]
+      }
+    },
+    {
+      "arc": {
+        "from": [
+          0,
+          1.5
+        ],
+        "to": [
+          1.5,
+          0
+        ],
+        "center": [
+          1.5,
+          1.5
+        ],
+        "clockwise": false
+      }
+    }
+  ],
+  "components": {
+    "U1": {
+      "component": "ne555dr",
+      "placement": {
+        "at": [
+          10,
+          8
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "R1": {
+      "component": "jlcpcb:resistor-0603",
+      "parameters": {
+        "value": "10k",
+        "lcsc": "C25804"
+      },
+      "placement": {
+        "at": [
+          15.6,
+          8.6
+        ],
+        "rotation": 90.0,
+        "side": "top"
+      }
+    },
+    "R2": {
+      "component": "jlcpcb:resistor-0603",
+      "parameters": {
+        "value": "100k",
+        "lcsc": "C25803"
+      },
+      "placement": {
+        "at": [
+          17.6,
+          6.6
+        ],
+        "rotation": 90.0,
+        "side": "top"
+      }
+    },
+    "R3": {
+      "component": "jlcpcb:resistor-0603",
+      "parameters": {
+        "value": "330",
+        "lcsc": "C23138"
+      },
+      "placement": {
+        "at": [
+          4.4,
+          8.2
+        ],
+        "rotation": 90.0,
+        "side": "top"
+      }
+    },
+    "C1": {
+      "component": "capacitor-0805",
+      "parameters": {
+        "value": "10u",
+        "lcsc": "C15850"
+      },
+      "placement": {
+        "at": [
+          10.5,
+          2.6
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "C2": {
+      "component": "jlcpcb:capacitor-0603",
+      "parameters": {
+        "value": "100n",
+        "lcsc": "C14663"
+      },
+      "placement": {
+        "at": [
+          15.6,
+          11.6
+        ],
+        "rotation": 90.0,
+        "side": "top"
+      },
+      "note": "VCC decoupling"
+    },
+    "C3": {
+      "component": "jlcpcb:capacitor-0603",
+      "parameters": {
+        "value": "100n",
+        "lcsc": "C14663"
+      },
+      "placement": {
+        "at": [
+          14.5,
+          2.6
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      },
+      "note": "CTRL"
+    },
+    "D1": {
+      "component": "led-0603-red",
+      "placement": {
+        "at": [
+          4.4,
+          3.6
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      }
+    },
+    "J1": {
+      "component": "solder-pads-2",
+      "placement": {
+        "at": [
+          4,
+          13.2
+        ],
+        "rotation": 0.0,
+        "side": "top"
+      },
+      "note": "5V in"
+    },
+    "V1": {
+      "component": "vsource",
+      "parameters": {
+        "value": "DC 5"
+      }
+    }
+  },
+  "nets": {
+    "VCC": {
+      "pins": [
+        "J1.+",
+        "U1.VCC",
+        "U1.RESET",
+        "R1.1",
+        "C2.1",
+        "V1.+"
+      ]
+    },
+    "GND": {
+      "pins": [
+        "J1.-",
+        "U1.GND",
+        "C1.2",
+        "C2.2",
+        "C3.2",
+        "D1.K",
+        "V1.-"
+      ]
+    },
+    "DIS": {
+      "pins": [
+        "R1.2",
+        "R2.1",
+        "U1.DIS"
+      ]
+    },
+    "THR": {
+      "pins": [
+        "R2.2",
+        "U1.THR",
+        "U1.TRIG",
+        "C1.1"
+      ]
+    },
+    "CTRL": {
+      "pins": [
+        "U1.CTRL",
+        "C3.1"
+      ]
+    },
+    "OUT": {
+      "pins": [
+        "U1.OUT",
+        "R3.1"
+      ]
+    },
+    "LED_A": {
+      "pins": [
+        "R3.2",
+        "D1.A"
+      ]
+    }
+  },
+  "pours": [
+    {
+      "name": "gnd_top",
+      "layer": "F.Cu",
+      "net": "GND",
+      "edges": [
+        {
+          "line": {
+            "from": [
+              1.5,
+              0
+            ],
+            "to": [
+              18.5,
+              0
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              18.5,
+              0
+            ],
+            "to": [
+              20,
+              1.5
+            ],
+            "center": [
+              18.5,
+              1.5
+            ],
+            "clockwise": false
+          }
+        },
+        {
+          "line": {
+            "from": [
+              20,
+              1.5
+            ],
+            "to": [
+              20,
+              14.5
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              20,
+              14.5
+            ],
+            "to": [
+              18.5,
+              16
+            ],
+            "center": [
+              18.5,
+              14.5
+            ],
+            "clockwise": false
+          }
+        },
+        {
+          "line": {
+            "from": [
+              18.5,
+              16
+            ],
+            "to": [
+              1.5,
+              16
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              1.5,
+              16
+            ],
+            "to": [
+              0,
+              14.5
+            ],
+            "center": [
+              1.5,
+              14.5
+            ],
+            "clockwise": false
+          }
+        },
+        {
+          "line": {
+            "from": [
+              0,
+              14.5
+            ],
+            "to": [
+              0,
+              1.5
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              0,
+              1.5
+            ],
+            "to": [
+              1.5,
+              0
+            ],
+            "center": [
+              1.5,
+              1.5
+            ],
+            "clockwise": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "gnd_bottom",
+      "layer": "B.Cu",
+      "net": "GND",
+      "edges": [
+        {
+          "line": {
+            "from": [
+              1.5,
+              0
+            ],
+            "to": [
+              18.5,
+              0
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              18.5,
+              0
+            ],
+            "to": [
+              20,
+              1.5
+            ],
+            "center": [
+              18.5,
+              1.5
+            ],
+            "clockwise": false
+          }
+        },
+        {
+          "line": {
+            "from": [
+              20,
+              1.5
+            ],
+            "to": [
+              20,
+              14.5
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              20,
+              14.5
+            ],
+            "to": [
+              18.5,
+              16
+            ],
+            "center": [
+              18.5,
+              14.5
+            ],
+            "clockwise": false
+          }
+        },
+        {
+          "line": {
+            "from": [
+              18.5,
+              16
+            ],
+            "to": [
+              1.5,
+              16
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              1.5,
+              16
+            ],
+            "to": [
+              0,
+              14.5
+            ],
+            "center": [
+              1.5,
+              14.5
+            ],
+            "clockwise": false
+          }
+        },
+        {
+          "line": {
+            "from": [
+              0,
+              14.5
+            ],
+            "to": [
+              0,
+              1.5
+            ]
+          }
+        },
+        {
+          "arc": {
+            "from": [
+              0,
+              1.5
+            ],
+            "to": [
+              1.5,
+              0
+            ],
+            "center": [
+              1.5,
+              1.5
+            ],
+            "clockwise": false
+          }
+        }
+      ]
+    }
+  ],
+  "traces": [
+    {
+      "layer": "F.Cu",
+      "net": "VCC",
+      "width": 0.25,
+      "points": [
+        [
+          11.6167,
+          8.3067
+        ],
+        [
+          11.6167,
+          9.2121
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "F.Cu",
+      "net": "VCC",
+      "width": 0.25,
+      "points": [
+        [
+          15.6,
+          7.825
+        ],
+        [
+          15.425,
+          8
+        ],
+        [
+          11.9234,
+          8
+        ],
+        [
+          11.6167,
+          8.3067
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "F.Cu",
+      "net": "VCC",
+      "width": 0.25,
+      "points": [
+        [
+          11.6167,
+          8.3067
+        ],
+        [
+          9.405,
+          6.095
+        ],
+        [
+          7.3,
+          6.095
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "F.Cu",
+      "net": "VCC",
+      "width": 0.25,
+      "points": [
+        [
+          11.6167,
+          9.2121
+        ],
+        [
+          12.3096,
+          9.905
+        ],
+        [
+          12.7,
+          9.905
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "F.Cu",
+      "net": "VCC",
+      "width": 0.25,
+      "points": [
+        [
+          2.25,
+          13.2
+        ],
+        [
+          6.2379,
+          9.2121
+        ],
+        [
+          11.6167,
+          9.2121
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "F.Cu",
+      "net": "VCC",
+      "width": 0.25,
+      "points": [
+        [
+          15.6,
+          10.825
+        ],
+        [
+          13.62,
+          10.825
+        ],
+        [
+          12.7,
+          9.905
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "F.Cu",
+      "net": "DIS",
+      "width": 0.25,
+      "points": [
+        [
+          15.6,
+          9.375
+        ],
+        [
+          14.86,
+          8.635
+        ],
+        [
+          12.7,
+          8.635
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "F.Cu",
+      "net": "DIS",
+      "width": 0.25,
+      "points": [
+        [
+          17.6,
+          5.825
+        ],
+        [
+          18.3817,
+          6.6067
+        ],
+        [
+          18.3817,
+          7.8449
+        ],
+        [
+          16.8516,
+          9.375
+        ],
+        [
+          15.6,
+          9.375
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "F.Cu",
+      "net": "THR",
+      "width": 0.25,
+      "points": [
+        [
+          9.5625,
+          4.3528
+        ],
+        [
+          12.5747,
+          7.365
+        ],
+        [
+          12.7,
+          7.365
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "F.Cu",
+      "net": "THR",
+      "width": 0.25,
+      "points": [
+        [
+          9.5625,
+          2.6
+        ],
+        [
+          9.5625,
+          4.3528
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "F.Cu",
+      "net": "THR",
+      "width": 0.25,
+      "points": [
+        [
+          9.5625,
+          4.3528
+        ],
+        [
+          7.604,
+          4.3528
+        ],
+        [
+          6.2049,
+          5.7519
+        ],
+        [
+          6.2049,
+          6.3825
+        ],
+        [
+          6.5524,
+          6.73
+        ],
+        [
+          8.0855,
+          6.73
+        ],
+        [
+          8.3965,
+          7.041
+        ],
+        [
+          8.3965,
+          7.7475
+        ],
+        [
+          7.509,
+          8.635
+        ],
+        [
+          7.3,
+          8.635
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "F.Cu",
+      "net": "THR",
+      "width": 0.25,
+      "points": [
+        [
+          17.6,
+          7.375
+        ],
+        [
+          14.5,
+          4.275
+        ],
+        [
+          14.5,
+          2.1082
+        ],
+        [
+          13.9662,
+          1.5744
+        ],
+        [
+          10.5881,
+          1.5744
+        ],
+        [
+          9.5625,
+          2.6
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "F.Cu",
+      "net": "CTRL",
+      "width": 0.25,
+      "points": [
+        [
+          13.725,
+          2.6
+        ],
+        [
+          12.7,
+          3.625
+        ],
+        [
+          12.7,
+          6.095
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "F.Cu",
+      "net": "OUT",
+      "width": 0.25,
+      "points": [
+        [
+          4.4,
+          7.425
+        ],
+        [
+          3.6158,
+          8.2092
+        ],
+        [
+          3.6158,
+          9.4099
+        ],
+        [
+          3.9393,
+          9.7334
+        ],
+        [
+          4.8669,
+          9.7334
+        ],
+        [
+          5.9905,
+          8.6098
+        ],
+        [
+          5.9905,
+          8.5208
+        ],
+        [
+          7.1463,
+          7.365
+        ],
+        [
+          7.3,
+          7.365
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "F.Cu",
+      "net": "LED_A",
+      "width": 0.25,
+      "points": [
+        [
+          5.2,
+          3.6
+        ],
+        [
+          5.2,
+          8.175
+        ],
+        [
+          4.4,
+          8.975
+        ]
+      ],
+      "routed": true
+    }
+  ],
+  "simulations": {
+    "blink": {
+      "analysis": {
+        "type": "tran",
+        "step": "2m",
+        "stop": "4"
+      },
+      "probes": [
+        "v(OUT)",
+        "v(THR)",
+        "@d1[id]",
+        "i(V1)"
+      ]
+    }
+  }
+}

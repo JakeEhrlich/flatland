@@ -1,0 +1,28 @@
+{
+  "schema": "pcb-component/1",
+  "name": "diode-1n4007",
+  "description": "1N4007 1 A / 1000 V rectifier diode, DO-41",
+  "datasheet": {
+    "url": "https://www.onsemi.com/pdf/datasheet/1n4001-d.pdf"
+  },
+  "footprint": {
+    "url": "../footprints/DO-41.json",
+    "blake3": "1931054c25d97a2d1b99e409d7ba1569a989ca0194e2e4a4e821c34b92a39daf"
+  },
+  "pins": [
+    {
+      "name": "K",
+      "pad": "1",
+      "description": "cathode (band)"
+    },
+    {
+      "name": "A",
+      "pad": "2",
+      "description": "anode"
+    }
+  ],
+  "spice": {
+    "template": "D{ref} {pin:A} {pin:K} D1N4007",
+    "model": ".model D1N4007 D(IS=7.02767n RS=0.0341512 N=1.80803 EG=1.05743 XTI=5 BV=1000 IBV=5e-08 CJO=1e-11 VJ=0.7 M=0.5 FC=0.5 TT=1e-07)"
+  }
+}

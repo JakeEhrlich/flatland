@@ -1,0 +1,38 @@
+{
+  "schema": "pcb-component/1",
+  "name": "capacitor-electrolytic",
+  "description": "Radial electrolytic capacitor, 5 mm diameter, 2 mm pitch (pin + is the square pad)",
+  "footprint": {
+    "url": "../footprints/C_Radial_5.0mm.json",
+    "blake3": "8233ad40df49f09c61fb7d889f6af10e8544a291041e0fb20fc144516a824b70"
+  },
+  "pins": [
+    {
+      "name": "+",
+      "pad": "1",
+      "description": "positive"
+    },
+    {
+      "name": "-",
+      "pad": "2",
+      "description": "negative"
+    }
+  ],
+  "parameters": {
+    "value": {
+      "default": "10u",
+      "description": "capacitance (SPICE syntax: 10u, 100u)"
+    },
+    "esr": {
+      "default": "0.5",
+      "description": "equivalent series resistance in ohms"
+    },
+    "voltage": {
+      "default": "25",
+      "description": "rated voltage in V (informational)"
+    }
+  },
+  "spice": {
+    "template": "C{ref} {pin:+} {ref}_esr {value}\nR{ref}_esr {ref}_esr {pin:-} {esr}"
+  }
+}

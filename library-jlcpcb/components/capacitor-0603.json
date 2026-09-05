@@ -1,0 +1,32 @@
+{
+  "schema": "pcb-component/1",
+  "name": "capacitor-0603",
+  "description": "MLCC 0603. Give the LCSC part for the value, e.g. 100n=C14663 (YAGEO CC0603KRX7R9BB104, 50 V X7R, basic), 1u=C15849",
+  "footprint": {
+    "url": "../footprints/0603.json",
+    "blake3": "7a2f712b8a1e292a1c332de0c3075690b4d8ca4c1c32c543aff8a264635f8541"
+  },
+  "pins": [
+    {
+      "name": "1"
+    },
+    {
+      "name": "2"
+    }
+  ],
+  "parameters": {
+    "value": {
+      "description": "capacitance (SPICE syntax: 100n, 1u)"
+    },
+    "lcsc": {
+      "default": "",
+      "description": "LCSC part number for this value"
+    }
+  },
+  "spice": {
+    "template": "C{ref} {pin:1} {pin:2} {value}"
+  },
+  "metadata": {
+    "assembly": true
+  }
+}

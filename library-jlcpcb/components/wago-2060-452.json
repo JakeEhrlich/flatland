@@ -1,0 +1,36 @@
+{
+  "schema": "pcb-component/1",
+  "name": "wago-2060-452",
+  "description": "WAGO 2060-452/998-404 SMD push-in terminal block, 2 poles, 4 mm pitch, 24-18 AWG, 9 A / 63 V (IEC III/3); JLCPCB extended part C2765055, machine-placed (set metadata.assembly false to hand-solder instead)",
+  "datasheet": {
+    "url": "https://www.wago.com/2060-452/998-404"
+  },
+  "footprint": {
+    "url": "../footprints/WAGO_2060-452.json",
+    "blake3": "b087458e48231bd75811fca3365c28e1f81ce709cda5c026b53c18e95cb1d673"
+  },
+  "pins": [
+    {
+      "name": "1",
+      "pad": [
+        "1A",
+        "1B"
+      ],
+      "description": "pole 1 (+y)"
+    },
+    {
+      "name": "2",
+      "pad": [
+        "2A",
+        "2B"
+      ],
+      "description": "pole 2 (-y)"
+    }
+  ],
+  "metadata": {
+    "lcsc": "C2765055",
+    "manufacturer": "WAGO",
+    "mpn": "2060-452/998-404",
+    "assembly": true
+  }
+}

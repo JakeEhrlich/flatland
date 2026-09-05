@@ -1,0 +1,64 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "LED_5mm",
+  "description": "5 mm through-hole LED, 2.54 mm pitch; pad 1 = anode (round), pad 2 = cathode (square, flat side)",
+  "pads": [
+    {
+      "name": "1",
+      "type": "through_hole",
+      "shape": "circle",
+      "at": [
+        -1.27,
+        0
+      ],
+      "size": [
+        1.8,
+        1.8
+      ],
+      "drill": 0.9
+    },
+    {
+      "name": "2",
+      "type": "through_hole",
+      "shape": "rect",
+      "at": [
+        1.27,
+        0
+      ],
+      "size": [
+        1.8,
+        1.8
+      ],
+      "drill": 0.9
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          2.6,
+          1.15
+        ],
+        "to": [
+          2.6,
+          -1.15
+        ]
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "circle": {
+        "center": [
+          0,
+          0
+        ],
+        "diameter": 6.2
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    3.5
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "pcb-component/1",
+  "name": "solder-pads-2",
+  "description": "Two exposed pads to solder supply wires to (+ and -); no part is placed, excluded from BOM/pick-and-place",
+  "footprint": {
+    "url": "../footprints/SolderWirePads_2.json",
+    "blake3": "ab553901671929c11bbb44a2303ae7007061a070933d3c5a9f1a7bc1a3884424"
+  },
+  "pins": [
+    {
+      "name": "+",
+      "pad": "1"
+    },
+    {
+      "name": "-",
+      "pad": "2"
+    }
+  ],
+  "metadata": {
+    "assembly": false
+  }
+}

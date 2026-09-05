@@ -1,0 +1,32 @@
+{
+  "schema": "pcb-component/1",
+  "name": "capacitor-0805",
+  "description": "MLCC 0805. Give the LCSC part for the value, e.g. 10u=C15850 (Samsung CL21A106KAYNNNE, 25 V X5R, basic)",
+  "footprint": {
+    "url": "../footprints/0805.json",
+    "blake3": "e7b27acad54d06f830ba5499041faf7701680455185e38c90ccff6fe2a750fef"
+  },
+  "pins": [
+    {
+      "name": "1"
+    },
+    {
+      "name": "2"
+    }
+  ],
+  "parameters": {
+    "value": {
+      "description": "capacitance (SPICE syntax: 10u)"
+    },
+    "lcsc": {
+      "default": "",
+      "description": "LCSC part number for this value"
+    }
+  },
+  "spice": {
+    "template": "C{ref} {pin:1} {pin:2} {value}"
+  },
+  "metadata": {
+    "assembly": true
+  }
+}

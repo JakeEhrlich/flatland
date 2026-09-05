@@ -1,0 +1,363 @@
+//! End-to-end tests driving the `pcb` binary.
+
+use std::path::{Path, PathBuf};
+use std::process::Command;
+
+fn library() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("library/index.json")
+}
+
+struct Proj {
+    dir: PathBuf,
+}
+
+impl Proj {
+    fn new(name: &str) -> Proj {
+        let dir = std::env::temp_dir().join(format!("flatland-test-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        Proj { dir }
+    }
+    fn run(&self, args: &[&str]) -> (bool, String) {
+        let out = Command::new(env!("CARGO_BIN_EXE_pcb")).args(args).current_dir(&self.dir).output().expect("run pcb");
+        let text = format!("{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
+        (out.status.success(), text)
+    }
+    fn ok(&self, args: &[&str]) -> String {
+        let (ok, text) = self.run(args);
+        assert!(ok, "pcb {} failed:\n{text}", args.join(" "));
+        text
+    }
+    fn fails(&self, args: &[&str]) -> String {
+        let (ok, text) = self.run(args);
+        assert!(!ok, "pcb {} unexpectedly succeeded:\n{text}", args.join(" "));
+        text
+    }
+    fn build(&self, rel: &str) -> PathBuf {
+        self.dir.join("build").join(rel)
+    }
+}
+
+impl Drop for Proj {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.dir);
+    }
+}
+
+fn ngspice_available() -> bool {
+    std::env::var_os("NGSPICE_LIB").is_some()
+        || ["/opt/homebrew/lib/libngspice.dylib", "/usr/local/lib/libngspice.dylib", "/usr/lib/x86_64-linux-gnu/libngspice.so.0"]
+            .iter()
+            .any(|p| Path::new(p).exists())
+}
+
+fn freerouting_available() -> bool {
+    std::env::var_os("FREEROUTING").is_some() || Path::new("/Applications/freerouting.app/Contents/MacOS/freerouting").exists()
+}
+
+fn build_led_driver(p: &Proj) {
+    let lib = library();
+    p.ok(&["init", "led", "--layers", "B.Cu", "--index", lib.to_str().unwrap()]);
+    p.ok(&["add", "J1", "battery-9v"]);
+    p.ok(&["add", "R1", "resistor-axial", "--param", "value=10k"]);
+    p.ok(&["add", "R2", "resistor-axial", "--param", "value=330"]);
+    p.ok(&["add", "Q1", "npn-2n2222"]);
+    p.ok(&["add", "D1", "led-5mm"]);
+    p.ok(&["add", "V1", "vsource", "--param", "value=PULSE(0 5 0 1u 1u 1m 2m)"]);
+    p.ok(&["connect", "J1.+", "R2.1", "--net", "VIN"]);
+    p.ok(&["connect", "J1.-", "Q1.E", "V1.-", "--net", "GND"]);
+    p.ok(&["connect", "R2.2", "D1.A"]);
+    p.ok(&["connect", "D1.K", "Q1.C", "--net", "LED_K"]);
+    p.ok(&["connect", "R1.1", "V1.+", "--net", "SIG"]);
+    p.ok(&["connect", "R1.2", "Q1.B", "--net", "BASE"]);
+    p.ok(&["outline", "rect", "40", "30", "--radius", "2"]);
+    p.ok(&["hole", "add", "3,3", "--drill", "2.2"]);
+    p.ok(&["place", "J1", "4,20"]);
+    p.ok(&["place", "R2", "21,25"]);
+    p.ok(&["place", "R1", "17,7"]);
+    p.ok(&["place", "Q1", "27,9", "--rotation", "180"]);
+    p.ok(&["place", "D1", "31,20", "--rotation", "90"]);
+    p.ok(&["pour", "new", "gnd", "--layer", "B.Cu", "--net", "GND", "--follow-outline"]);
+}
+
+#[test]
+fn single_sided_board_end_to_end() {
+    let p = Proj::new("single");
+    build_led_driver(&p);
+
+    let status = p.ok(&["status", "--json"]);
+    let v: serde_json::Value = serde_json::from_str(&status).unwrap();
+    assert_eq!(v["layers"], serde_json::json!(["B.Cu"]));
+    assert_eq!(v["unrouted_connections"], 4); // GND is joined by the pour; SIG only has one real pad
+    assert_eq!(v["outline"]["width_mm"], 40.0);
+
+    // Auto-named net and merge behaviour.
+    let text = p.ok(&["net", "list"]);
+    assert!(text.contains("N$1: R2.2 D1.A"), "{text}");
+    let text = p.fails(&["connect", "VIN_dummy.1", "R1.1"]);
+    assert!(text.contains("no instance named `VIN_dummy`"), "{text}");
+    let text = p.fails(&["connect", "R1.1", "J1.+"]);
+    assert!(text.contains("--merge"), "{text}");
+
+    let check = p.run(&["check"]).1;
+    assert!(check.contains("0 error(s)"), "{check}");
+
+    p.ok(&["visualize", "pcb"]);
+    p.ok(&["visualize", "pcb", "--from-bottom", "--grid", "-o", p.build("bottom.png").to_str().unwrap()]);
+    p.ok(&["visualize", "netlist"]);
+    assert!(p.build("pcb.png").exists() && p.build("pcb.svg").exists() && p.build("bottom.png").exists() && p.build("netlist.png").exists());
+
+    let files = p.ok(&["gerbers"]);
+    for f in ["B_Cu.gbl", "F_Mask.gts", "B_Mask.gbs", "F_Silkscreen.gto", "Edge_Cuts.gko", "PTH.drl", "NPTH.drl", "gerbers.zip"] {
+        assert!(files.contains(f), "missing {f} in:\n{files}");
+    }
+    let gbl = std::fs::read_to_string(p.build("gerbers/led-B_Cu.gbl")).unwrap();
+    assert!(gbl.starts_with("%TF.GenerationSoftware") && gbl.ends_with("M02*\n") && gbl.contains("G36*"));
+
+    p.ok(&["route", "--dsn-only"]);
+    let dsn = std::fs::read_to_string(p.build("led.dsn")).unwrap();
+    assert!(dsn.contains("(place Q1 27000 9000 front 180)"), "{dsn}");
+    assert!(dsn.contains("(net GND (pins"), "{dsn}");
+    // Single-layer boards export no planes: the router must draw the pour net's
+    // links itself, the pour then swallows them.
+    assert!(!dsn.contains("(plane GND"), "{dsn}");
+
+    // Autorouting keeps GND on the pour: router-drawn GND links are pruned.
+    if std::path::Path::new("/Applications/freerouting.app").exists() {
+        let out = p.ok(&["route"]);
+        assert!(out.contains("all nets routed"), "{out}");
+        let proj: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(p.dir.join("pcb.json")).unwrap()).unwrap();
+        let gnd_routed = proj["traces"].as_array().unwrap().iter().filter(|t| t["routed"] == true && t["net"] == "GND").count();
+        assert_eq!(gnd_routed, 0, "router GND segments should be pruned:\n{out}");
+    }
+
+    // Simulations: definition always works; running needs libngspice.
+    p.ok(&["sim", "add", "op", "op", "--probe", "v(LED_K)", "--probe", "@d1[id]"]);
+    p.ok(&["sim", "add", "hot", "temp", "-40", "100", "10", "--probe", "@d1[id]", "--param", "V1.value=DC 5"]);
+    let net = p.ok(&["sim", "netlist", "hot"]);
+    assert!(net.contains("D1 N$1 LED_K LED_RED"), "{net}");
+    assert!(net.contains("V1 SIG 0 DC 5"), "{net}");
+    assert!(net.contains(".dc temp -40 100 10"), "{net}");
+    let text = p.fails(&["sim", "add", "bad", "op", "--param", "R1.resistance=1"]);
+    assert!(text.contains("no parameter `resistance`"), "{text}");
+    if ngspice_available() {
+        let out = p.ok(&["sim", "run", "hot"]);
+        assert!(out.contains("@d1[id]"), "{out}");
+        assert!(p.build("sim/hot/results.csv").exists() && p.build("sim/hot/plot.png").exists());
+        let out = p.ok(&["sim", "run", "hot"]);
+        assert!(out.contains("up to date"), "{out}");
+        let list = p.ok(&["sim", "list"]);
+        assert!(list.contains("hot: .dc temp -40 100 10 — up to date"), "{list}");
+        // Changing an input makes the study stale.
+        p.ok(&["set", "R2", "value=470"]);
+        let list = p.ok(&["sim", "list"]);
+        assert!(list.contains("stale"), "{list}");
+        let op = p.ok(&["sim", "run", "op"]);
+        assert!(op.contains("operating point"), "{op}");
+    } else {
+        eprintln!("libngspice not found; skipping simulation run");
+    }
+
+    if freerouting_available() {
+        let out = p.ok(&["route", "--timeout", "180"]);
+        assert!(out.contains("all nets routed"), "{out}");
+        let check = p.run(&["check"]).1;
+        assert!(check.contains("0 error(s), 0 warning(s)"), "{check}");
+        // Re-routing replaces routed traces; hand traces would be kept.
+        let out = p.ok(&["route", "--timeout", "180"]);
+        assert!(out.contains("all nets routed"), "{out}");
+    } else {
+        eprintln!("freerouting not found; skipping autorouting");
+    }
+}
+
+#[test]
+fn two_layer_smd_board() {
+    let p = Proj::new("two");
+    let lib = library();
+    p.ok(&["init", "smd", "--index", lib.to_str().unwrap()]);
+    p.ok(&["add", "R1", "resistor-0603", "--param", "value=1k", "--at", "5,5"]);
+    p.ok(&["add", "R2", "resistor-0603", "--param", "value=2k", "--at", "5,10", "--side", "bottom", "--rotation", "90"]);
+    p.ok(&["add", "C1", "capacitor-0603", "--at", "10,7"]);
+    p.ok(&["connect", "R1.1", "R2.1", "--net", "A"]);
+    p.ok(&["connect", "R1.2", "C1.1", "--net", "B"]);
+    p.ok(&["connect", "R2.2", "C1.2", "--net", "GND"]);
+    p.ok(&["outline", "rect", "15", "15"]);
+
+    // A hand trace on F.Cu connects R1.2 to C1.1; net is inferred from the pad.
+    p.ok(&["trace", "add", "--layer", "F.Cu", "5.875,5", "9.125,7"]);
+    let list = p.ok(&["trace", "list"]);
+    assert!(list.contains("net B"), "{list}");
+    // A via plus a bottom trace joins R2.2 (bottom) to C1.2 (top).
+    p.ok(&["via", "add", "12,10", "--net", "GND"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "GND", "10.875,7", "12,10"]);
+    // R2 is on the bottom, rotated 90°: pad 2 is mirrored then rotated to (5, 9.125).
+    p.ok(&["trace", "add", "--layer", "B.Cu", "--net", "GND", "12,10", "5,9.125"]);
+    let status = p.ok(&["status", "--json"]);
+    let v: serde_json::Value = serde_json::from_str(&status).unwrap();
+    let nets = v["nets"].as_array().unwrap();
+    let unrouted = |n: &str| nets.iter().find(|x| x["name"] == n).unwrap()["unrouted"].as_u64().unwrap();
+    assert_eq!(unrouted("B"), 0);
+    assert_eq!(unrouted("GND"), 0);
+    assert_eq!(unrouted("A"), 1);
+
+    let text = p.fails(&["trace", "add", "--layer", "In1.Cu", "1,1", "2,2"]);
+    assert!(text.contains("stackup only has"), "{text}");
+    let text = p.fails(&["place", "R9", "1,1"]);
+    assert!(text.contains("no instance named `R9`"), "{text}");
+    let text = p.fails(&["add", "R3", "resistor-060"]);
+    assert!(text.contains("did you mean `resistor-0603`"), "{text}");
+    let text = p.fails(&["connect", "R1.3", "C1.1"]);
+    assert!(text.contains("has no pin `3`"), "{text}");
+
+    let files = p.ok(&["gerbers"]);
+    for f in ["F_Cu.gtl", "B_Cu.gbl", "F_Paste.gtp", "B_Paste.gbp", "F_Mask.gts", "B_Mask.gbs", "PTH.drl"] {
+        assert!(files.contains(f), "missing {f} in:\n{files}");
+    }
+    p.ok(&["route", "--dsn-only"]);
+    let dsn = std::fs::read_to_string(p.build("smd.dsn")).unwrap();
+    assert!(dsn.contains("(place R2 5000 10000 back 90"), "{dsn}");
+    assert!(dsn.contains("(wire (path F.Cu 250"), "{dsn}");
+    assert!(dsn.contains("(via Via[0-1]_800:400_um 12000 10000 (net GND) (type protect))"), "{dsn}");
+
+    // Import a hand-written session for net A.
+    let ses = r#"(session "smd.ses" (routes (resolution um 10) (library_out (padstack "Via[0-1]_800:400_um" (shape (circle F.Cu 8000 0 0)) (shape (circle B.Cu 8000 0 0)) (attach off)))
+      (network_out (net A (wire (path F.Cu 2500 41250 50000 30000 80000)) (via "Via[0-1]_800:400_um" 30000 80000) (wire (path B.Cu 2500 30000 80000 50000 108750))))))"#;
+    std::fs::write(p.dir.join("hand.ses"), ses).unwrap();
+    let out = p.ok(&["route", "--import", "hand.ses"]);
+    assert!(out.contains("imported 2 trace segment(s) and 1 via(s)"), "{out}");
+    assert!(out.contains("all nets routed"), "{out}");
+    p.ok(&["visualize", "pcb", "--from-bottom"]);
+    let check = p.run(&["check"]).1;
+    assert!(check.contains("0 error(s)"), "{check}");
+}
+
+#[test]
+fn index_management() {
+    let p = Proj::new("index");
+    p.ok(&["init", "ix"]);
+    let text = p.fails(&["add", "R1", "resistor-0603"]);
+    assert!(text.contains("no component indexes"), "{text}");
+    p.ok(&["index", "new", "mylib", "--name", "mine"]);
+    p.ok(&["component", "template", "mylib/components/widget.json", "--name", "widget"]);
+    p.ok(&["index", "register", "mylib", "mylib/components/widget.json"]);
+    p.ok(&["index", "add", "mylib", "--pin"]);
+    let list = p.ok(&["component", "list"]);
+    assert!(list.contains("mine:widget"), "{list}");
+    p.ok(&["add", "W1", "widget", "--at", "1,1"]);
+    p.ok(&["index", "verify"]);
+    // Editing a component file breaks the pinned hash until `index update`.
+    let path = p.dir.join("mylib/components/widget.json");
+    let mut s = std::fs::read_to_string(&path).unwrap();
+    s = s.replace("Template component; edit me", "changed");
+    std::fs::write(&path, s).unwrap();
+    let text = p.fails(&["status"]);
+    assert!(text.contains("hash mismatch"), "{text}");
+    p.fails(&["index", "verify"]);
+    // The index file itself changed hash too (it is pinned), so update then re-pin.
+    p.ok(&["index", "update", "mylib"]);
+    let text = p.fails(&["status"]);
+    assert!(text.contains("hash mismatch for component index"), "{text}");
+    p.ok(&["index", "remove", "mine"]);
+    p.ok(&["index", "add", "mylib", "--pin"]);
+    p.ok(&["status"]);
+}
+
+#[test]
+fn jlcpcb_assembly_outputs() {
+    let p = Proj::new("jlc");
+    let jlc = Path::new(env!("CARGO_MANIFEST_DIR")).join("library-jlcpcb/index.json");
+    let basic = library();
+    p.ok(&["init", "blinky", "--index", jlc.to_str().unwrap(), "--index", basic.to_str().unwrap()]);
+    // Ambiguous name needs qualification.
+    let text = p.fails(&["add", "R1", "resistor-0603", "--param", "value=10k"]);
+    assert!(text.contains("several indexes"), "{text}");
+    p.ok(&["add", "U1", "ne555dr", "--at", "10,8"]);
+    p.ok(&["add", "R1", "jlcpcb:resistor-0603", "--param", "value=10k", "--param", "lcsc=C25804", "--at", "15,8", "--rotation", "90"]);
+    p.ok(&["add", "R2", "jlcpcb:resistor-0603", "--param", "value=10k", "--param", "lcsc=C25804", "--at", "17,6"]);
+    p.ok(&["add", "R9", "jlcpcb:resistor-0603", "--param", "value=1meg", "--at", "3,3"]); // no LCSC number
+    p.ok(&["add", "D1", "led-0603-red", "--at", "4,4", "--side", "bottom"]);
+    p.ok(&["add", "J1", "solder-pads-2", "--at", "4,13"]);
+    p.ok(&["add", "V1", "vsource"]);
+    p.ok(&["outline", "rect", "20", "16"]);
+    p.ok(&["connect", "U1.VCC", "R1.1", "J1.+", "V1.+", "--net", "VCC"]);
+    p.ok(&["connect", "U1.GND", "D1.K", "J1.-", "V1.-", "--net", "GND"]);
+
+    let out = p.ok(&["bom"]);
+    assert!(out.contains("not assembled (assembly: false): J1"), "{out}");
+    assert!(out.contains("no LCSC part number for R9"), "{out}");
+    let bom = std::fs::read_to_string(p.build("assembly/blinky-bom.csv")).unwrap();
+    assert!(bom.starts_with("Comment,Designator,Footprint,LCSC Part #\n"), "{bom}");
+    assert!(bom.contains("NE555DR,U1,SOIC-8_3.9x4.9mm_P1.27mm,C7593"), "{bom}");
+    assert!(bom.contains("10k,\"R1,R2\",0603,C25804"), "{bom}");
+    assert!(bom.contains("KT-0603R,D1,LED_0603,C2286"), "{bom}");
+    assert!(!bom.contains("R9") && !bom.contains("J1") && !bom.contains("V1"), "{bom}");
+    let full = p.ok(&["bom", "-f", "csv", "--all", "-o", "full.csv"]);
+    assert!(full.contains("wrote"), "{full}");
+    let full = std::fs::read_to_string(p.dir.join("full.csv")).unwrap();
+    assert!(full.contains("R9,1,resistor-0603,1meg,0603,UNI-ROYAL,,,yes"), "{full}");
+    assert!(full.contains("J1,1,solder-pads-2,solder-pads-2,SolderWirePads_2,,,,no"), "{full}");
+
+    let cpl = p.ok(&["pnp"]);
+    assert!(cpl.contains("placement(s)"), "{cpl}");
+    let cpl = std::fs::read_to_string(p.build("assembly/blinky-cpl.csv")).unwrap();
+    assert!(cpl.starts_with("Designator,Mid X,Mid Y,Layer,Rotation\n"), "{cpl}");
+    assert!(cpl.contains("U1,10.0000,8.0000,Top,270\n"), "{cpl}"); // SOIC-8 rotation_offset for JLCPCB
+    assert!(cpl.contains("R1,15.0000,8.0000,Top,90\n"), "{cpl}");
+    assert!(cpl.contains("D1,4.0000,4.0000,Bottom,0\n"), "{cpl}");
+    assert!(!cpl.contains("J1") && !cpl.contains("V1"), "{cpl}");
+    // An unplaced assembled part is an error (file still written).
+    p.ok(&["unplace", "R2"]);
+    let text = p.fails(&["pnp"]);
+    assert!(text.contains("not placed: R2"), "{text}");
+
+    // A pin with several solder tabs: every tab carries the net, `pads` lists them,
+    // and the tabs count as connected to each other.
+    p.ok(&["add", "J9", "wago-2060-452", "--at", "10,13"]);
+    p.ok(&["connect", "J9.1", "--net", "VCC"]);
+    p.ok(&["connect", "J9.2", "--net", "GND"]);
+    let pads = p.ok(&["pads", "J9"]);
+    assert!(pads.contains("1A") && pads.contains("1B") && pads.contains("2A") && pads.contains("2B"), "{pads}");
+    assert_eq!(pads.matches("VCC").count(), 2, "{pads}");
+    let status = p.ok(&["status", "--json"]);
+    let v: serde_json::Value = serde_json::from_str(&status).unwrap();
+    let vcc = v["nets"].as_array().unwrap().iter().find(|n| n["name"] == "VCC").unwrap();
+    // J9.1 is one pin (two tabs) plus U1.VCC, R1.1: three separate islands, not four.
+    assert_eq!(vcc["islands"].as_array().unwrap().len(), 3, "{status}");
+    p.ok(&["route", "--dsn-only"]);
+    let dsn = std::fs::read_to_string(p.build("blinky.dsn")).unwrap();
+    assert!(dsn.contains("(pins U1-8 R1-1 J9-1A)") || dsn.contains("J9-1A"), "{dsn}");
+    assert!(!dsn.contains("J9-1B"), "secondary tab must not be a separate DSN pin:\n{dsn}");
+    // Label overrides live on the placement, in the footprint frame.
+    p.ok(&["label", "J9", "R1", "--at", "0,-2", "--size", "0.6"]);
+    let out = p.ok(&["label", "U1", "--at", "12,3", "--absolute"]);
+    assert!(out.contains("U1 label at 12,3"), "{out}");
+    let proj: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(p.dir.join("pcb.json")).unwrap()).unwrap();
+    assert_eq!(proj["components"]["R1"]["placement"]["label_size"], 0.6);
+    assert!(proj["components"]["U1"]["placement"]["label_at"].is_array());
+    p.ok(&["label", "R1", "--hide"]);
+    assert!(p.ok(&["label", "R1", "--show"]).contains("R1 label at"));
+    p.ok(&["label", "R1", "U1", "--reset"]);
+    assert!(p.fails(&["label", "R1"]).contains("nothing to change"));
+    p.ok(&["remove", "J9"]);
+
+    // The 555 model simulates and oscillates.
+    if ngspice_available() {
+        p.ok(&["add", "R3", "jlcpcb:resistor-0603", "--param", "value=100k", "--param", "lcsc=C25803"]);
+        p.ok(&["add", "C1", "capacitor-0805", "--param", "value=10u", "--param", "lcsc=C15850"]);
+        p.ok(&["connect", "U1.RESET", "--net", "VCC"]);
+        p.ok(&["connect", "R1.2", "R3.1", "U1.DIS", "--net", "DIS"]);
+        p.ok(&["connect", "R3.2", "U1.THR", "U1.TRIG", "C1.1", "--net", "THR"]);
+        p.ok(&["connect", "C1.2", "--net", "GND"]);
+        // U1.OUT is left unconnected here; probe the threshold ramp instead.
+        p.ok(&["sim", "add", "blink", "tran", "5m", "3", "--probe", "v(THR)"]);
+        let out = p.ok(&["sim", "run", "blink"]);
+        assert!(out.contains("thr"), "{out}");
+        let csv = std::fs::read_to_string(p.build("sim/blink/results.csv")).unwrap();
+        let vals: Vec<f64> = csv.lines().skip(1).filter_map(|l| l.split(',').nth(1)?.parse().ok()).collect();
+        let max = vals.iter().cloned().fold(0.0, f64::max);
+        let min_late = vals.iter().skip(vals.len() / 2).cloned().fold(9.0, f64::min);
+        assert!(max > 3.2 && max < 3.5, "threshold should reach 2/3 VCC, max {max}");
+        assert!(min_late < 1.8, "threshold should fall back to 1/3 VCC, min {min_late}");
+    }
+}

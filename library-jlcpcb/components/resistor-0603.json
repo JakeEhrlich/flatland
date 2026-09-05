@@ -1,0 +1,37 @@
+{
+  "schema": "pcb-component/1",
+  "name": "resistor-0603",
+  "description": "Chip resistor 0603, 1%, 100 mW. Give the LCSC part for the value you use, e.g. 10k=C25804, 100k=C25803, 330=C23138, 1k=C21190 (JLCPCB basic parts)",
+  "footprint": {
+    "url": "../footprints/0603.json",
+    "blake3": "7a2f712b8a1e292a1c332de0c3075690b4d8ca4c1c32c543aff8a264635f8541"
+  },
+  "pins": [
+    {
+      "name": "1"
+    },
+    {
+      "name": "2"
+    }
+  ],
+  "parameters": {
+    "value": {
+      "description": "resistance (SPICE syntax: 4.7k, 1meg)"
+    },
+    "lcsc": {
+      "default": "",
+      "description": "LCSC part number for this value, e.g. C25804"
+    },
+    "tc1": {
+      "default": "0",
+      "description": "linear temperature coefficient (1/°C)"
+    }
+  },
+  "spice": {
+    "template": "R{ref} {pin:1} {pin:2} {value} tc1={tc1}"
+  },
+  "metadata": {
+    "manufacturer": "UNI-ROYAL",
+    "assembly": true
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "pcb-component/1",
+  "name": "regulator-lm7805",
+  "description": "LM7805 5 V / 1 A linear regulator, TO-220 (IN GND OUT); behavioural SPICE model",
+  "datasheet": {
+    "url": "https://www.ti.com/lit/ds/symlink/lm340.pdf"
+  },
+  "footprint": {
+    "url": "../footprints/TO-220-3_Vertical.json",
+    "blake3": "7663f59b6f5423b31088f340914d316dc2eec31a92814ba0d1603b552087fadf"
+  },
+  "pins": [
+    {
+      "name": "IN",
+      "pad": "1"
+    },
+    {
+      "name": "GND",
+      "pad": "2"
+    },
+    {
+      "name": "OUT",
+      "pad": "3"
+    }
+  ],
+  "parameters": {
+    "vout": {
+      "default": "5",
+      "description": "regulated output voltage"
+    },
+    "dropout": {
+      "default": "2",
+      "description": "minimum input-output headroom in V"
+    }
+  },
+  "spice": {
+    "template": "X{ref} {pin:IN} {pin:OUT} {pin:GND} LM78XX vout={vout} dropout={dropout}",
+    "model": ".subckt LM78XX in out gnd vout=5 dropout=2\nEreg out_i gnd value={max(0, min(vout, V(in,gnd)-dropout))}\nRout out_i out 0.02\nRq in gnd 1k\n.ends LM78XX"
+  }
+}

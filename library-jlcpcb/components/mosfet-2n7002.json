@@ -1,0 +1,34 @@
+{
+  "schema": "pcb-component/1",
+  "name": "mosfet-2n7002",
+  "description": "JSCJ 2N7002 N-channel MOSFET, 60 V, 115 mA, Vgs(th) 1-2.5 V, SOT-23 pins 1=G 2=S 3=D (LCSC C8545, JLCPCB basic)",
+  "footprint": {
+    "url": "../footprints/SOT-23-3.json",
+    "blake3": "cba5c74d80337cb6c4ffadfaa6639c9e85395a114f6c7168d49bede7999d4adb"
+  },
+  "pins": [
+    {
+      "name": "G",
+      "pad": "1"
+    },
+    {
+      "name": "S",
+      "pad": "2"
+    },
+    {
+      "name": "D",
+      "pad": "3"
+    }
+  ],
+  "spice": {
+    "template": "M{ref} {pin:D} {pin:G} {pin:S} {pin:S} MOS_2N7002",
+    "model": ".model MOS_2N7002 NMOS(LEVEL=1 VTO=1.6 KP=0.06 LAMBDA=0.02 RD=1 RS=0.5 CGSO=20p CGDO=5p)"
+  },
+  "metadata": {
+    "lcsc": "C8545",
+    "manufacturer": "JSCJ",
+    "mpn": "2N7002",
+    "assembly": true,
+    "rotation_offset": 0
+  }
+}

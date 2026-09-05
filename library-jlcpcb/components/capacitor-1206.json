@@ -1,0 +1,32 @@
+{
+  "schema": "pcb-component/1",
+  "name": "capacitor-1206",
+  "description": "MLCC 1206. LCSC per value: 1u/100V X7R = C13832 (Samsung CL31B105KCHNNNE)",
+  "footprint": {
+    "url": "../footprints/1206.json",
+    "blake3": "6b66aeaba6d2389e186bcdcea2b0434ebb2a4b11dba4e46ae3e1cff1f707de1b"
+  },
+  "pins": [
+    {
+      "name": "1"
+    },
+    {
+      "name": "2"
+    }
+  ],
+  "parameters": {
+    "value": {
+      "description": "capacitance (SPICE syntax)"
+    },
+    "lcsc": {
+      "default": "",
+      "description": "LCSC part number for this value"
+    }
+  },
+  "spice": {
+    "template": "C{ref} {pin:1} {pin:2} {value}"
+  },
+  "metadata": {
+    "assembly": true
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "pcb-component/1",
+  "name": "resistor-1206",
+  "description": "Chip resistor 1206, 250 mW, 200 V. LCSC per value: 3.3k=C26032 (UNI-ROYAL), 3.3Ω=C137283 (YAGEO RC1206FR-073R3L)",
+  "footprint": {
+    "url": "../footprints/1206.json",
+    "blake3": "6b66aeaba6d2389e186bcdcea2b0434ebb2a4b11dba4e46ae3e1cff1f707de1b"
+  },
+  "pins": [
+    {
+      "name": "1"
+    },
+    {
+      "name": "2"
+    }
+  ],
+  "parameters": {
+    "value": {
+      "description": "resistance (SPICE syntax)"
+    },
+    "lcsc": {
+      "default": "",
+      "description": "LCSC part number for this value"
+    },
+    "tc1": {
+      "default": "0",
+      "description": "temperature coefficient (1/°C)"
+    }
+  },
+  "spice": {
+    "template": "R{ref} {pin:1} {pin:2} {value} tc1={tc1}"
+  },
+  "metadata": {
+    "assembly": true
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "pcb-component/1",
+  "name": "zener-bzt52c10",
+  "description": "BZT52C10 zener 10 V 500 mW, SOD-123, pad 1 = cathode (LCSC C216719 Shikues)",
+  "footprint": {
+    "url": "../footprints/SOD-123.json",
+    "blake3": "de4f68797c4c3ac69d3a4532350ff08bee8deab58e8b7aba08512eb373c906ef"
+  },
+  "pins": [
+    {
+      "name": "K",
+      "pad": "1",
+      "description": "cathode (bar)"
+    },
+    {
+      "name": "A",
+      "pad": "2"
+    }
+  ],
+  "spice": {
+    "template": "D{ref} {pin:A} {pin:K} BZT52C10",
+    "model": ".model BZT52C10 D(IS=1e-12 N=1.2 RS=1 BV=10 IBV=5m)"
+  },
+  "metadata": {
+    "lcsc": "C216719",
+    "manufacturer": "Shikues",
+    "mpn": "BZT52C10",
+    "assembly": true,
+    "rotation_offset": 0
+  }
+}

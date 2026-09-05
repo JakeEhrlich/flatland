@@ -1,0 +1,78 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "DO-41",
+  "description": "DO-41 axial diode, 10.16 mm pitch; pad 1 = cathode (square, band end)",
+  "pads": [
+    {
+      "name": "1",
+      "type": "through_hole",
+      "shape": "rect",
+      "at": [
+        -5.08,
+        0
+      ],
+      "size": [
+        2.0,
+        2.0
+      ],
+      "drill": 1.0
+    },
+    {
+      "name": "2",
+      "type": "through_hole",
+      "shape": "circle",
+      "at": [
+        5.08,
+        0
+      ],
+      "size": [
+        2.0,
+        2.0
+      ],
+      "drill": 1.0
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          -2.0,
+          -1.4
+        ],
+        "to": [
+          -2.0,
+          1.4
+        ],
+        "width": 0.4
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -6.4,
+            -1.7
+          ],
+          [
+            6.4,
+            -1.7
+          ],
+          [
+            6.4,
+            1.7
+          ],
+          [
+            -6.4,
+            1.7
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    2.4
+  ]
+}

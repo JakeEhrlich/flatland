@@ -1,0 +1,33 @@
+{
+  "schema": "pcb-component/1",
+  "name": "resistor-0805",
+  "description": "Chip resistor 0805, 125 mW. LCSC per value: 0Ω jumper = C17477 (UNI-ROYAL, JLCPCB basic)",
+  "footprint": {
+    "url": "../footprints/0805.json",
+    "blake3": "e7b27acad54d06f830ba5499041faf7701680455185e38c90ccff6fe2a750fef"
+  },
+  "pins": [
+    {
+      "name": "1"
+    },
+    {
+      "name": "2"
+    }
+  ],
+  "parameters": {
+    "value": {
+      "default": "0",
+      "description": "resistance (SPICE syntax)"
+    },
+    "lcsc": {
+      "default": "C17477",
+      "description": "LCSC part number for this value"
+    }
+  },
+  "spice": {
+    "template": "R{ref} {pin:1} {pin:2} {value}"
+  },
+  "metadata": {
+    "assembly": true
+  }
+}

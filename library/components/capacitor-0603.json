@@ -1,0 +1,30 @@
+{
+  "schema": "pcb-component/1",
+  "name": "capacitor-0603",
+  "description": "Generic MLCC capacitor, 0603",
+  "footprint": {
+    "url": "../footprints/0603.json",
+    "blake3": "55d1d483e801ca3f6fac511a3db50b75f790eccb4722a734d5d87b3410410003"
+  },
+  "pins": [
+    {
+      "name": "1"
+    },
+    {
+      "name": "2"
+    }
+  ],
+  "parameters": {
+    "value": {
+      "default": "100n",
+      "description": "capacitance (SPICE syntax: 100n, 4.7u)"
+    },
+    "voltage": {
+      "default": "50",
+      "description": "rated voltage in V (informational)"
+    }
+  },
+  "spice": {
+    "template": "C{ref} {pin:1} {pin:2} {value}"
+  }
+}

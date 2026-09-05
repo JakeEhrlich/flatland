@@ -1,0 +1,106 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "PinHeader_1x04_P2.54mm",
+  "description": "1x4 pin header, 2.54 mm pitch, vertical; pad 1 square",
+  "pads": [
+    {
+      "name": "1",
+      "type": "through_hole",
+      "shape": "rect",
+      "at": [
+        0,
+        0
+      ],
+      "size": [
+        1.7,
+        1.7
+      ],
+      "drill": 1.0
+    },
+    {
+      "name": "2",
+      "type": "through_hole",
+      "shape": "oval",
+      "at": [
+        0,
+        -2.54
+      ],
+      "size": [
+        1.7,
+        1.7
+      ],
+      "drill": 1.0
+    },
+    {
+      "name": "3",
+      "type": "through_hole",
+      "shape": "oval",
+      "at": [
+        0,
+        -5.08
+      ],
+      "size": [
+        1.7,
+        1.7
+      ],
+      "drill": 1.0
+    },
+    {
+      "name": "4",
+      "type": "through_hole",
+      "shape": "oval",
+      "at": [
+        0,
+        -7.62
+      ],
+      "size": [
+        1.7,
+        1.7
+      ],
+      "drill": 1.0
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          -1.0,
+          1.4
+        ],
+        "to": [
+          1.0,
+          1.4
+        ],
+        "width": 0.2
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -1.6,
+            1.6
+          ],
+          [
+            1.6,
+            1.6
+          ],
+          [
+            1.6,
+            -9.2
+          ],
+          [
+            -1.6,
+            -9.2
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    2.3
+  ]
+}

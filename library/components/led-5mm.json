@@ -1,0 +1,31 @@
+{
+  "schema": "pcb-component/1",
+  "name": "led-5mm",
+  "description": "5 mm through-hole LED (red, ~2 V forward)",
+  "footprint": {
+    "url": "../footprints/LED_5mm.json",
+    "blake3": "696d15af860f85e9f83ef2480ac3e8d12baa76e2aea1aebab1c74ee266828f4c"
+  },
+  "pins": [
+    {
+      "name": "A",
+      "pad": "1",
+      "description": "anode"
+    },
+    {
+      "name": "K",
+      "pad": "2",
+      "description": "cathode"
+    }
+  ],
+  "parameters": {
+    "color": {
+      "default": "red",
+      "description": "informational"
+    }
+  },
+  "spice": {
+    "template": "D{ref} {pin:A} {pin:K} LED_RED",
+    "model": ".model LED_RED D(IS=1e-20 N=1.6 RS=1.5 EG=1.8 XTI=3 CJO=20p TT=10n BV=5)"
+  }
+}

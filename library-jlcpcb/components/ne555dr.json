@@ -1,0 +1,63 @@
+{
+  "schema": "pcb-component/1",
+  "name": "ne555dr",
+  "description": "Texas Instruments NE555DR precision timer, SOIC-8, 4.5–16 V (LCSC C7593, JLCPCB basic part); behavioural SPICE model",
+  "datasheet": {
+    "url": "https://www.ti.com/lit/ds/symlink/ne555.pdf"
+  },
+  "footprint": {
+    "url": "../footprints/SOIC-8_3.9x4.9mm_P1.27mm.json",
+    "blake3": "fcb69280516f28239bb9d22940dcb04372d238dd1b024e36f5b2eae630bc6f4a"
+  },
+  "pins": [
+    {
+      "name": "GND",
+      "pad": "1"
+    },
+    {
+      "name": "TRIG",
+      "pad": "2",
+      "description": "trigger: output goes high when below 1/3 VCC"
+    },
+    {
+      "name": "OUT",
+      "pad": "3"
+    },
+    {
+      "name": "RESET",
+      "pad": "4",
+      "description": "active low; tie to VCC when unused"
+    },
+    {
+      "name": "CTRL",
+      "pad": "5",
+      "description": "2/3 VCC threshold; decouple with 10–100 nF"
+    },
+    {
+      "name": "THR",
+      "pad": "6",
+      "description": "threshold: output goes low when above 2/3 VCC"
+    },
+    {
+      "name": "DIS",
+      "pad": "7",
+      "description": "discharge transistor collector"
+    },
+    {
+      "name": "VCC",
+      "pad": "8"
+    }
+  ],
+  "spice": {
+    "template": "X{ref} {pin:GND} {pin:TRIG} {pin:OUT} {pin:RESET} {pin:CTRL} {pin:THR} {pin:DIS} {pin:VCC} NE555_BEHAV",
+    "model": ".subckt NE555_BEHAV GND TRIG OUT RESET CTRL THR DIS VCC\n* internal divider: CTRL sits at 2/3 VCC, ctl3 at 1/3 VCC\nRd1 VCC CTRL 5k\nRd2 CTRL ctl3 5k\nRd3 ctl3 GND 5k\n* set/reset latch: trigger sets, threshold resets, otherwise regenerate to a rail\nBst st_in GND V = (V(RESET,GND) < 0.7) ? 0 : ((V(TRIG,GND) < V(ctl3,GND)) ? V(VCC,GND) : ((V(THR,GND) > V(CTRL,GND)) ? 0 : ((V(st,GND) > V(VCC,GND)/2) ? V(VCC,GND) : 0)))\nRst st_in st 100\nCst st GND 10p\n* totem-pole output: ~1.2 V below VCC when high, ~0.1 V when low\nBout out_i GND V = (V(st,GND) > V(VCC,GND)/2) ? V(VCC,GND) - 1.2 : 0.1\nVsense out_i out_j 0\nRout out_j OUT 10\n* current sourced by the output is drawn from VCC\nBsup VCC GND I = max(i(Vsense), 0)\n* discharge transistor conducts while the latch is low\nSdis DIS GND GND st swdis\n.model swdis SW(Ron=15 Roff=1e9 Vt=-2.5 Vh=0.2)\n* quiescent supply current\nRq VCC GND 20k\n.ends NE555_BEHAV"
+  },
+  "metadata": {
+    "lcsc": "C7593",
+    "manufacturer": "Texas Instruments",
+    "mpn": "NE555DR",
+    "assembly": true,
+    "rotation_offset": 270,
+    "rotation_note": "JLCPCB's SOIC-8 zero orientation is body horizontal with pin 1 bottom-left; this footprint has pin 1 top-left (pins down the left side), which is their orientation turned 270 deg CCW"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "LED_0603",
+  "description": "0603 chip LED; pad 1 = cathode (marked with a bar), pad 2 = anode",
+  "pads": [
+    {
+      "name": "1",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -0.8,
+        0
+      ],
+      "size": [
+        0.8,
+        0.9
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "2",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        0.8,
+        0
+      ],
+      "size": [
+        0.8,
+        0.9
+      ],
+      "corner_radius": 0.2
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          -1.5,
+          -0.7
+        ],
+        "to": [
+          -1.5,
+          0.7
+        ],
+        "width": 0.15
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -1.7,
+            -0.8
+          ],
+          [
+            1.5,
+            -0.8
+          ],
+          [
+            1.5,
+            0.8
+          ],
+          [
+            -1.7,
+            0.8
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    1.5
+  ]
+}

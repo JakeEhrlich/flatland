@@ -1,0 +1,92 @@
+{
+  "schema": "pcb-component-index/1",
+  "name": "jlcpcb",
+  "description": "Parts orderable from LCSC and assembled by JLCPCB (basic parts where possible); LCSC numbers verified 2026-09-05",
+  "components": {
+    "capacitor-0603": {
+      "url": "components/capacitor-0603.json",
+      "blake3": "ad13a9e4b3eac5526e2a25328f66724817b576a29a1d9458be6b559bb97bd3f2",
+      "description": "MLCC 0603. Give the LCSC part for the value, e.g. 100n=C14663 (YAGEO CC0603KRX7R9BB104, 50 V X7R, basic), 1u=C15849"
+    },
+    "capacitor-0805": {
+      "url": "components/capacitor-0805.json",
+      "blake3": "54c7bcedd8511ae574b6a81cbc1ba6d99f620790a4604b3b4b7ae20a2f545240",
+      "description": "MLCC 0805. Give the LCSC part for the value, e.g. 10u=C15850 (Samsung CL21A106KAYNNNE, 25 V X5R, basic)"
+    },
+    "led-0603-red": {
+      "url": "components/led-0603-red.json",
+      "blake3": "b97c251be8f973678fa1286a5584518518435689550000592b8e28cc31025187",
+      "description": "Red 0603 chip LED, KENTO KT-0603R, Vf 1.8–2.4 V (LCSC C2286, JLCPCB basic part)"
+    },
+    "ne555dr": {
+      "url": "components/ne555dr.json",
+      "blake3": "64ed08dcb95359c50857d8bf9f04bdb8a91f7b3e50e039cb2c7b7902535423cd",
+      "description": "Texas Instruments NE555DR precision timer, SOIC-8, 4.5–16 V (LCSC C7593, JLCPCB basic part); behavioural SPICE model"
+    },
+    "resistor-0603": {
+      "url": "components/resistor-0603.json",
+      "blake3": "cdf39e516d46d723dfe51dded466aaf20d22523ad62000e2c30fb7ce0eebe774",
+      "description": "Chip resistor 0603, 1%, 100 mW. Give the LCSC part for the value you use, e.g. 10k=C25804, 100k=C25803, 330=C23138, 1k=C21190 (JLCPCB basic parts)"
+    },
+    "solder-pads-2": {
+      "url": "components/solder-pads-2.json",
+      "blake3": "eb23f2985453e45589e5600e1bf968c7e6e4c6564bab638b26c7074b4a520278",
+      "description": "Two exposed pads to solder supply wires to (+ and -); no part is placed, excluded from BOM/pick-and-place"
+    },
+    "led-duris-e-2835-cri90": {
+      "url": "components/led-duris-e-2835-cri90.json",
+      "blake3": "dc4893bf5d3c0b911123fad649b10d6e2af9e3a6f1bd8da1c7a6465cd06a647a",
+      "description": "OSRAM DURIS E 2835 GW JTLPS1.CM white LED, CRI 90 min / 92 typ, R9>=50, 150 mA nominal (250 mA max), Vf 2.70-3.30 V (2.94 typ), Rth 25 K/W. Stocked variant: 6500 K (LCSC C17297932); other CCTs of the same part use the same footprint"
+    },
+    "mosfet-aod482": {
+      "url": "components/mosfet-aod482.json",
+      "blake3": "80ee685383f0491f308983798c1f63f2314e577dc19fe71aa774a95706139122",
+      "description": "AOS AOD482 N-channel MOSFET, 100 V, 32 A, 42 mΩ @ 4.5 V, Vgs(th) 1.6-2.7 V, TO-252 (LCSC C89735); fine as a linear current sink at ~1 W on an aluminium board"
+    },
+    "mosfet-2n7002": {
+      "url": "components/mosfet-2n7002.json",
+      "blake3": "1c3a8d098d8738379844db213205288d2f932df859888745a82d49962eff9af1",
+      "description": "JSCJ 2N7002 N-channel MOSFET, 60 V, 115 mA, Vgs(th) 1-2.5 V, SOT-23 pins 1=G 2=S 3=D (LCSC C8545, JLCPCB basic)"
+    },
+    "cj431-sot23": {
+      "url": "components/cj431-sot23.json",
+      "blake3": "351f5b9578b1bfa96a1b19bbda2f1aeb76560239e46dce79b5095263afc4c445",
+      "description": "JSCJ CJ431 adjustable shunt reference 2.495 V (TL431 equivalent), SOT-23 with pins 1=REF 2=CATHODE 3=ANODE (note: NOT the TI pinout); Ika min 1 mA (LCSC C3113, JLCPCB basic)"
+    },
+    "lm358-soic8": {
+      "url": "components/lm358-soic8.json",
+      "blake3": "9622f4489b84a21194e320c927178abb2301e7b1d958a743b847da0b3c1de496",
+      "description": "onsemi LM358DR2G dual op-amp, 3-32 V single supply, SOIC-8: 1 OUT1, 2 IN1-, 3 IN1+, 4 GND, 5 IN2+, 6 IN2-, 7 OUT2, 8 VCC (LCSC C7950, JLCPCB basic); behavioural model 100 dB, 1 MHz GBW, output swings to VCC-1.5 V"
+    },
+    "zener-bzt52c10": {
+      "url": "components/zener-bzt52c10.json",
+      "blake3": "6dbe96fbdcd0811c5eb9742577a056c3046fcb489da1568fba5098b0d4af857d",
+      "description": "BZT52C10 zener 10 V 500 mW, SOD-123, pad 1 = cathode (LCSC C216719 Shikues)"
+    },
+    "resistor-1206": {
+      "url": "components/resistor-1206.json",
+      "blake3": "cfd82ae7bb148a69729dfbd97c6d20fe687825dfd3ce02ced8e487931977aa84",
+      "description": "Chip resistor 1206, 250 mW, 200 V. LCSC per value: 3.3k=C26032 (UNI-ROYAL), 3.3Ω=C137283 (YAGEO RC1206FR-073R3L)"
+    },
+    "capacitor-1206": {
+      "url": "components/capacitor-1206.json",
+      "blake3": "29ce89d23881a2f0b02e3ba4408b950484c417878f4b83966faac38e21390281",
+      "description": "MLCC 1206. LCSC per value: 1u/100V X7R = C13832 (Samsung CL31B105KCHNNNE)"
+    },
+    "resistor-0805": {
+      "url": "components/resistor-0805.json",
+      "blake3": "1d5b7ee6713b28d5a5400a645f40dbb5a0602a7b51e02880256b9c09edef1263",
+      "description": "Chip resistor 0805, 125 mW. LCSC per value: 0Ω jumper = C17477 (UNI-ROYAL, JLCPCB basic)"
+    },
+    "wago-2060-452": {
+      "url": "components/wago-2060-452.json",
+      "blake3": "5f3b24ca4e53ff88f8d747b523ff4767961239ba716f107578dcc0d234944bec",
+      "description": "WAGO 2060-452/998-404 SMD push-in terminal block, 2 poles, 4 mm pitch, 24-18 AWG, 9 A / 63 V (IEC III/3); JLCPCB stocks it (C2765055) but it is marked hand-soldered (assembly: false) — set metadata.assembly true if you want JLCPCB to place it"
+    },
+    "al5809-60": {
+      "url": "components/al5809-60.json",
+      "blake3": "5b8875859cb40813beab9cafbd286c51c0dd5763b7a0db35075ea556e8c05481",
+      "description": "Diodes AL5809-60P1-7 two-terminal 60 mA (±5%) constant-current LED regulator, 2.5-60 V across IN-OUT, PowerDI-123, 1.24 W on a good pad (LCSC C154921). Parallel several for more current; PWM 100-200 Hz via a low-side MOSFET on OUT (0.5 ms min on/off)"
+    }
+  }
+}

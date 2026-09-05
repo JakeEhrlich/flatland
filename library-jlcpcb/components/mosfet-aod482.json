@@ -1,0 +1,39 @@
+{
+  "schema": "pcb-component/1",
+  "name": "mosfet-aod482",
+  "description": "AOS AOD482 N-channel MOSFET, 100 V, 32 A, 42 m\u03a9 @ 4.5 V, Vgs(th) 1.6-2.7 V, TO-252 (LCSC C89735); fine as a linear current sink at ~1 W on an aluminium board",
+  "datasheet": {
+    "url": "https://www.aosmd.com/res/datasheets/AOD482.pdf"
+  },
+  "footprint": {
+    "url": "../footprints/TO-252-2.json",
+    "blake3": "c11c933b317e19b363446a683a6dd9268fd59832d6e9e678b1960afcaef9667e"
+  },
+  "pins": [
+    {
+      "name": "G",
+      "pad": "1"
+    },
+    {
+      "name": "D",
+      "pad": "2",
+      "description": "drain (tab)"
+    },
+    {
+      "name": "S",
+      "pad": "3"
+    }
+  ],
+  "spice": {
+    "template": "M{ref} {pin:D} {pin:G} {pin:S} {pin:S} AOD482",
+    "model": ".model AOD482 NMOS(LEVEL=1 VTO=2.1 KP=60 LAMBDA=0.005 RD=0.02 RS=0.01 CGSO=1n CGDO=0.1n)"
+  },
+  "metadata": {
+    "lcsc": "C89735",
+    "manufacturer": "Alpha & Omega",
+    "mpn": "AOD482",
+    "assembly": true,
+    "rotation_offset": 90,
+    "rotation_note": "JLCPCB's reel orientation for this TO-252 is a quarter turn from our footprint (verified in their preview 2026-09-05): with offset 90 the legs face the way the footprint draws them"
+  }
+}

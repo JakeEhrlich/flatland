@@ -1,0 +1,35 @@
+{
+  "schema": "pcb-component/1",
+  "name": "cj431-sot23",
+  "description": "JSCJ CJ431 adjustable shunt reference 2.495 V (TL431 equivalent), SOT-23 with pins 1=REF 2=CATHODE 3=ANODE (note: NOT the TI pinout); Ika min 1 mA (LCSC C3113, JLCPCB basic)",
+  "footprint": {
+    "url": "../footprints/SOT-23-3.json",
+    "blake3": "cba5c74d80337cb6c4ffadfaa6639c9e85395a114f6c7168d49bede7999d4adb"
+  },
+  "pins": [
+    {
+      "name": "REF",
+      "pad": "1"
+    },
+    {
+      "name": "K",
+      "pad": "2",
+      "description": "cathode"
+    },
+    {
+      "name": "A",
+      "pad": "3",
+      "description": "anode"
+    }
+  ],
+  "spice": {
+    "template": "B{ref} {pin:K} {pin:A} I = max(0, 5*(V({pin:REF},{pin:A}) - 2.495))\nR{ref}_ref {pin:REF} {pin:A} 1e7"
+  },
+  "metadata": {
+    "lcsc": "C3113",
+    "manufacturer": "JSCJ",
+    "mpn": "CJ431",
+    "assembly": true,
+    "rotation_offset": 0
+  }
+}

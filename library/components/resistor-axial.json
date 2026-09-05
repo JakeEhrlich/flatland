@@ -1,0 +1,34 @@
+{
+  "schema": "pcb-component/1",
+  "name": "resistor-axial",
+  "description": "Generic 1/4 W axial through-hole resistor, 7.62 mm pitch",
+  "footprint": {
+    "url": "../footprints/R_Axial_7.62mm.json",
+    "blake3": "527cf9cc4ae192d1ce97e1c0b5a830ed0e4ee6cf97fcb14fc3035acb52c83bf8"
+  },
+  "pins": [
+    {
+      "name": "1"
+    },
+    {
+      "name": "2"
+    }
+  ],
+  "parameters": {
+    "value": {
+      "default": "10k",
+      "description": "resistance (SPICE syntax: 4.7k, 1meg, 0.1)"
+    },
+    "tc1": {
+      "default": "0",
+      "description": "linear temperature coefficient (1/°C), e.g. 100e-6"
+    },
+    "power": {
+      "default": "0.25",
+      "description": "rated power in W (informational)"
+    }
+  },
+  "spice": {
+    "template": "R{ref} {pin:1} {pin:2} {value} tc1={tc1}"
+  }
+}

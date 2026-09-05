@@ -1,0 +1,41 @@
+{
+  "schema": "pcb-component/1",
+  "name": "al5809-60",
+  "description": "Diodes AL5809-60P1-7 two-terminal 60 mA (±5%) constant-current LED regulator, 2.5-60 V across IN-OUT, PowerDI-123, 1.24 W on a good pad (LCSC C154921). Parallel several for more current; PWM 100-200 Hz via a low-side MOSFET on OUT (0.5 ms min on/off)",
+  "datasheet": {
+    "url": "https://www.diodes.com/assets/Datasheets/AL5809.pdf"
+  },
+  "footprint": {
+    "url": "../footprints/PowerDI-123.json",
+    "blake3": "ea3425e1540a0f848309f1f58b1d738098ddd33cf5364a81b24b6e7c304c019e"
+  },
+  "pins": [
+    {
+      "name": "IN",
+      "pad": "1",
+      "description": "current input (LED cathode side for low-side use)"
+    },
+    {
+      "name": "OUT",
+      "pad": "2",
+      "description": "current output (to GND / PWM switch)"
+    }
+  ],
+  "parameters": {
+    "current": {
+      "default": "60m",
+      "description": "regulated current (SPICE units), 57-63 mA for the -60 part"
+    }
+  },
+  "spice": {
+    "template": "B{ref} {pin:IN} {pin:OUT} I = {current} * max(0, min(1, (V({pin:IN},{pin:OUT}) - 1.5) / 1.0))\nR{ref}_p {pin:IN} {pin:OUT} 2e6"
+  },
+  "metadata": {
+    "lcsc": "C154921",
+    "manufacturer": "Diodes Incorporated",
+    "mpn": "AL5809-60P1-7",
+    "assembly": true,
+    "rotation_offset": 0,
+    "rotation_note": "pin 1 (IN) is at +x, on the band-marked end of the package; verify in JLCPCB's placement preview"
+  }
+}

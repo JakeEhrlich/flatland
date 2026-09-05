@@ -1,0 +1,55 @@
+{
+  "schema": "pcb-component/1",
+  "name": "lm358-soic8",
+  "description": "onsemi LM358DR2G dual op-amp, 3-32 V single supply, SOIC-8: 1 OUT1, 2 IN1-, 3 IN1+, 4 GND, 5 IN2+, 6 IN2-, 7 OUT2, 8 VCC (LCSC C7950, JLCPCB basic); behavioural model 100 dB, 1 MHz GBW, output swings to VCC-1.5 V",
+  "footprint": {
+    "url": "../footprints/SOIC-8_3.9x4.9mm_P1.27mm.json",
+    "blake3": "fcb69280516f28239bb9d22940dcb04372d238dd1b024e36f5b2eae630bc6f4a"
+  },
+  "pins": [
+    {
+      "name": "OUT1",
+      "pad": "1"
+    },
+    {
+      "name": "IN1-",
+      "pad": "2"
+    },
+    {
+      "name": "IN1+",
+      "pad": "3"
+    },
+    {
+      "name": "GND",
+      "pad": "4"
+    },
+    {
+      "name": "IN2+",
+      "pad": "5"
+    },
+    {
+      "name": "IN2-",
+      "pad": "6"
+    },
+    {
+      "name": "OUT2",
+      "pad": "7"
+    },
+    {
+      "name": "VCC",
+      "pad": "8"
+    }
+  ],
+  "spice": {
+    "template": "X{ref}A {pin:IN1+} {pin:IN1-} {pin:VCC} {pin:GND} {pin:OUT1} LM358_BEHAV\nX{ref}B {pin:IN2+} {pin:IN2-} {pin:VCC} {pin:GND} {pin:OUT2} LM358_BEHAV",
+    "model": ".subckt LM358_BEHAV inp inn vcc gnd out\nRin inp inn 1e7\n* 100 dB open loop, dominant pole 10 Hz -> 1 MHz GBW\nBg o1 gnd V = max(min(1e5*(V(inp,gnd)-V(inn,gnd)), V(vcc,gnd)-1.5), 0.05)\nR1 o1 o2 1k\nC1 o2 gnd 16u\nBo o3 gnd V = max(min(V(o2,gnd), V(vcc,gnd)-1.5), 0.05)\nRout o3 out 50\nIq vcc gnd 0.5m\n.ends LM358_BEHAV"
+  },
+  "metadata": {
+    "lcsc": "C7950",
+    "manufacturer": "onsemi",
+    "mpn": "LM358DR2G",
+    "assembly": true,
+    "rotation_offset": 270,
+    "rotation_note": "SOIC-8: JLCPCB's zero orientation is body-horizontal with pin 1 bottom-left; this footprint has pin 1 top-left"
+  }
+}

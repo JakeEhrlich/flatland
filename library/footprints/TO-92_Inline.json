@@ -1,0 +1,78 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "TO-92_Inline",
+  "description": "TO-92 with leads in a row on 1.27 mm pitch; pad 1 on the left with the flat face down (toward -y)",
+  "pads": [
+    {
+      "name": "1",
+      "type": "through_hole",
+      "shape": "rect",
+      "at": [
+        -1.27,
+        0
+      ],
+      "size": [
+        1.05,
+        1.5
+      ],
+      "drill": 0.75
+    },
+    {
+      "name": "2",
+      "type": "through_hole",
+      "shape": "oval",
+      "at": [
+        0,
+        0
+      ],
+      "size": [
+        1.05,
+        1.5
+      ],
+      "drill": 0.75
+    },
+    {
+      "name": "3",
+      "type": "through_hole",
+      "shape": "oval",
+      "at": [
+        1.27,
+        0
+      ],
+      "size": [
+        1.05,
+        1.5
+      ],
+      "drill": 0.75
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          -2.3,
+          -1.1
+        ],
+        "to": [
+          2.3,
+          -1.1
+        ]
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "circle": {
+        "center": [
+          0,
+          0
+        ],
+        "diameter": 5.4
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    3.2
+  ]
+}

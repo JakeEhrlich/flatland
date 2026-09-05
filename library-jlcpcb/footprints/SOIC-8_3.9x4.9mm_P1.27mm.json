@@ -1,0 +1,159 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "SOIC-8_3.9x4.9mm_P1.27mm",
+  "description": "SOIC-8 narrow body (3.9 x 4.9 mm), 1.27 mm pitch, IPC nominal pads; pin 1 top-left, counter-clockwise",
+  "pads": [
+    {
+      "name": "1",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -2.7,
+        1.905
+      ],
+      "size": [
+        1.55,
+        0.6
+      ],
+      "corner_radius": 0.15
+    },
+    {
+      "name": "2",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -2.7,
+        0.635
+      ],
+      "size": [
+        1.55,
+        0.6
+      ],
+      "corner_radius": 0.15
+    },
+    {
+      "name": "3",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -2.7,
+        -0.635
+      ],
+      "size": [
+        1.55,
+        0.6
+      ],
+      "corner_radius": 0.15
+    },
+    {
+      "name": "4",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -2.7,
+        -1.905
+      ],
+      "size": [
+        1.55,
+        0.6
+      ],
+      "corner_radius": 0.15
+    },
+    {
+      "name": "5",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        2.7,
+        -1.905
+      ],
+      "size": [
+        1.55,
+        0.6
+      ],
+      "corner_radius": 0.15
+    },
+    {
+      "name": "6",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        2.7,
+        -0.635
+      ],
+      "size": [
+        1.55,
+        0.6
+      ],
+      "corner_radius": 0.15
+    },
+    {
+      "name": "7",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        2.7,
+        0.635
+      ],
+      "size": [
+        1.55,
+        0.6
+      ],
+      "corner_radius": 0.15
+    },
+    {
+      "name": "8",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        2.7,
+        1.905
+      ],
+      "size": [
+        1.55,
+        0.6
+      ],
+      "corner_radius": 0.15
+    }
+  ],
+  "silkscreen": [
+    {
+      "circle": {
+        "center": [
+          -1.4,
+          2.0
+        ],
+        "diameter": 0.5,
+        "width": 0.15
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -3.7,
+            -2.7
+          ],
+          [
+            3.7,
+            -2.7
+          ],
+          [
+            3.7,
+            2.7
+          ],
+          [
+            -3.7,
+            2.7
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    3.4
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "pcb-component/1",
+  "name": "led-duris-e-2835-cri90",
+  "description": "OSRAM DURIS E 2835 GW JTLPS1.CM white LED, CRI 90 min / 92 typ, R9>=50, 150 mA nominal (250 mA max), Vf 2.70-3.30 V (2.94 typ), Rth 25 K/W. Stocked variant: 6500 K (LCSC C17297932); other CCTs of the same part use the same footprint",
+  "datasheet": {
+    "url": "https://look.ams-osram.com/m/236f14ade14e818/original/GW-JTLPS1-CM.pdf"
+  },
+  "footprint": {
+    "url": "../footprints/LED_2835_DURIS_E.json",
+    "blake3": "aec4aa208ea3b4e172784c3de26218514e8cecc3e24ccf4f66d7a474bce7215a"
+  },
+  "pins": [
+    {
+      "name": "K",
+      "pad": "K",
+      "description": "cathode (wide pad, package mark)"
+    },
+    {
+      "name": "A",
+      "pad": "A",
+      "description": "anode"
+    }
+  ],
+  "parameters": {
+    "cct": {
+      "default": "6500K",
+      "description": "colour temperature (informational; must match the LCSC part)"
+    },
+    "lcsc": {
+      "default": "C17297932",
+      "description": "LCSC part; C17297932 = GW JTLPS1.CM-JNKN-XX51 6500 K"
+    },
+    "vf_trim": {
+      "default": "0",
+      "description": "forward-voltage offset in volts for this LED (bin/part spread; series source V<ref>_trim also measures the LED current)"
+    }
+  },
+  "spice": {
+    "template": "D{ref} {pin:A} {ref}_m DURIS_E_CM\nV{ref}_trim {ref}_m {pin:K} DC {vf_trim}",
+    "model": "* fitted to the datasheet I-V curve of the typical (L2-group) part: 2.94 V @ 150 mA, ~3.05 V @ 200 mA; tempco -1.7 mV/K (SPICE gives dVf/dT = (Vf_junction - EG - XTI*Vt)/T, so EG is a fitting value here, not the physical bandgap).\n* Datasheet forward-voltage groups at 150 mA: K2 2.70-2.80, L1 2.80-2.90, L2 2.90-3.00, M1 3.00-3.10, M2 3.10-3.20, N1 3.20-3.30 V.\n* The reel's group is on its label (e.g. `HN-35-K2`); vf_trim shifts this instance by that much (+0.36 = worst-case N1).\n.model DURIS_E_CM D(IS=1e-20 N=2.5 RS=0.9 EG=3.26 XTI=2 CJO=60p TT=5n BV=8)"
+  },
+  "metadata": {
+    "lcsc": "C17297932",
+    "manufacturer": "ams OSRAM",
+    "mpn": "GW JTLPS1.CM-JNKN-XX51-1-150-R33",
+    "assembly": true,
+    "rotation_offset": 0,
+    "rotation_note": "polarity: cathode is the wide pad on the package-mark side; verify in JLCPCB's placement preview and set rotation_offset if their reel orientation differs"
+  }
+}

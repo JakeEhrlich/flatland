@@ -1,0 +1,72 @@
+{
+  "schema": "pcb-component-index/1",
+  "name": "basic",
+  "description": "Starter parts: passives, LEDs, diodes, a transistor, a regulator, headers and virtual sources",
+  "components": {
+    "battery-9v": {
+      "url": "components/battery-9v.json",
+      "blake3": "aa80d6b229a1dd84234e82763c3c27a3a180141c17c6582228b73f1a9fc18081",
+      "description": "9 V battery connector (2-pin header footprint) modelled as a 9 V source with internal resistance"
+    },
+    "capacitor-0603": {
+      "url": "components/capacitor-0603.json",
+      "blake3": "1089e96ec1798763f94f95fa5892e9e8dbeaa07ae3377729b0893c9f073da804",
+      "description": "Generic MLCC capacitor, 0603"
+    },
+    "capacitor-electrolytic": {
+      "url": "components/capacitor-electrolytic.json",
+      "blake3": "7503c79a7ba58324588490a6f82e56eeaead09c5b88b42cc279eaefa8be84bac",
+      "description": "Radial electrolytic capacitor, 5 mm diameter, 2 mm pitch (pin + is the square pad)"
+    },
+    "diode-1n4007": {
+      "url": "components/diode-1n4007.json",
+      "blake3": "95c807eab4406f97dbec3b184d75a031855d9c66b3a383c08f245dac6a598b2f",
+      "description": "1N4007 1 A / 1000 V rectifier diode, DO-41"
+    },
+    "header-1x02": {
+      "url": "components/header-1x02.json",
+      "blake3": "84bcf19661221b254d3a9681fe2f1c9d48ae0d95051aa778f416f80668b7f715",
+      "description": "1x2 pin header, 2.54 mm (no SPICE model)"
+    },
+    "header-1x04": {
+      "url": "components/header-1x04.json",
+      "blake3": "7640075067764b5c80662be5cc203973e06853ed57f12585eb70601731cae65a",
+      "description": "1x4 pin header, 2.54 mm (no SPICE model)"
+    },
+    "isource": {
+      "url": "components/isource.json",
+      "blake3": "cadabafcfb90202fe4df1bab6763baddbe95583f76f38bb2ccb16b761a07608f",
+      "description": "Virtual current source for simulation only (no footprint); current flows from + to - through the source"
+    },
+    "led-5mm": {
+      "url": "components/led-5mm.json",
+      "blake3": "2f71e24cd63091876f1b4b08e1ffe038ba428f3c8dd8ee6bb74e8436e89fb559",
+      "description": "5 mm through-hole LED (red, ~2 V forward)"
+    },
+    "npn-2n2222": {
+      "url": "components/npn-2n2222.json",
+      "blake3": "c2876527ae5a697ca49473530cf7b6b5fe55e33153eac88635e8303b08651ccf",
+      "description": "2N2222A NPN transistor, TO-92 (E B C)"
+    },
+    "regulator-lm7805": {
+      "url": "components/regulator-lm7805.json",
+      "blake3": "23c8361ae444b269510a800d28e6a14239365867ca78638deb5d314a725b0559",
+      "description": "LM7805 5 V / 1 A linear regulator, TO-220 (IN GND OUT); behavioural SPICE model"
+    },
+    "resistor-axial": {
+      "url": "components/resistor-axial.json",
+      "blake3": "06aa81d851d2d2af53607469a74342b2d9a33412e6330fef290bb2cebec1043b",
+      "description": "Generic 1/4 W axial through-hole resistor, 7.62 mm pitch"
+    },
+    "vsource": {
+      "url": "components/vsource.json",
+      "blake3": "00330edaf7c471c089c6695516e8b33dc2cf37890a947bc0f2d1cbb26c1fe886",
+      "description": "Virtual voltage source for simulation only (no footprint). `value` takes any SPICE source spec: `DC 9`, `PULSE(0 5 0 1n 1n 1m 2m)`, `SIN(0 1 1k)`, `DC 0 AC 1`"
+    },
+    "resistor-0603": {
+      "url": "components/resistor-0603.json",
+      "blake3": "1b81009cfd93d395abe168e28b6330acb7cffbd8636df328daa8d9b31a74e085",
+      "description": "Generic chip resistor, 0603"
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "SOT-23-3",
+  "description": "SOT-23 three-lead: pads 1 and 2 toward -y (left, right), pad 3 toward +y",
+  "pads": [
+    {
+      "name": "1",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -0.95,
+        -1.0
+      ],
+      "size": [
+        0.7,
+        1.1
+      ],
+      "corner_radius": 0.15
+    },
+    {
+      "name": "2",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        0.95,
+        -1.0
+      ],
+      "size": [
+        0.7,
+        1.1
+      ],
+      "corner_radius": 0.15
+    },
+    {
+      "name": "3",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        0,
+        1.0
+      ],
+      "size": [
+        0.7,
+        1.1
+      ],
+      "corner_radius": 0.15
+    }
+  ],
+  "silkscreen": [],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -1.9,
+            -1.9
+          ],
+          [
+            1.9,
+            -1.9
+          ],
+          [
+            1.9,
+            1.9
+          ],
+          [
+            -1.9,
+            1.9
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    2.4
+  ]
+}

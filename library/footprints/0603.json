@@ -1,0 +1,64 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "0603",
+  "description": "Chip resistor/capacitor 0603 (1608 metric), hand-solder friendly pads",
+  "pads": [
+    {
+      "name": "1",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -0.875,
+        0
+      ],
+      "size": [
+        1.05,
+        0.95
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "2",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        0.875,
+        0
+      ],
+      "size": [
+        1.05,
+        0.95
+      ],
+      "corner_radius": 0.2
+    }
+  ],
+  "silkscreen": [],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -1.65,
+            -0.75
+          ],
+          [
+            1.65,
+            -0.75
+          ],
+          [
+            1.65,
+            0.75
+          ],
+          [
+            -1.65,
+            0.75
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    1.5
+  ]
+}

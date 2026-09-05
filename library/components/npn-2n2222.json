@@ -1,0 +1,33 @@
+{
+  "schema": "pcb-component/1",
+  "name": "npn-2n2222",
+  "description": "2N2222A NPN transistor, TO-92 (E B C)",
+  "datasheet": {
+    "url": "https://www.onsemi.com/pdf/datasheet/p2n2222a-d.pdf"
+  },
+  "footprint": {
+    "url": "../footprints/TO-92_Inline.json",
+    "blake3": "9082301ea34c1c1d991cebe35da14174e207d4a2ea332c577711ff6be020fe1d"
+  },
+  "pins": [
+    {
+      "name": "E",
+      "pad": "1",
+      "description": "emitter"
+    },
+    {
+      "name": "B",
+      "pad": "2",
+      "description": "base"
+    },
+    {
+      "name": "C",
+      "pad": "3",
+      "description": "collector"
+    }
+  ],
+  "spice": {
+    "template": "Q{ref} {pin:C} {pin:B} {pin:E} Q2N2222",
+    "model": ".model Q2N2222 NPN(IS=1e-14 VAF=100 BF=200 IKF=0.3 XTB=1.5 BR=3 CJC=8e-12 CJE=25e-12 TR=100e-9 TF=400e-12 ITF=1 VTF=2 XTF=3 RB=10 RC=0.3 RE=0.2 VJC=0.75 MJC=0.33 VJE=0.75 MJE=0.33 XTI=3 EG=1.11)"
+  }
+}

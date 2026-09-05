@@ -1,0 +1,38 @@
+[package]
+name = "flatland"
+version = "0.1.0"
+edition = "2021"
+description = "Agent-oriented command line PCB design tools"
+default-run = "pcb"
+
+[[bin]]
+name = "pcb"
+path = "src/main.rs"
+
+[lib]
+name = "flatland"
+path = "src/lib.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive", "wrap_help"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+indexmap = { version = "2", features = ["serde"] }
+thiserror = "2"
+miette = { version = "7", features = ["fancy"] }
+clipper2 = "0.6"
+resvg = "0.48"
+usvg = "0.48"
+layout-rs = "0.1"
+blake3 = "1"
+strsim = "0.11"
+libloading = "0.8"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+libc = "0.2"
+time = { version = "0.3", features = ["formatting", "local-offset"] }
+
+[profile.release]
+debug = 1
+
+[dev-dependencies]
+serde_json = "1"

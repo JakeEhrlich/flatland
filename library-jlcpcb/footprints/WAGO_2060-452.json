@@ -1,0 +1,119 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "WAGO_2060-452",
+  "description": "WAGO 2060-452/998-404 SMD terminal block, 2 poles on 4 mm pitch; wires enter from -x; each pole has two solder pads (A: 6.0x2.0, B: 3.5x2.0) per the WAGO drawing",
+  "pads": [
+    {
+      "name": "1A",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -4.0,
+        2.0
+      ],
+      "size": [
+        6.0,
+        2.0
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "1B",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        5.25,
+        2.0
+      ],
+      "size": [
+        3.5,
+        2.0
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "2A",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -4.0,
+        -2.0
+      ],
+      "size": [
+        6.0,
+        2.0
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "2B",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        5.25,
+        -2.0
+      ],
+      "size": [
+        3.5,
+        2.0
+      ],
+      "corner_radius": 0.2
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          -8.6,
+          2.0
+        ],
+        "to": [
+          -7.4,
+          2.0
+        ],
+        "width": 0.2
+      }
+    },
+    {
+      "line": {
+        "from": [
+          -8.6,
+          -2.0
+        ],
+        "to": [
+          -7.4,
+          -2.0
+        ],
+        "width": 0.2
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -7.5,
+            -4.3
+          ],
+          [
+            7.3,
+            -4.3
+          ],
+          [
+            7.3,
+            4.3
+          ],
+          [
+            -7.5,
+            4.3
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    4.9
+  ]
+}

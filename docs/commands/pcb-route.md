@@ -1,0 +1,138 @@
+# pcb-route(1)
+
+## NAME
+
+pcb route — autoroute the board with freerouting.
+
+## SYNOPSIS
+
+```
+pcb route [--passes N] [--timeout SECONDS] [--keep]
+          [--freerouting PATH] [--java PATH]
+pcb route --dsn-only
+pcb route --import FILE.ses
+```
+
+## DESCRIPTION
+
+`pcb route` performs, in order:
+
+1. Deletes previously autorouted traces and vias (`routed: true`), unless
+   `--keep`. Hand-drawn copper is kept.
+2. Writes a Specctra design file `build/<name>.dsn` describing layers,
+   outline, keepouts (non-plated holes), planes (pours with a net), every
+   placed footprint with its pads, nets and net classes with widths /
+   clearances / via, and hand-drawn traces and vias as *protected*
+   wiring. Stops here with `--dsn-only`.
+3. If every net is already one island, stops ("nothing to route").
+4. Runs freerouting in batch mode:
+   `freerouting -de build/<name>.dsn -do build/<name>.ses -mp N -dct 0 -da -dl`
+   with `JAVA_TOOL_OPTIONS=-Djava.awt.headless=true`, output captured to
+   `build/freerouting.log`. No window should appear; it exits by itself.
+5. Parses the session file `build/<name>.ses`: wires become traces
+   (`routed: true`, with the net and width freerouting used) and vias
+   become vias, converted from the session's `resolution`/`unit`.
+6. Rebuilds the board, saves, and reports imported counts and which nets
+   remain unrouted.
+
+`--import FILE.ses` skips steps 2–4 and imports a session you produced
+yourself (for example after routing interactively in freerouting from the
+`--dsn-only` file). Existing routed traces are kept in this mode.
+
+## OPTIONS
+
+`--passes N`
+: Maximum optimisation passes (`-mp`), default 20 or `routing.max_passes`
+  from `pcb.json`. Small boards finish in seconds; more passes mostly
+  shorten traces.
+
+`--timeout SECONDS`
+: Kill freerouting after this long (default 600) and fail with a hint.
+
+`--keep`
+: Do not delete previously autorouted copper first (freerouting then sees
+  it as protected wiring and only routes what is missing).
+
+`--keep-redundant`
+: After import every router-drawn segment is removed in turn and kept only
+  if its net would fall apart without it. That strips the links freerouting
+  draws between the pads of a pour's net on a board with no planes (one
+  copper layer), the pieces of protected hand wiring it echoes back, and
+  links between the solder tabs of one pin. This flag keeps them all.
+  Hand-drawn traces are never touched.
+
+`--freerouting PATH`
+: A `.jar` (run with Java) or the app's launcher executable. Precedence:
+  this flag, `routing.freerouting` in `pcb.json`, `$FREEROUTING`, then
+  `/Applications/freerouting.app/Contents/MacOS/freerouting`,
+  `~/freerouting/freerouting.jar`, `~/freerouting.jar`,
+  `/usr/local/share/freerouting/freerouting.jar`,
+  `/opt/freerouting/freerouting.jar`.
+
+`--java PATH`
+: Java executable for a jar. Precedence: flag, `routing.java`,
+  `$JAVA_HOME/bin/java`, Homebrew `openjdk` locations, `java` on `PATH`.
+  Recent freerouting jars need a recent JDK (2.2.x needs Java 25); the
+  `.app` bundle carries its own runtime, which is why it is preferred.
+
+## WHAT THE ROUTER SEES
+
+The DSN asks for 45° routing (`snap_angle fortyfive_degree`), so router
+wiring runs horizontally, vertically or diagonally; hand-drawn traces can
+match with `pcb trace add --chamfer`.
+
+* Layers: all `copper_layers`, in order. A single-layer board is routed on
+  its one layer (a via padstack is still declared because freerouting
+  requires one, but it cannot be used).
+* Rules: `trace_width` and `clearance` globally; per net class width,
+  clearance and via; a `default` class for unclassed nets.
+* Pads: exact polygons (SMD pads on the top layer, mirrored by the router
+  for bottom-side parts; through-hole pads on all layers). Plated holes
+  with a net are exported as one-pin parts named `HOLE<n>`.
+* Pours with a net are `plane`s on multi-layer boards: the router keeps
+  other nets clear of them and treats them as connecting their own net. On
+  a single-layer board pours are *not* exported, so the router draws that
+  net as traces (otherwise its other traces would carve the fill into
+  islands); the pour then merges with those traces.
+* A pin with several solder tabs is one router pin whose padstack holds
+  every tab.
+* Keepouts: non-plated holes and unassigned plated holes, grown by
+  `clearance`.
+
+## OUTPUT AND STATE
+
+Traces/vias imported from the router carry `routed: true` and are shown
+like any other copper. Re-running `pcb route` regenerates them; `pcb trace
+clear --routed-only` removes them. Because pours are recomputed from the
+current copper, a pour adjusts itself around routed traces automatically.
+
+After routing, run `pcb check` (clearance/short detection is independent of
+freerouting's own rules) and `pcb visualize pcb`.
+
+## TROUBLESHOOTING
+
+* *freerouting was not found* — install it and pass `--freerouting`, or
+  set `$FREEROUTING`, or add `"routing": {"freerouting": "…"}` to
+  `pcb.json`.
+* *needs a newer Java* — the jar's class version exceeds your JDK; use the
+  app bundle or `brew install openjdk` and `--java`.
+* *exited without writing …ses* — see the last log lines in the error and
+  `build/freerouting.log`; common causes are an unclosed outline (caught
+  earlier) or parts placed outside the outline.
+* *still unrouted* — the router gave up on some connections; add layers,
+  move parts, widen the board, relax clearances, or draw the remaining
+  traces with `pcb trace add`.
+* Do not launch freerouting by hand without `-de/-do`: it opens a GUI.
+
+## EXAMPLES
+
+```
+pcb route
+pcb route --passes 50 --timeout 1200
+pcb route --dsn-only            # then route interactively, save build/<name>.ses
+pcb route --import build/<name>.ses
+```
+
+## SEE ALSO
+
+pcb(1), pcb-copper(1), pcb-board(1), pcb-project(1).

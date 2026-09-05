@@ -1,0 +1,91 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "TO-220-3_Vertical",
+  "description": "TO-220 three-lead, vertical, 2.54 mm pitch; pad 1 square, tab toward +y",
+  "pads": [
+    {
+      "name": "1",
+      "type": "through_hole",
+      "shape": "rect",
+      "at": [
+        -2.54,
+        0
+      ],
+      "size": [
+        1.8,
+        2.4
+      ],
+      "drill": 1.0
+    },
+    {
+      "name": "2",
+      "type": "through_hole",
+      "shape": "oval",
+      "at": [
+        0,
+        0
+      ],
+      "size": [
+        1.8,
+        2.4
+      ],
+      "drill": 1.0
+    },
+    {
+      "name": "3",
+      "type": "through_hole",
+      "shape": "oval",
+      "at": [
+        2.54,
+        0
+      ],
+      "size": [
+        1.8,
+        2.4
+      ],
+      "drill": 1.0
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          -5.2,
+          1.6
+        ],
+        "to": [
+          5.2,
+          1.6
+        ]
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -5.5,
+            -2.2
+          ],
+          [
+            5.5,
+            -2.2
+          ],
+          [
+            5.5,
+            3.2
+          ],
+          [
+            -5.5,
+            3.2
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    4.0
+  ]
+}

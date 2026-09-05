@@ -1,0 +1,106 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "SolderWirePads_2",
+  "description": "Two 2.5 x 2.5 mm exposed pads for soldering supply wires, 3.5 mm apart; pad 1 = +",
+  "pads": [
+    {
+      "name": "1",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -1.75,
+        0
+      ],
+      "size": [
+        2.5,
+        2.5
+      ],
+      "corner_radius": 0.3,
+      "thermal_relief": false
+    },
+    {
+      "name": "2",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        1.75,
+        0
+      ],
+      "size": [
+        2.5,
+        2.5
+      ],
+      "corner_radius": 0.3,
+      "thermal_relief": false
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          -2.3,
+          1.8
+        ],
+        "to": [
+          -1.2,
+          1.8
+        ],
+        "width": 0.15
+      }
+    },
+    {
+      "line": {
+        "from": [
+          -1.75,
+          1.25
+        ],
+        "to": [
+          -1.75,
+          2.35
+        ],
+        "width": 0.15
+      }
+    },
+    {
+      "line": {
+        "from": [
+          1.2,
+          1.8
+        ],
+        "to": [
+          2.3,
+          1.8
+        ],
+        "width": 0.15
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -3.2,
+            -1.5
+          ],
+          [
+            3.2,
+            -1.5
+          ],
+          [
+            3.2,
+            2.6
+          ],
+          [
+            -3.2,
+            2.6
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    -2.0
+  ]
+}
