@@ -51,7 +51,7 @@ for n in VIN STR_A STR_B SW; do $PCB net class $n bus >/dev/null; done
 $PCB connect J2.1 RIN.1 VP.+ --net PWM
 $PCB connect RIN.2 RPD.1 Q1.G --net PWM_G
 
-# ---- Board: LEDs in 4 rows of 8 (7 mm pitch, y = 10..40); connectors on the
+# ---- Board: LEDs in 4 rows of 8 (7 mm pitch, y = 12/21/30/39); connectors on the
 # bottom corners; regulators beside their string ends at the top corners; the
 # PWM switch top-centre. One copper layer, so the bus is hand-routed planar:
 #   VIN: J1 -> up the left margin to row 3, and along the bottom edge / right
