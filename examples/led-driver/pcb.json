@@ -15,9 +15,10 @@
   },
   "design_rules": {
     "trace_width": 0.25,
-    "clearance": 0.2,
+    "clearance": 0.15,
     "via_drill": 0.4,
     "via_diameter": 0.8,
+    "pour_clearance": 0.3,
     "mask_expansion": 0.05,
     "paste_shrink": 0,
     "silk_width": 0.15,
@@ -433,52 +434,72 @@
       "width": 0.25,
       "points": [
         [
+          12.0769,
+          24.0798
+        ],
+        [
+          9.2065,
+          24.0798
+        ],
+        [
+          5.1267,
+          20
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "B.Cu",
+      "net": "VIN",
+      "width": 0.25,
+      "points": [
+        [
+          17.19,
+          25
+        ],
+        [
+          16.2698,
+          24.0798
+        ],
+        [
+          12.0769,
+          24.0798
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "B.Cu",
+      "net": "VIN",
+      "width": 0.25,
+      "points": [
+        [
+          11,
+          21
+        ],
+        [
+          12.0769,
+          22.0769
+        ],
+        [
+          12.0769,
+          24.0798
+        ]
+      ],
+      "routed": true
+    },
+    {
+      "layer": "B.Cu",
+      "net": "VIN",
+      "width": 0.25,
+      "points": [
+        [
           4,
           20
         ],
         [
-          5.1767,
+          5.1267,
           20
-        ]
-      ],
-      "routed": true
-    },
-    {
-      "layer": "B.Cu",
-      "net": "VIN",
-      "width": 0.25,
-      "points": [
-        [
-          11,
-          21
-        ],
-        [
-          6.1767,
-          21
-        ],
-        [
-          5.1767,
-          20
-        ]
-      ],
-      "routed": true
-    },
-    {
-      "layer": "B.Cu",
-      "net": "VIN",
-      "width": 0.25,
-      "points": [
-        [
-          11,
-          21
-        ],
-        [
-          13.19,
-          21
-        ],
-        [
-          17.19,
-          25
         ]
       ],
       "routed": true
@@ -489,16 +510,24 @@
       "width": 0.25,
       "points": [
         [
-          31,
-          18.73
-        ],
-        [
-          24.81,
-          24.92
-        ],
-        [
           24.81,
           25
+        ],
+        [
+          29.4943,
+          25
+        ],
+        [
+          32.1767,
+          22.3176
+        ],
+        [
+          32.1767,
+          19.9067
+        ],
+        [
+          31,
+          18.73
         ]
       ],
       "routed": true
@@ -514,35 +543,15 @@
         ],
         [
           31,
-          20.0433
-        ]
-      ],
-      "routed": true
-    },
-    {
-      "layer": "B.Cu",
-      "net": "LED_K",
-      "width": 0.25,
-      "points": [
-        [
-          31,
-          20.0433
+          20.2597
         ],
         [
-          31.46,
-          20.0433
-        ],
-        [
-          32.2729,
-          19.2304
-        ],
-        [
-          32.2729,
-          18.2209
+          30.8468,
+          20.2597
         ],
         [
           25.73,
-          11.678
+          15.1429
         ],
         [
           25.73,
@@ -582,10 +591,10 @@
         ],
         [
           27,
-          8.829
+          8.8364
         ],
         [
-          25.171,
+          25.1636,
           7
         ],
         [
@@ -634,5 +643,29 @@
         "V1.value": "DC 5"
       }
     }
+  },
+  "drc": {
+    "rulesets": [
+      {
+        "url": "drc/jlcpcb-fr4-2layer.json",
+        "blake3": "c665f3792f715dbc347bd19e0f12a615abb1cd3d6266bd7b32ff7f2aedd11096"
+      }
+    ],
+    "waivers": [
+      {
+        "rule": "pth-annular-ring-recommended",
+        "features": [
+          "Q1"
+        ],
+        "reason": "1.27 mm pitch TO-92 cannot carry 0.25 mm rings; 0.2 mm meets the 0.18 mm absolute minimum"
+      },
+      {
+        "rule": "mask-dam",
+        "features": [
+          "Q1"
+        ],
+        "reason": "the fab will merge the three TO-92 mask openings into one; fine for hand soldering"
+      }
+    ]
   }
 }

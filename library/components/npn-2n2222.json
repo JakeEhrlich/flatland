@@ -7,7 +7,7 @@
   },
   "footprint": {
     "url": "../footprints/TO-92_Inline.json",
-    "blake3": "9082301ea34c1c1d991cebe35da14174e207d4a2ea332c577711ff6be020fe1d"
+    "blake3": "996662ad067d40d3ff989d81e9e182a03bdcf9334a4f372949ad01005cb1c48c"
   },
   "pins": [
     {

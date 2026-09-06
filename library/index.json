@@ -45,7 +45,7 @@
     },
     "npn-2n2222": {
       "url": "components/npn-2n2222.json",
-      "blake3": "c2876527ae5a697ca49473530cf7b6b5fe55e33153eac88635e8303b08651ccf",
+      "blake3": "27f0924151692991b198a73cb8323523965cd579be51bd98f17c6b26febfef28",
       "description": "2N2222A NPN transistor, TO-92 (E B C)"
     },
     "regulator-lm7805": {

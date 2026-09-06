@@ -534,7 +534,9 @@ impl Board {
                 let holes: Vec<Ring> = copper.iter().filter(|r| geom::signed_area(r) <= 0.0).cloned().collect();
                 let mut kept: Rings = Vec::new();
                 for o in outers {
-                    if anchors.is_empty() || geom::overlaps(&[o.clone()], &anchors) {
+                    // No copper of the net on this layer at all (a bottom fill with
+                    // no via or pad to reach it) leaves nothing to keep.
+                    if !anchors.is_empty() && geom::overlaps(&[o.clone()], &anchors) {
                         // Keep the island and the holes that lie inside it.
                         for h in &holes {
                             if h.first().map_or(false, |p| geom::contains(&o, *p)) {

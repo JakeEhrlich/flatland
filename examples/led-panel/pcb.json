@@ -554,7 +554,7 @@
       "placement": {
         "at": [
           18.5,
-          8.3
+          8
         ],
         "rotation": 270.0,
         "side": "top",
@@ -2198,5 +2198,19 @@
         "D32.vf_trim": "0.36"
       }
     }
+  },
+  "drc": {
+    "rulesets": [
+      {
+        "url": "drc/jlcpcb-aluminium-1layer.json",
+        "blake3": "e72352e528ca4ac9af3e8d86df8e707d0ecd13558c00e135c1eb36b6676eef8c"
+      }
+    ],
+    "waivers": [
+      {
+        "rule": "design-rules-silk",
+        "reason": "0.8 mm reference designators are a deliberate choice on this small board; JLCPCB's 1 mm figure is legibility guidance"
+      }
+    ]
   }
 }

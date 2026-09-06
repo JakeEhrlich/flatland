@@ -31,7 +31,8 @@ pcb hole add 3,3 --drill 2.2
 pcb place R1 17,7 --rotation 90
 pcb pour new gnd --layer B.Cu --net GND --follow-outline
 pcb status                               # parts, nets, what is unrouted
-pcb check                                # outline, placement, clearance, connectivity
+pcb drc add jlcpcb-fr4-2layer            # the fab's limits as a rule set
+pcb check                                # basic rules + fab profile + project rules; waivable
 pcb visualize pcb                        # build/pcb.png (+ .svg); --from-bottom, --layers, --grid
 pcb visualize netlist                    # build/netlist.png
 pcb route                                # DSN -> freerouting (headless) -> SES -> traces

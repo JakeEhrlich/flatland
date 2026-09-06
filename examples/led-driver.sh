@@ -10,6 +10,12 @@ mkdir -p "$DIR"
 cd "$DIR"
 
 $PCB init led-driver --layers B.Cu --index "$ROOT/library/index.json"
+$PCB drc add jlcpcb-fr4-2layer   # single-sided FR4 is made on the 1-2 layer process; `pcb check` runs its limits
+# TO-92 leads on a 1.27 mm pitch leave 0.17 mm between pads, so the design clearance goes below
+# the 0.2 mm default (JLCPCB's limit is 0.10). Pours keep 0.3 mm from the mounting holes (0.28 min).
+$PCB rules set clearance=0.15 pour_clearance=0.3
+$PCB drc waive pth-annular-ring-recommended Q1 --reason "1.27 mm pitch TO-92 cannot carry 0.25 mm rings; 0.2 mm meets the 0.18 mm absolute minimum"
+$PCB drc waive mask-dam Q1 --reason "the fab will merge the three TO-92 mask openings into one; fine for hand soldering"
 
 # Parts
 $PCB add J1 battery-9v

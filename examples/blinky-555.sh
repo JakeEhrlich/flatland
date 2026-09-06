@@ -13,6 +13,8 @@ cd "$DIR"
 # Two-layer board; JLCPCB parts plus the basic library for simulation sources.
 $PCB init blinky-555 --layers F.Cu,B.Cu --index "$ROOT/library-jlcpcb/index.json" --index "$ROOT/library/index.json"
 $PCB rules set trace_width=0.25 clearance=0.15 via_drill=0.3 via_diameter=0.6 silk_text_size=0.8
+$PCB drc add jlcpcb-fr4-2layer   # the fab's limits; `pcb check` runs them
+$PCB drc waive design-rules-silk --reason "0.8 mm reference designators are a deliberate choice on this small board; JLCPCB's 1 mm figure is legibility guidance"
 
 # Parts (LCSC numbers are JLCPCB basic parts; passives carry theirs per value)
 $PCB add U1 ne555dr
@@ -48,6 +50,8 @@ $PCB place R3 4.4,8.2   --rotation 90
 $PCB place D1 4.4,3.6
 $PCB pour new gnd_top --layer F.Cu --net GND --follow-outline
 $PCB pour new gnd_bottom --layer B.Cu --net GND --follow-outline
+# One stitching via so the bottom fill is actually ground (without it the fill is floating copper).
+$PCB via add --net GND 2,2
 
 # Simulations
 # (no `op` study: an astable has no DC operating point, ngspice would not converge)

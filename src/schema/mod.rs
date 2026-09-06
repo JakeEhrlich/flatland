@@ -8,11 +8,13 @@
 //!   an optional SPICE model; and a **footprint** file: pads and graphics.
 
 pub mod component;
+pub mod drc;
 pub mod footprint;
 pub mod index;
 pub mod project;
 
 pub use component::*;
+pub use drc::*;
 pub use footprint::*;
 pub use index::*;
 pub use project::*;

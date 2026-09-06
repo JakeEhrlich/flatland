@@ -58,6 +58,8 @@ fn freerouting_available() -> bool {
 fn build_led_driver(p: &Proj) {
     let lib = library();
     p.ok(&["init", "led", "--layers", "B.Cu", "--index", lib.to_str().unwrap()]);
+    // TO-92 leads on a 1.27 mm pitch leave 0.17 mm between pads.
+    p.ok(&["rules", "set", "clearance=0.15"]);
     p.ok(&["add", "J1", "battery-9v"]);
     p.ok(&["add", "R1", "resistor-axial", "--param", "value=10k"]);
     p.ok(&["add", "R2", "resistor-axial", "--param", "value=330"]);
@@ -360,4 +362,75 @@ fn jlcpcb_assembly_outputs() {
         assert!(max > 3.2 && max < 3.5, "threshold should reach 2/3 VCC, max {max}");
         assert!(min_late < 1.8, "threshold should fall back to 1/3 VCC, min {min_late}");
     }
+}
+
+#[test]
+fn design_rules() {
+    let p = Proj::new("drc");
+    let basic = library();
+    p.ok(&["init", "drc", "--index", basic.to_str().unwrap()]);
+    p.ok(&["outline", "rect", "20", "16"]);
+    p.ok(&["add", "R1", "resistor-0603", "--at", "5,5"]);
+    p.ok(&["add", "R2", "resistor-0603", "--at", "10,5"]);
+    p.ok(&["connect", "R1.1", "R2.1", "--net", "A"]);
+    p.ok(&["connect", "R1.2", "R2.2", "--net", "GND"]);
+    // Basic rules: unrouted nets are warnings, so gerbers still write.
+    let out = p.run(&["check"]).1;
+    assert!(out.contains("nets-routed") && out.contains("0 error(s)"), "{out}");
+    // A GND trace hugging the A trace closer than the clearance is an error and blocks gerbers.
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.3", "4.125,5", "4.125,6.5", "9.125,6.5", "9.125,5"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "GND", "--width", "0.3", "5.875,5", "5.875,6.2", "10.875,6.2", "10.875,5"]);
+    let out = p.fails(&["check"]);
+    assert!(out.contains("error: copper-clearance"), "{out}");
+    let out = p.fails(&["gerbers"]);
+    assert!(out.contains("not writing gerbers"), "{out}");
+    p.ok(&["gerbers", "--force"]);
+    p.ok(&["trace", "clear"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.3", "4.125,5", "4.125,6.5", "9.125,6.5", "9.125,5"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "GND", "--width", "0.3", "5.875,5", "5.875,3.5", "10.875,3.5", "10.875,5"]);
+    let out = p.ok(&["check"]);
+    assert!(out.contains("0 error(s), 0 warning(s)"), "{out}");
+    // A fab profile: bundled, copied into the project, hash-pinned.
+    let out = p.ok(&["drc", "add", "jlcpcb-fr4-2layer"]);
+    assert!(out.contains("added rule set jlcpcb-fr4-2layer"), "{out}");
+    assert!(p.dir.join("drc/jlcpcb-fr4-2layer.json").exists());
+    let out = p.ok(&["check"]);
+    assert!(out.contains("from basic, jlcpcb-fr4-2layer"), "{out}");
+    // A 0.05 mm trace violates the process minimum and the meta-check on design rules.
+    p.ok(&["rules", "set", "trace_width=0.05"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.05", "4.125,4", "4.125,5"]);
+    let out = p.fails(&["check"]);
+    assert!(out.contains("error: trace-width") && out.contains("error: design-rules"), "{out}");
+    // Waive one, fix the other.
+    p.ok(&["drc", "waive", "trace-width", "A", "--reason", "test"]);
+    p.ok(&["rules", "set", "trace_width=0.25"]);
+    let out = p.ok(&["check"]);
+    assert!(out.contains("1 waived"), "{out}");
+    let out = p.ok(&["check", "--waived"]);
+    assert!(out.contains("waived: trace-width"), "{out}");
+    // Project rule, explain, list, JSON.
+    p.ok(&["drc", "rule", "wide-gnd", "--for", "trace", "--where", "{\"net\":\"GND\"}", "--check", "{\"min_width\": 0.5}", "--severity", "warning"]);
+    let out = p.ok(&["check"]);
+    assert!(out.contains("warning: wide-gnd"), "{out}");
+    let out = p.ok(&["drc", "explain", "wide-gnd"]);
+    assert!(out.contains("min_width"), "{out}");
+    let out = p.ok(&["drc", "list"]);
+    assert!(out.contains("waiver: trace-width"), "{out}");
+    let out = p.ok(&["check", "--json"]);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert!(v.as_array().unwrap().iter().any(|f| f["rule"] == "wide-gnd"), "{out}");
+    // Slivers: a pour squeezed between two traces leaves a thread narrower than the process
+    // minimum unless pour_min_width trims it; the check names it either way.
+    p.ok(&["drc", "unrule", "wide-gnd"]);
+    p.ok(&["drc", "unwaive", "trace-width"]);
+    p.ok(&["trace", "clear"]);
+    p.ok(&["pour", "new", "gnd", "--layer", "F.Cu", "--net", "GND", "--follow-outline"]);
+    p.ok(&["rules", "set", "pour_min_width=0.01", "pour_clearance=0.2"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.3", "4.125,5", "4.125,6.5", "9.125,6.5", "9.125,5"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.3", "3,7.25", "11,7.25"]);
+    let out = p.run(&["check"]).1;
+    assert!(out.contains("trace-width: pour gnd has a sliver"), "{out}");
+    p.ok(&["rules", "set", "pour_min_width=0.3"]);
+    let out = p.run(&["check"]).1;
+    assert!(!out.contains("sliver"), "{out}");
 }

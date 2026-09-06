@@ -2,6 +2,7 @@
 //! inspects it, and (for mutations) writes it back atomically.
 
 mod assembly;
+mod drc_cmd;
 mod edit;
 mod index_cmd;
 mod inspect;
@@ -80,6 +81,9 @@ pub enum Command {
     Status(inspect::StatusArgs),
     /// Check the design: connectivity, clearances, outline, unplaced parts.
     Check(inspect::CheckArgs),
+    /// Design-rule sets, project rules and waivers.
+    #[command(subcommand)]
+    Drc(drc_cmd::DrcCmd),
     /// List pad positions and nets of placed parts (for hand routing).
     Pads(inspect::PadsArgs),
     /// Render the netlist (schematic-style graph) or the board to PNG/SVG.
@@ -127,6 +131,7 @@ pub fn run() -> Result<()> {
         Command::Rules(c) => edit::run_rules(&ctx, c),
         Command::Status(a) => inspect::status(&ctx, a),
         Command::Check(a) => inspect::check(&ctx, a),
+        Command::Drc(c) => drc_cmd::run_drc(&ctx, c),
         Command::Pads(a) => inspect::pads(&ctx, a),
         Command::Visualize(c) => output::run_visualize(&ctx, c),
         Command::Route(a) => output::route(&ctx, a),

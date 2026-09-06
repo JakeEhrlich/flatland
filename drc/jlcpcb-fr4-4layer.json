@@ -1,0 +1,183 @@
+{
+  "schema": "pcb-drc/1",
+  "name": "jlcpcb-fr4-4layer",
+  "description": "JLCPCB 4+ layer FR4, 1 oz outer copper, standard process. Values from jlcpcb.com/capabilities/pcb-capabilities, read 2026-09-05; re-check before relying on them.",
+  "applies": {
+    "layers": [
+      4,
+      6,
+      8
+    ],
+    "material": "fr4"
+  },
+  "rules": [
+    {
+      "name": "design-rules",
+      "for": "board",
+      "check": {
+        "design_rules": {
+          "trace_width": 0.09,
+          "clearance": 0.09,
+          "via_drill": 0.15,
+          "via_diameter": 0.25,
+          "edge_clearance": 0.2
+        }
+      }
+    },
+    {
+      "name": "design-rules-silk",
+      "for": "board",
+      "severity": "warning",
+      "check": {
+        "design_rules": {
+          "silk_width": 0.15,
+          "silk_text_size": 1.0
+        }
+      },
+      "description": "Silkscreen stroke and text-height minimums are legibility guidance, not process limits."
+    },
+    {
+      "name": "trace-width",
+      "for": "copper",
+      "check": {
+        "min_width": 0.09
+      }
+    },
+    {
+      "name": "copper-spacing",
+      "for": "copper",
+      "check": {
+        "clearance": {
+          "to": "copper",
+          "relation": "different_net",
+          "min": 0.09
+        }
+      }
+    },
+    {
+      "name": "copper-gap",
+      "for": "copper",
+      "severity": "warning",
+      "check": {
+        "min_gap": 0.09
+      }
+    },
+    {
+      "name": "via-drill",
+      "for": "via",
+      "check": {
+        "min": {
+          "drill": 0.15
+        }
+      }
+    },
+    {
+      "name": "via-diameter",
+      "for": "via",
+      "check": {
+        "min": {
+          "diameter": 0.25
+        }
+      }
+    },
+    {
+      "name": "pth-annular-ring",
+      "for": "pad",
+      "where": {
+        "kind": "through_hole"
+      },
+      "check": {
+        "min": {
+          "annular_ring": 0.2
+        }
+      }
+    },
+    {
+      "name": "npth-size",
+      "for": "hole",
+      "where": {
+        "plated": false
+      },
+      "check": {
+        "min": {
+          "drill": 0.5
+        }
+      }
+    },
+    {
+      "name": "hole-to-hole",
+      "for": "hole",
+      "check": {
+        "clearance": {
+          "to": "hole",
+          "relation": "any",
+          "min": 0.45
+        }
+      }
+    },
+    {
+      "name": "hole-to-copper",
+      "for": "hole",
+      "check": {
+        "clearance": {
+          "to": "copper",
+          "relation": "different_net",
+          "min": 0.28
+        }
+      }
+    },
+    {
+      "name": "copper-to-edge",
+      "for": "copper",
+      "check": {
+        "clearance": {
+          "to": "outline",
+          "min": 0.2
+        }
+      }
+    },
+    {
+      "name": "mask-dam",
+      "for": "mask_opening",
+      "severity": "warning",
+      "check": {
+        "min_gap": 0.1
+      }
+    },
+    {
+      "name": "silk-width",
+      "for": "silk",
+      "check": {
+        "min_width": 0.15
+      }
+    },
+    {
+      "name": "silk-text-width",
+      "for": "silk_text",
+      "check": {
+        "min_width": 0.15
+      }
+    },
+    {
+      "name": "silk-text-height",
+      "for": "silk_text",
+      "severity": "info",
+      "check": {
+        "min": {
+          "height": 1.0
+        }
+      },
+      "description": "Text under 1 mm prints but may not be legible."
+    },
+    {
+      "name": "board-size",
+      "for": "board",
+      "check": {
+        "max": {
+          "width": 656,
+          "height": 586
+        }
+      }
+    }
+  ]
+}

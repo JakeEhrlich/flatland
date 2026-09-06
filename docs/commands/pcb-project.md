@@ -74,32 +74,14 @@ a net whose only other member is a virtual source counts as routed.
 
 ## pcb check
 
-Runs the design checks and prints every finding as `error:` or `warning:`
-lines followed by a count. Exit status is 1 if there is any error, or, with
-`--strict`, any warning.
-
-Errors:
-
-* no board outline;
-* a non-virtual component is not placed;
-* a pad centre or hole centre lies outside the outline;
-* on any copper layer, two copper features on different nets (or with no
-  net) are closer than `design_rules.clearance`; features that actually
-  overlap are reported as `overlap (short circuit)`. Features are pads,
-  traces, vias, plated hole rings and pours (a pour counts as one feature
-  including its clearance holes). Features that sit exactly at the
-  clearance distance — pour edges, for example — are accepted (2 µm
-  tolerance).
-
-Warnings:
-
-* a pin is not on any net;
-* a net has fewer than two pins;
-* a net is not fully routed (islands are listed, e.g.
-  `2 islands (R2.2 | D1.A)`).
-
-Not checked (yet): trace-to-outline distance beyond what pours already
-respect, annular ring sizes, silkscreen over pads, courtyard overlap.
+`pcb check [--strict] [--json] [--rule NAME] [--waived]` runs the design
+rules: the built-in basic set (outline, placement, copper inside the
+outline, clearance at the project's rule, routed nets, connected pins,
+dangling traces, floating fill, overlapping courtyards) plus any fab rule
+sets and project rules from `pcb drc`. See pcb-drc(1) for the grammar,
+the bundled JLCPCB profiles and waivers. Exit status is non-zero on
+errors, or on warnings with `--strict`; `pcb gerbers` refuses to write
+while there are errors.
 
 ## pcb pads
 

@@ -42,6 +42,8 @@ and the optional hash pins the referenced file's contents.
   "traces": [ { "layer": "F.Cu", "net": "GND", "width": 0.25, "points": [[1, 1], [5, 1]], "routed": false } ],
   "vias": [ { "at": [5, 1], "net": "GND", "drill": 0.4, "diameter": 0.8, "layers": [] } ],
   "simulations": { "...": "see simulation below" },
+  "drc": { "rulesets": [{ "url": "drc/jlcpcb-fr4-2layer.json", "blake3": "…" }],
+           "rules": [], "waivers": [{ "rule": "courtyards", "features": ["J1"], "reason": "…" }] },
   "routing": { "freerouting": "/Applications/freerouting.app/Contents/MacOS/freerouting", "java": null, "max_passes": 20 }
 }
 ```
@@ -173,3 +175,33 @@ an operating-point sweep over temperature). `temperature` sets `.temp`,
 `nominal_temperature` sets `tnom`. Results land in
 `build/sim/<name>/` (`netlist.cir`, `results.csv`, `plot.png`,
 `manifest.json` with the input hash used to detect stale results).
+
+## drc — a `pcb-drc/1` rule set
+
+```json
+{
+  "schema": "pcb-drc/1",
+  "name": "jlcpcb-fr4-2layer",
+  "description": "where the numbers come from and when they were read",
+  "applies": { "layers": [1, 2], "material": "fr4" },
+  "rules": [
+    { "name": "copper-spacing", "severity": "error", "for": "copper",
+      "check": { "clearance": { "to": "copper", "relation": "different_net", "min": 0.10 } } },
+    { "name": "trace-width", "for": "copper", "check": { "min_width": 0.10 } },
+    { "name": "npth-size", "for": "hole", "where": { "plated": false }, "check": { "min": { "drill": 0.5 } } },
+    { "name": "mask-dam", "for": "mask_opening", "severity": "warning", "check": { "min_gap": 0.10 } },
+    { "name": "no-vias", "for": "via", "check": { "exists": false } }
+  ]
+}
+```
+
+* `severity` is `error` (default), `warning` or `info`. `for` is one of
+  `trace via pad hole pour pour_piece copper mask_opening silk silk_text
+  courtyard outline board net pin part`. `where` filters on `layer`, `net`,
+  `class`, `plated`, `kind`, `refdes`, `footprint`, `component`.
+* `check` is exactly one of `clearance`, `min_width`, `min_gap`, `min`,
+  `max`, `inside`, `connected`, `exists`, `placed`, `design_rules`. Distances
+  are mm or `"design"` (the project's own rule). See `pcb docs drc`.
+* The project's `drc` section holds `rulesets` (file references with
+  hashes), `rules` (same shape as above) and `waivers`
+  (`{rule, features, reason}`).

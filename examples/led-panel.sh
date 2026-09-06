@@ -20,6 +20,8 @@ $PCB init led-panel --layers F.Cu --index "$ROOT/library-jlcpcb/index.json" --in
 $PCB rules set trace_width=0.4 clearance=0.3 pour_clearance=0.35 edge_clearance=0.5 silk_text_size=0.8 thermal_spoke_width=0.4
 # LED-to-LED links as wide as the LED pads; the supply/return buses 1.2 mm. Electrically 0.4 mm
 # would do at 180 mA — the width is for looks and a little extra copper for heat spreading.
+$PCB drc add jlcpcb-aluminium-1layer   # metal-core process limits; `pcb check` runs them
+$PCB drc waive design-rules-silk --reason "0.8 mm reference designators are a deliberate choice on this small board; JLCPCB's 1 mm figure is legibility guidance"
 $PCB rules class led --width 2.0 --clearance 0.3
 $PCB rules class bus --width 1.2 --clearance 0.3
 $PCB stackup set F.Cu --board-thickness 1.6
@@ -64,7 +66,7 @@ k=0; for i in $(seq 17 24); do $PCB place D$i  $((6+7*k)),30 --rotation 180 >/de
 k=7; for i in $(seq 25 32); do $PCB place D$i  $((6+7*k)),39 --rotation 0   >/dev/null; k=$((k-1)); done   # B: right -> left, ends D32 (left)
 $PCB place J1 9.5,4.5          # 1.5 mm in from the edge: leaves the far-left lane to the GND return
 $PCB place J2 46,4.5 --rotation 180     # Pi, wires from the right edge; pole 1 (PWM) lower row
-$PCB place C1 18.5,8.3 --rotation 270   # pin 1 (VIN) north on the feed trace, pin 2 (GND) south
+$PCB place C1 18.5,8.0 --rotation 270   # pin 1 (VIN) north on the feed trace, pin 2 (GND) south
 $PCB place CC1 54,52 && $PCB place CC2 54,49 && $PCB place CC3 54,46          # IN (pin 1) toward the right margin
 $PCB place CC4 6,52 --rotation 180 && $PCB place CC5 6,49 --rotation 180 && $PCB place CC6 6,46 --rotation 180
 $PCB place Q1 30,51 --rotation 180      # leads up: S left, G right; drain tab toward the LEDs
@@ -137,7 +139,7 @@ $PCB label CC1 CC2 CC3 CC4 CC5 CC6 --at 0,1.5 --size 0.7   # in the 1.5 mm gap b
 $PCB label RIN --at 38,57.5 --absolute --size 0.7          # right of the resistors, clear of the gate trace
 $PCB label RPD --at 38.2,53.5 --absolute --size 0.7
 $PCB label Q1 --at 19.5,52 --absolute                      # free space left of the MOSFET
-$PCB label C1 --at 21.6,8.3 --absolute --size 0.7
+$PCB label C1 --at 21.6,8.0 --absolute --size 0.7
 $PCB label J1 --at 1.25,0 --size 0.7                       # between the solder tabs of each pole
 $PCB label J2 --at 1.25,0 --size 0.7
 

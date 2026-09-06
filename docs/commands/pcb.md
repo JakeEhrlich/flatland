@@ -36,6 +36,7 @@ The command set is organised in families, each documented on its own page:
 | [pcb-copper](pcb-copper.md) | `pour …`, `trace …`, `via …` |
 | [pcb-visualize](pcb-visualize.md) | `visualize pcb`, `visualize netlist` |
 | [pcb-route](pcb-route.md) | `route` — freerouting autorouter |
+| [pcb-drc](pcb-drc.md) | `check`, `drc …` — design rules, fab profiles, waivers |
 | [pcb-gerbers](pcb-gerbers.md) | `gerbers` — fabrication outputs |
 | [pcb-assembly](pcb-assembly.md) | `bom`, `pnp` — BOM and pick-and-place for SMT assembly |
 | [pcb-sim](pcb-sim.md) | `sim …` — ngspice simulation studies |
@@ -149,5 +150,5 @@ footprint files. `build/` — outputs. See SCHEMA.md.
 
 ## SEE ALSO
 
-pcb-project(1), pcb-index(1), pcb-netlist(1), pcb-board(1), pcb-place(1),
+pcb-project(1), pcb-index(1), pcb-netlist(1), pcb-board(1), pcb-place(1), pcb-drc(1),
 pcb-copper(1), pcb-visualize(1), pcb-route(1), pcb-gerbers(1), pcb-assembly(1), pcb-sim(1).

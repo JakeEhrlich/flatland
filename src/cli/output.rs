@@ -121,11 +121,29 @@ pub struct GerbersArgs {
     /// Skip the zip archive.
     #[arg(long)]
     pub no_zip: bool,
+    /// Write the files even if the design check reports errors.
+    #[arg(long)]
+    pub force: bool,
 }
 
 pub fn gerbers(ctx: &Ctx, a: GerbersArgs) -> Result<()> {
     let loaded = ctx.load()?;
     let board = ctx.board(&loaded)?;
+    // Fab output goes through the design check first.
+    let report = crate::drc::run(&board, &loaded.path)?;
+    let errors = report.count(crate::schema::Severity::Error);
+    if errors > 0 {
+        for f in report.findings.iter().filter(|f| f.severity == crate::schema::Severity::Error && f.waived.is_none()) {
+            eprintln!("error: {}: {}", f.rule, f.message);
+        }
+        if !a.force {
+            return Err(crate::error::Error::with_help(
+                format!("design check reports {errors} error(s); not writing gerbers"),
+                "fix them (`pcb check`), waive the ones you have judged acceptable (`pcb drc waive`), or pass --force",
+            ));
+        }
+        eprintln!("warning: writing gerbers despite {errors} design-check error(s) (--force)");
+    }
     let dir = a.output.unwrap_or_else(|| loaded.build_dir().join("gerbers"));
     let files = crate::gerber::emit(&board, &dir, !a.no_zip)?;
     for f in files {

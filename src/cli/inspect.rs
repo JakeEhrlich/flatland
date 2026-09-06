@@ -1,5 +1,6 @@
 //! Read-only commands: status, check, schema docs.
 
+use crate::schema::Severity;
 use super::Ctx;
 use crate::error::{Error, Result};
 use crate::geom;
@@ -85,123 +86,75 @@ pub struct CheckArgs {
     /// Treat warnings as errors.
     #[arg(long)]
     pub strict: bool,
+    /// Findings as a JSON array.
+    #[arg(long)]
+    pub json: bool,
+    /// Only run this rule.
+    #[arg(long)]
+    pub rule: Option<String>,
+    /// Show waived findings too.
+    #[arg(long)]
+    pub waived: bool,
+    /// List info-level findings (they are only counted otherwise).
+    #[arg(long)]
+    pub info: bool,
 }
 
 pub fn check(ctx: &Ctx, a: CheckArgs) -> Result<()> {
     let loaded = ctx.load()?;
     let board = ctx.board(&loaded)?;
-    let mut errors: Vec<String> = Vec::new();
-    let mut warnings: Vec<String> = Vec::new();
-
-    if board.outline.is_none() {
-        errors.push("no board outline".into());
+    let mut report = crate::drc::run(&board, &loaded.path)?;
+    if let Some(r) = &a.rule {
+        report.findings.retain(|f| &f.rule == r);
     }
-    for i in &board.instances {
-        if !i.is_placed() && !i.component.is_virtual() {
-            errors.push(format!("{} ({}) is not placed", i.refdes, i.component.name));
-        }
-    }
-    // Pads outside the outline.
-    if let Some(o) = &board.outline {
-        for pad in board.all_pads() {
-            if !geom::contains(o, pad.center) {
-                errors.push(format!("pad {}.{} at {} is outside the board outline", pad.refdes, pad.pad_name, pad.center));
+    if a.json {
+        println!("{}", serde_json::to_string_pretty(&report.findings).unwrap());
+    } else {
+        // Long lists of one rule's findings are summarised after a few lines;
+        // `--rule NAME` shows them all.
+        let cap = if a.rule.is_some() { usize::MAX } else { 6 };
+        let mut shown: std::collections::HashMap<&str, usize> = std::collections::HashMap::new();
+        let mut hidden: Vec<(String, usize)> = Vec::new();
+        for f in &report.findings {
+            if f.waived.is_some() && !a.waived {
+                continue;
             }
-        }
-        for h in &board.holes {
-            if !geom::contains(o, h.hole.at) {
-                errors.push(format!("hole at {} is outside the board outline", h.hole.at));
+            if f.severity == Severity::Info && !a.info && a.rule.is_none() {
+                continue;
             }
-        }
-    }
-    // Unconnected pins.
-    for i in &board.instances {
-        for pin in &i.component.component.pins {
-            if board.pin_net(&i.refdes, &pin.name).is_none() {
-                warnings.push(format!("{}.{} is not connected to any net", i.refdes, pin.name));
-            }
-        }
-    }
-    // Single-pin nets.
-    for n in &board.nets {
-        if n.pins.len() < 2 {
-            warnings.push(format!("net {} has only {} pin(s)", n.name, n.pins.len()));
-        }
-    }
-    // Connectivity.
-    for (n, islands) in board.connectivity()? {
-        if islands.len() > 1 {
-            let desc: Vec<String> = islands.iter().map(|i| i.join("+")).collect();
-            warnings.push(format!("net {n} is not fully routed: {} islands ({})", islands.len(), desc.join(" | ")));
-        }
-    }
-    // Clearance between different nets on each layer (pads/traces/vias/pours).
-    let clearance = board.rules().clearance;
-    for layer in board.layers() {
-        let mut items: Vec<(Option<String>, geom::Rings, String)> = board
-            .copper_on_layer(layer)
-            .into_iter()
-            .map(|(n, r)| {
-                let c = geom::bounds(&[r.clone()]).map(|(lo, hi)| Point_mid(lo, hi)).unwrap_or_default();
-                (n, vec![r], c)
-            })
-            .collect();
-        for p in &board.pours {
-            if &p.pour.layer == layer {
-                // A pour is one polygon set (outer rings plus clearance holes).
-                items.push((p.pour.net.clone(), p.copper.clone(), format!("pour {}", p.pour.name)));
-            }
-        }
-        for i in 0..items.len() {
-            for j in (i + 1)..items.len() {
-                let (na, ra, da) = &items[i];
-                let (nb, rb, db) = &items[j];
-                if na.is_some() && na == nb {
-                    continue;
+            let n = shown.entry(f.rule.as_str()).or_insert(0);
+            *n += 1;
+            if *n > cap {
+                match hidden.iter_mut().find(|(r, _)| *r == f.rule) {
+                    Some(e) => e.1 += 1,
+                    None => hidden.push((f.rule.clone(), 1)),
                 }
-                if !bbox_near(ra, rb, clearance) {
-                    continue;
-                }
-                // Grow by slightly less than the clearance so copper placed
-                // exactly at the rule (e.g. pour edges) does not trip it.
-                let grown = geom::offset(ra, clearance - crate::units::Length(2_000));
-                if geom::overlaps(&grown, rb) {
-                    let touching = geom::overlaps(ra, rb);
-                    let why = if touching { "overlap (short circuit)".to_string() } else { format!("are closer than the {clearance} clearance") };
-                    errors.push(format!(
-                        "{layer}: {} ({}) and {} ({}) {}",
-                        da,
-                        na.as_deref().unwrap_or("no net"),
-                        db,
-                        nb.as_deref().unwrap_or("no net"),
-                        why
-                    ));
-                }
+                continue;
+            }
+            match &f.waived {
+                Some(reason) => println!("waived: {}: {} (waived: {reason})", f.rule, f.message),
+                None => println!("{}: {}: {}", f.severity, f.rule, f.message),
             }
         }
+        for (rule, n) in hidden {
+            println!("… {n} more {rule} finding(s) (`pcb check --rule {rule}` lists them)");
+        }
+        let (e, w, i) = (report.count(Severity::Error), report.count(Severity::Warning), report.count(Severity::Info));
+        let waived = report.waived();
+        println!(
+            "{e} error(s), {w} warning(s){}{} — {} rule(s) from {}",
+            if i > 0 { format!(", {i} info (--info lists them)") } else { String::new() },
+            if waived > 0 { format!(", {waived} waived") } else { String::new() },
+            report.rules_run,
+            report.sets.join(", ")
+        );
     }
-    for e in &errors {
-        println!("error: {e}");
-    }
-    for w in &warnings {
-        println!("warning: {w}");
-    }
-    println!("{} error(s), {} warning(s)", errors.len(), warnings.len());
-    if !errors.is_empty() || (a.strict && !warnings.is_empty()) {
-        return Err(Error::msg("design check failed"));
+    let errors = report.count(Severity::Error);
+    let warnings = report.count(Severity::Warning);
+    if errors > 0 || (a.strict && warnings > 0) {
+        return Err(Error::with_help("design check failed", "`pcb drc explain <rule>` describes a rule; `pcb drc waive <rule> <feature> --reason ...` silences a finding you have judged acceptable"));
     }
     Ok(())
-}
-
-#[allow(non_snake_case)]
-fn Point_mid(lo: crate::units::Point, hi: crate::units::Point) -> String {
-    let m = crate::units::Point::nm((lo.x.nm() + hi.x.nm()) / 2, (lo.y.nm() + hi.y.nm()) / 2);
-    format!("copper near {m}")
-}
-
-fn bbox_near(a: &geom::Rings, b: &geom::Rings, d: crate::units::Length) -> bool {
-    let (Some((alo, ahi)), Some((blo, bhi))) = (geom::bounds(a), geom::bounds(b)) else { return false };
-    !(ahi.x + d < blo.x || bhi.x + d < alo.x || ahi.y + d < blo.y || bhi.y + d < alo.y)
 }
 
 #[derive(Args)]
@@ -228,7 +181,7 @@ pub fn schema(_ctx: &Ctx, a: SchemaArgs) -> Result<()> {
                 }
             }
             if !any {
-                return Err(Error::with_help(format!("no schema section `{k}`"), "sections: project, index, component, footprint, simulation"));
+                return Err(Error::with_help(format!("no schema section `{k}`"), "sections: project, index, component, footprint, simulation, drc"));
             }
         }
     }
@@ -247,6 +200,7 @@ const PAGES: &[(&str, &[&str], &str)] = &[
     ("pcb-visualize", &["visualize", "png", "svg", "render"], include_str!("../../docs/commands/pcb-visualize.md")),
     ("pcb-route", &["route", "freerouting", "dsn", "ses"], include_str!("../../docs/commands/pcb-route.md")),
     ("pcb-gerbers", &["gerbers", "gerber", "drill", "excellon", "fab"], include_str!("../../docs/commands/pcb-gerbers.md")),
+    ("pcb-drc", &["drc", "rules-check", "design-rules", "waive", "profiles"], include_str!("../../docs/commands/pcb-drc.md")),
     ("pcb-assembly", &["bom", "pnp", "assembly", "jlcpcb", "lcsc", "cpl", "pick-and-place"], include_str!("../../docs/commands/pcb-assembly.md")),
     ("pcb-sim", &["sim", "simulate", "spice", "ngspice"], include_str!("../../docs/commands/pcb-sim.md")),
 ];

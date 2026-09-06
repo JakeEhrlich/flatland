@@ -1,0 +1,175 @@
+{
+  "schema": "pcb-drc/1",
+  "name": "jlcpcb-aluminium-1layer",
+  "description": "JLCPCB single-layer aluminium (metal core) boards, HASL. Drill, slot and board-size limits from jlcpcb.com/capabilities/pcb-capabilities (read 2026-09-05); JLCPCB gives no separate trace/spacing figure for aluminium, so 0.15 mm is used as a conservative one. No plated holes or vias exist on this process.",
+  "applies": {
+    "layers": [
+      1
+    ],
+    "material": "aluminium"
+  },
+  "rules": [
+    {
+      "name": "design-rules",
+      "for": "board",
+      "check": {
+        "design_rules": {
+          "trace_width": 0.15,
+          "clearance": 0.15,
+          "edge_clearance": 0.3
+        }
+      }
+    },
+    {
+      "name": "design-rules-silk",
+      "for": "board",
+      "severity": "warning",
+      "check": {
+        "design_rules": {
+          "silk_width": 0.15,
+          "silk_text_size": 1.0
+        }
+      },
+      "description": "Silkscreen stroke and text-height minimums are legibility guidance, not process limits."
+    },
+    {
+      "name": "no-vias",
+      "for": "via",
+      "check": {
+        "exists": false
+      },
+      "description": "A single-layer metal-core board has no plated holes at all."
+    },
+    {
+      "name": "no-plated-holes",
+      "for": "hole",
+      "where": {
+        "plated": true
+      },
+      "check": {
+        "exists": false
+      }
+    },
+    {
+      "name": "trace-width",
+      "for": "copper",
+      "check": {
+        "min_width": 0.15
+      }
+    },
+    {
+      "name": "copper-spacing",
+      "for": "copper",
+      "check": {
+        "clearance": {
+          "to": "copper",
+          "relation": "different_net",
+          "min": 0.15
+        }
+      }
+    },
+    {
+      "name": "copper-gap",
+      "for": "copper",
+      "severity": "warning",
+      "check": {
+        "min_gap": 0.15
+      }
+    },
+    {
+      "name": "hole-size",
+      "for": "hole",
+      "check": {
+        "min": {
+          "drill": 0.65
+        }
+      },
+      "description": "Minimum drill 0.65 mm in aluminium."
+    },
+    {
+      "name": "hole-to-hole",
+      "for": "hole",
+      "check": {
+        "clearance": {
+          "to": "hole",
+          "relation": "any",
+          "min": 0.45
+        }
+      }
+    },
+    {
+      "name": "hole-to-copper",
+      "for": "hole",
+      "check": {
+        "clearance": {
+          "to": "copper",
+          "relation": "any",
+          "min": 0.3
+        }
+      }
+    },
+    {
+      "name": "copper-to-edge",
+      "for": "copper",
+      "check": {
+        "clearance": {
+          "to": "outline",
+          "min": 0.3
+        }
+      }
+    },
+    {
+      "name": "mask-dam",
+      "for": "mask_opening",
+      "severity": "warning",
+      "check": {
+        "min_gap": 0.1
+      }
+    },
+    {
+      "name": "silk-width",
+      "for": "silk",
+      "check": {
+        "min_width": 0.15
+      }
+    },
+    {
+      "name": "silk-text-width",
+      "for": "silk_text",
+      "check": {
+        "min_width": 0.15
+      }
+    },
+    {
+      "name": "silk-text-height",
+      "for": "silk_text",
+      "severity": "info",
+      "check": {
+        "min": {
+          "height": 1.0
+        }
+      },
+      "description": "Text under 1 mm prints but may not be legible."
+    },
+    {
+      "name": "board-min-size",
+      "for": "board",
+      "check": {
+        "min": {
+          "width": 5,
+          "height": 5
+        }
+      }
+    },
+    {
+      "name": "board-max-size",
+      "for": "board",
+      "check": {
+        "max": {
+          "width": 602,
+          "height": 506
+        }
+      }
+    }
+  ]
+}

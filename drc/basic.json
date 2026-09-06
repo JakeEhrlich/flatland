@@ -1,0 +1,32 @@
+{
+  "schema": "pcb-drc/1",
+  "name": "basic",
+  "description": "Built into pcb and always on: the board is complete and self-consistent. Process limits come from a fab rule set (`pcb drc add`).",
+  "rules": [
+    { "name": "outline-exists", "for": "outline", "check": { "exists": true },
+      "description": "A board needs an outline before anything can be checked against it." },
+    { "name": "parts-placed", "for": "part", "check": { "placed": true },
+      "description": "Every non-virtual part has a placement." },
+    { "name": "copper-inside-outline", "for": "copper", "check": { "inside": "outline" },
+      "description": "Pads, traces, vias and pours lie within the outline." },
+    { "name": "holes-inside-outline", "for": "hole", "check": { "inside": "outline" } },
+    { "name": "copper-clearance", "for": "copper",
+      "check": { "clearance": { "to": "copper", "relation": "different_net", "min": "design" } },
+      "description": "Copper of different nets keeps the project's `clearance` rule." },
+    { "name": "copper-to-edge", "for": "copper", "severity": "warning",
+      "check": { "clearance": { "to": "outline", "min": "design" } },
+      "description": "Copper keeps the project's `edge_clearance` from the board edge." },
+    { "name": "pins-connected", "for": "pin", "severity": "warning", "check": { "connected": true },
+      "description": "A pin on no net is usually a forgotten connection (NC pins can be waived)." },
+    { "name": "net-pins", "for": "net", "severity": "warning", "check": { "min": { "pins": 2 } } },
+    { "name": "nets-routed", "for": "net", "severity": "warning", "check": { "connected": true },
+      "description": "Every net is one island of copper." },
+    { "name": "dangling-trace", "for": "trace", "severity": "warning", "check": { "connected": true },
+      "description": "Both ends of a trace land on copper of its net." },
+    { "name": "floating-copper", "for": "pour_piece", "severity": "warning", "check": { "connected": true },
+      "description": "Every piece of a pour reaches a pad of its net (pieces that do not are removed from output, but usually mean the fill is not doing what you think)." },
+    { "name": "courtyards", "for": "courtyard", "severity": "warning",
+      "check": { "clearance": { "to": "courtyard", "relation": "different_part", "min": 0 } },
+      "description": "Part bodies do not overlap." }
+  ]
+}

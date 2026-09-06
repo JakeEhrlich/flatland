@@ -956,6 +956,27 @@
       "routed": true
     }
   ],
+  "vias": [
+    {
+      "at": [
+        2,
+        2
+      ],
+      "net": "GND",
+      "drill": 0.3,
+      "diameter": 0.6
+    },
+    {
+      "at": [
+        2,
+        2
+      ],
+      "net": "GND",
+      "drill": 0.3,
+      "diameter": 0.6,
+      "routed": true
+    }
+  ],
   "simulations": {
     "blink": {
       "analysis": {
@@ -970,5 +991,19 @@
         "i(V1)"
       ]
     }
+  },
+  "drc": {
+    "rulesets": [
+      {
+        "url": "drc/jlcpcb-fr4-2layer.json",
+        "blake3": "c665f3792f715dbc347bd19e0f12a615abb1cd3d6266bd7b32ff7f2aedd11096"
+      }
+    ],
+    "waivers": [
+      {
+        "rule": "design-rules-silk",
+        "reason": "0.8 mm reference designators are a deliberate choice on this small board; JLCPCB's 1 mm figure is legibility guidance"
+      }
+    ]
   }
 }

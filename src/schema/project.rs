@@ -1,3 +1,4 @@
+use super::drc::DrcConfig;
 use super::FileRef;
 use crate::geom::Edge;
 use crate::units::{Length, Point};
@@ -42,6 +43,9 @@ pub struct Project {
     pub simulations: IndexMap<String, Simulation>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub routing: Option<RoutingConfig>,
+    /// Design-rule sets, project rules and waivers (`pcb drc`).
+    #[serde(default, skip_serializing_if = "DrcConfig::is_empty")]
+    pub drc: DrcConfig,
     /// Counter used to generate unique auto net names (`N$1`, `N$2`, ...).
     #[serde(default, skip_serializing_if = "is_zero_u32")]
     pub next_net_id: u32,
@@ -69,6 +73,7 @@ impl Project {
             vias: vec![],
             simulations: IndexMap::new(),
             routing: None,
+            drc: DrcConfig::default(),
             next_net_id: 0,
         }
     }
