@@ -7,7 +7,7 @@
   },
   "footprint": {
     "url": "../footprints/PowerDI-123.json",
-    "blake3": "ea3425e1540a0f848309f1f58b1d738098ddd33cf5364a81b24b6e7c304c019e"
+    "blake3": "24f2784ccbee05a3e8ab1e174142a35372ffe67c0c70d7261704aaf4e2b89afb"
   },
   "pins": [
     {
@@ -36,6 +36,7 @@
     "mpn": "AL5809-60P1-7",
     "assembly": true,
     "rotation_offset": 0,
-    "rotation_note": "pin 1 (IN) is at +x, on the band-marked end of the package; verify in JLCPCB's placement preview"
+    "rotation_note": "Pad 1 = IN at +x (unmarked end), pad 2 = OUT at -x (the end with the marking bar; datasheet DS36625 rev 5-2 p.1 and p.13). Verified against the datasheet 2026-09-07 after JLCPCB queried the polarity. In JLCPCB's preview the banded end must sit on the OUT pad.",
+    "polarity": "banded end = OUT (pin 2)"
   }
 }
