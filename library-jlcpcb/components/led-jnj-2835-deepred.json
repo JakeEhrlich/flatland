@@ -1,0 +1,46 @@
+{
+  "schema": "pcb-component/1",
+  "name": "led-jnj-2835-deepred",
+  "description": "JNJ JNJ-L-2835CW-66018-S-G1 2835 deep red LED, 660 nm dominant, rated 20 mA in the catalogue (IF max 300 mA per datasheet), Vf 1.8 V at 20 mA (~1.9 V at 60 mA, extrapolated), 125 deg, 4 cd (LCSC C22447975)",
+  "datasheet": {
+    "url": "https://www.lcsc.com/product-detail/C22447975.html"
+  },
+  "footprint": {
+    "url": "../footprints/LED_2835_JNJ.json",
+    "blake3": "317f03908b33aca57459268fa8d95c7d0b85381229d4c5fcec9998bc73425818"
+  },
+  "pins": [
+    {
+      "name": "A",
+      "pad": "A",
+      "description": "anode (-x pad)"
+    },
+    {
+      "name": "K",
+      "pad": "K",
+      "description": "cathode (+x pad, silkscreen bar)"
+    }
+  ],
+  "parameters": {
+    "lcsc": {
+      "default": "C22447975",
+      "description": "LCSC part; C22447975 = JNJ-L-2835CW-66018-S-G1"
+    },
+    "vf_trim": {
+      "default": "0",
+      "description": "forward-voltage offset in volts for this LED (bin/part spread); the series source V<ref>_trim also measures the LED current: probe i(V<ref>_trim)"
+    }
+  },
+  "spice": {
+    "template": "D{ref} {pin:A} {ref}_m JNJ2835_RED\nV{ref}_trim {ref}_m {pin:K} DC {vf_trim}",
+    "model": "* JNJ 660 nm deep red (AlInGaP). Fitted through the published 1.8 V @ 20 mA with N=1.9, RS=1.5, giving 1.91 V @ 60 mA. Tempco -2.0 mV/K. Extrapolated, like the amber: measure before committing a ballast value.\n.model JNJ2835_RED D(IS=4.561e-18 N=1.9 RS=1.5 EG=2.319 XTI=2 CJO=40p TT=5n BV=8)"
+  },
+  "metadata": {
+    "lcsc": "C22447975",
+    "manufacturer": "JNJ OPTOELECTRONICS",
+    "mpn": "JNJ-L-2835CW-66018-S-G1",
+    "assembly": true,
+    "rotation_offset": 0,
+    "rotation_note": "Footprint has the anode at -x and the cathode at +x. JLCPCB's reel zero-orientation for this part is not yet verified: check the polarity in their placement preview on the first order and record the correction here."
+  }
+}

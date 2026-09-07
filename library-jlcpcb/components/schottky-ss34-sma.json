@@ -1,0 +1,36 @@
+{
+  "schema": "pcb-component/1",
+  "name": "schottky-ss34-sma",
+  "description": "SS34 Schottky diode, 40 V 3 A, Vf 0.55 V at 3 A (~0.35 V at 0.3 A), SMA/DO-214AC (LCSC C8678, JLCPCB basic). Reverse-supply protection for rails up to ~30 V",
+  "datasheet": {
+    "url": "https://www.lcsc.com/product-detail/C8678.html"
+  },
+  "footprint": {
+    "url": "../footprints/SMA.json",
+    "blake3": "05e6d39ae7d8f9347db21d29d7c19de821ec669da6cbf495e03ac119389f0397"
+  },
+  "pins": [
+    {
+      "name": "K",
+      "pad": "1",
+      "description": "cathode (bar)"
+    },
+    {
+      "name": "A",
+      "pad": "2",
+      "description": "anode"
+    }
+  ],
+  "spice": {
+    "template": "D{ref} {pin:A} {pin:K} SS34",
+    "model": "* SS34: 0.55 V @ 3 A, 0.35 V @ 0.3 A, 40 V\n.model SS34 D(IS=2e-6 N=1.05 RS=0.05 BV=40 IBV=0.5m CJO=250p M=0.45 XTI=2 EG=0.69)"
+  },
+  "metadata": {
+    "lcsc": "C8678",
+    "manufacturer": "MDD",
+    "mpn": "SS34",
+    "assembly": true,
+    "rotation_offset": 0,
+    "rotation_note": "cathode bar at -x (pad 1); check JLCPCB's preview on the first order"
+  }
+}

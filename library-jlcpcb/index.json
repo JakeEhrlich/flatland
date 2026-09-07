@@ -87,6 +87,56 @@
       "url": "components/al5809-60.json",
       "blake3": "e219db2e1b9b62c2086706fcfc51e828faa890024108a58eb9a97989c8428ddd",
       "description": "Diodes AL5809-60P1-7 two-terminal 60 mA (±5%) constant-current LED regulator, 2.5-60 V across IN-OUT, PowerDI-123, 1.24 W on a good pad (LCSC C154921). Parallel several for more current; PWM 100-200 Hz via a low-side MOSFET on OUT (0.5 ms min on/off)"
+    },
+    "led-hongli-2835-hr6-6500k": {
+      "url": "components/led-hongli-2835-hr6-6500k.json",
+      "blake3": "49fac41e5fae6f5e78340c878ef4d34ab57dc7cca911c990feda79505423f5bd",
+      "description": "HONGLITRONIC HL-AM-2835H421W-S1-08-HR6 2835 white LED, 6500 K (6000-7000 K), Ra 95, SDCM<6, 60 mA, Vf 2.8-3.4 V (3.1 typ), 120 deg, ~22 lm (LCSC C516135)"
+    },
+    "led-hongli-2835-hr6-2800k": {
+      "url": "components/led-hongli-2835-hr6-2800k.json",
+      "blake3": "00641d7d2580143c9a656fcaf037518d06b9ff5ce0f773b547485971ee68ab1c",
+      "description": "HONGLITRONIC HL-AM-2835H421W-S1-08-HR6 2835 white LED, 2800 K (2800-3100 K), Ra 95, SDCM<6, 60 mA, Vf 2.8-3.4 V (3.1 typ), 120 deg (LCSC C516131). Same footprint and I-V model as the 6500 K part"
+    },
+    "led-xinglight-2835-blue": {
+      "url": "components/led-xinglight-2835-blue.json",
+      "blake3": "b2fab5e7d835ddc1dcadc2d14df9ad119cb2972ded4f421f17bd1e332b8e5402",
+      "description": "XINGLIGHT XL-2835UBC-02 2835 blue LED, 460 nm dominant (465 nm peak), 60 mA max continuous, 200 mW, Vf 3.4 V max (3.2 typ), 120 deg, 1.75 cd (LCSC C2843871). Note 60 mA is the ABSOLUTE MAXIMUM, flat only to ~30 C ambient: run it PWM'd, not DC"
+    },
+    "led-xinglight-2835-green": {
+      "url": "components/led-xinglight-2835-green.json",
+      "blake3": "7f94d7509f05952806d14ec51ec8c44fc145389c35b5b8dd6c2963f3c7e51d38",
+      "description": "XINGLIGHT XL-2835UGC-02 2835 emerald green LED, 510 nm dominant (520 nm peak), 60 mA max continuous, 200 mW, Vf 3.6 V max (3.3 typ), 120 deg, 6 cd (LCSC C2843870). 60 mA is the absolute maximum: PWM it"
+    },
+    "led-togialed-3030-amber": {
+      "url": "components/led-togialed-3030-amber.json",
+      "blake3": "46fb21de224876b92d38531a2fe48dbf3139f6f2d1136614ee0920feec0b9c8e",
+      "description": "TOGIALED TJ-S3030UG5W6TLC9Y-A5 3030 amber LED, 595 nm dominant (591 nm peak), 150 mA rated, 0.39 W, Vf 2.6 V typ at 150 mA (~2.4 V at 60 mA, extrapolated: MEASURE IT), 120 deg (LCSC C42389961)"
+    },
+    "led-jnj-2835-deepred": {
+      "url": "components/led-jnj-2835-deepred.json",
+      "blake3": "d0c0a1e7c6c4aff25795471828957b2dad09d4b95df782383f82dbf5732bbcfd",
+      "description": "JNJ JNJ-L-2835CW-66018-S-G1 2835 deep red LED, 660 nm dominant, rated 20 mA in the catalogue (IF max 300 mA per datasheet), Vf 1.8 V at 20 mA (~1.9 V at 60 mA, extrapolated), 125 deg, 4 cd (LCSC C22447975)"
+    },
+    "schottky-ss34-sma": {
+      "url": "components/schottky-ss34-sma.json",
+      "blake3": "07a8f3e0940e0a1d0f8abf5c097ee75e44342d3ea50199cab10facc39efa0cef",
+      "description": "SS34 Schottky diode, 40 V 3 A, Vf 0.55 V at 3 A (~0.35 V at 0.3 A), SMA/DO-214AC (LCSC C8678, JLCPCB basic). Reverse-supply protection for rails up to ~30 V"
+    },
+    "capacitor-elec-6.3x7.7": {
+      "url": "components/capacitor-elec-6.3x7.7.json",
+      "blake3": "3e7bc16809754726d377f5cbc4cbf87850d2fb5da6b94befee12e5d4c827c2ef",
+      "description": "SMD aluminium electrolytic, V-chip D6.3 x 7.7 mm. LCSC per value: 47u/50V = C72523 (ROQANG RVT1H470M0607, 2000 h @ 105 C); 100u/50V = C3151829 (RVT1H101M0607)"
+    },
+    "solder-pad-1": {
+      "url": "components/solder-pad-1.json",
+      "blake3": "2729705333b9dfaf61a32306275a25313455cbccfdd97e5e69a14d86f3df6d04",
+      "description": "One 3 x 3 mm exposed pad to solder a wire to (control signal, ground reference); no part is placed, excluded from BOM/pick-and-place"
+    },
+    "resistor-2512": {
+      "url": "components/resistor-2512.json",
+      "blake3": "21d3c0d4ad574d6c30504d0a2dd7bb1ea90ebd2697cae1f01fed21a40adfd1ba",
+      "description": "Chip resistor 2512, 1 W. LCSC per value (all 1 W 200 V thick film): 62R 1% = C2999540 (low stock), 68R 5% = C25492, 82R 1% = C3000773 (low stock), 91R 1% = C878260, 100R 1% = C35218 — stock as of 2026-09-07"
     }
   }
 }

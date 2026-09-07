@@ -1,0 +1,36 @@
+{
+  "schema": "pcb-component/1",
+  "name": "resistor-2512",
+  "description": "Chip resistor 2512, 1 W. LCSC per value (all 1 W 200 V thick film): 62R 1% = C2999540, 68R 5% = C25492, 82R 1% = C3000773, 91R 1% = C878260, 100R 1% = C35218",
+  "footprint": {
+    "url": "../footprints/2512.json",
+    "blake3": "52d3efa71d77e42081fbe313b475e738eefbe4a843824ec814a41cb404659296"
+  },
+  "pins": [
+    {
+      "name": "1"
+    },
+    {
+      "name": "2"
+    }
+  ],
+  "parameters": {
+    "value": {
+      "description": "resistance (SPICE syntax)"
+    },
+    "lcsc": {
+      "default": "",
+      "description": "LCSC part number for this value"
+    },
+    "tc1": {
+      "default": "100e-6",
+      "description": "temperature coefficient (1/K), 100 ppm/K for thick film"
+    }
+  },
+  "spice": {
+    "template": "R{ref} {pin:1} {pin:2} {value} tc1={tc1}"
+  },
+  "metadata": {
+    "assembly": true
+  }
+}

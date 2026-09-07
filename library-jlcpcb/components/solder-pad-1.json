@@ -1,0 +1,18 @@
+{
+  "schema": "pcb-component/1",
+  "name": "solder-pad-1",
+  "description": "One 3 x 3 mm exposed pad to solder a wire to (control signal, ground reference); no part is placed, excluded from BOM/pick-and-place",
+  "footprint": {
+    "url": "../footprints/SolderWirePad_1.json",
+    "blake3": "2f5c3b8fb5a86cab9d67b4264fd6286cede3e7a011fa6aa15fa8e75858793693"
+  },
+  "pins": [
+    {
+      "name": "1",
+      "pad": "1"
+    }
+  ],
+  "metadata": {
+    "assembly": false
+  }
+}

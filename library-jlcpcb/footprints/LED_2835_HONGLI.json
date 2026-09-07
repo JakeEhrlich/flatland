@@ -1,0 +1,78 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "LED_2835_HONGLI",
+  "description": "HONGLITRONIC HL-AM-2835H421W 2835 white LED, datasheet B-18-A-1091 'Recommended Soldering Pattern': pads 1.10 (anode) and 2.33 (cathode) x 2.38 mm, 0.50 mm gap. Anode is the NARROW pad (settled from the footprint LCSC ships, not the datasheet, which never labels the pads). Drawn anode at -x, cathode at +x; silkscreen bar = cathode.",
+  "pads": [
+    {
+      "name": "A",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -1.415,
+        0
+      ],
+      "size": [
+        1.1,
+        2.38
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "K",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        0.8,
+        0
+      ],
+      "size": [
+        2.33,
+        2.38
+      ],
+      "corner_radius": 0.2
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          2.315,
+          -0.9
+        ],
+        "to": [
+          2.315,
+          0.9
+        ],
+        "width": 0.2
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -2.515,
+            -1.6
+          ],
+          [
+            2.515,
+            -1.6
+          ],
+          [
+            2.515,
+            1.6
+          ],
+          [
+            -2.515,
+            1.6
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    2.1
+  ]
+}

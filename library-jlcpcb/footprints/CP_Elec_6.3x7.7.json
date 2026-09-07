@@ -1,0 +1,91 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "CP_Elec_6.3x7.7",
+  "description": "SMD aluminium electrolytic, V-chip D6.3 x L7.7 mm (Lelon RVT / Panasonic FK size): pads 3.5 x 1.6 mm at 5.3 mm centres (1.8 mm gap), 6.6 mm square base. Pad 1 = positive (+x is drawn with a '+' mark); the can's black bar marks the NEGATIVE terminal.",
+  "pads": [
+    {
+      "name": "1",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -2.65,
+        0
+      ],
+      "size": [
+        3.5,
+        1.6
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "2",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        2.65,
+        0
+      ],
+      "size": [
+        3.5,
+        1.6
+      ],
+      "corner_radius": 0.2
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          -4.0,
+          2.6
+        ],
+        "to": [
+          -3.0,
+          2.6
+        ],
+        "width": 0.2
+      }
+    },
+    {
+      "line": {
+        "from": [
+          -3.5,
+          2.1
+        ],
+        "to": [
+          -3.5,
+          3.1
+        ],
+        "width": 0.2
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -3.7,
+            -3.7
+          ],
+          [
+            3.7,
+            -3.7
+          ],
+          [
+            3.7,
+            3.7
+          ],
+          [
+            -3.7,
+            3.7
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    4.2
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "pcb-component/1",
+  "name": "led-hongli-2835-hr6-6500k",
+  "description": "HONGLITRONIC HL-AM-2835H421W-S1-08-HR6 2835 white LED, 6500 K (6000-7000 K), Ra 95, SDCM<6, 60 mA, Vf 2.8-3.4 V (3.1 typ), 120 deg, ~22 lm (LCSC C516135)",
+  "datasheet": {
+    "url": "https://www.lcsc.com/product-detail/C516135.html"
+  },
+  "footprint": {
+    "url": "../footprints/LED_2835_HONGLI.json",
+    "blake3": "892885f9546f07309444a628fc182190c0e2c1f97ab1c0379fdc68eb07e978da"
+  },
+  "pins": [
+    {
+      "name": "A",
+      "pad": "A",
+      "description": "anode (-x pad)"
+    },
+    {
+      "name": "K",
+      "pad": "K",
+      "description": "cathode (+x pad, silkscreen bar)"
+    }
+  ],
+  "parameters": {
+    "lcsc": {
+      "default": "C516135",
+      "description": "LCSC part; C516135 = HL-AM-2835H421W-S1-08-HR6(SDCM<6)(6000K-7000K)60mA"
+    },
+    "vf_trim": {
+      "default": "0",
+      "description": "forward-voltage offset in volts for this LED (bin/part spread); the series source V<ref>_trim also measures the LED current: probe i(V<ref>_trim)"
+    },
+    "cct": {
+      "default": "6500K",
+      "description": "colour temperature (informational; must match the LCSC part)"
+    }
+  },
+  "spice": {
+    "template": "D{ref} {pin:A} {ref}_m HONGLI_HR6_65\nV{ref}_trim {ref}_m {pin:K} DC {vf_trim}",
+    "model": "* HONGLITRONIC HL-AM-2835H421W-S1-08-HR6 (Ra 95), 60 mA rated (IF max 90 mA at 25 C, derating to 45 mA at 85 C). JLCPCB lists Vf 3.4 V, which is the bin maximum; the Vf groups span 2.8-3.4 V.\n* Fitted for 3.10 V at 60 mA (typical), tempco -2.0 mV/K; SPICE gives dVf/dT = (Vf_j - EG - XTI*Vt)/T so EG is a fitting value, not the bandgap. vf_trim=+0.30 is the worst bin.\n.model HONGLI_HR6_65 D(IS=2.185e-21 N=2.6 RS=1.5 EG=3.559 XTI=2 CJO=50p TT=5n BV=8)"
+  },
+  "metadata": {
+    "lcsc": "C516135",
+    "manufacturer": "HONGLITRONIC",
+    "mpn": "HL-AM-2835H421W-S1-08-HR6(SDCM<6)(6000K-7000K)60mA",
+    "assembly": true,
+    "rotation_offset": 0,
+    "rotation_note": "Footprint has the anode at -x and the cathode at +x. JLCPCB's reel zero-orientation for this part is not yet verified: check the polarity in their placement preview on the first order and record the correction here."
+  }
+}

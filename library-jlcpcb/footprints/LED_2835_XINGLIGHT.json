@@ -1,0 +1,78 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "LED_2835_XINGLIGHT",
+  "description": "XINGLIGHT XL-2835UBC-02 / XL-2835UGC-02 2835 colour LED: pads 1.0 (anode) and 2.1 (cathode) x 2.3 mm, 0.6 mm gap, 3.7 mm span; anode on the narrow pad, terminals dimensioned 0.92 / 1.99 in the datasheet. Drawn anode at -x, cathode at +x; silkscreen bar = cathode.",
+  "pads": [
+    {
+      "name": "A",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -1.35,
+        0
+      ],
+      "size": [
+        1.0,
+        2.3
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "K",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        0.8,
+        0
+      ],
+      "size": [
+        2.1,
+        2.3
+      ],
+      "corner_radius": 0.2
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          2.2,
+          -0.9
+        ],
+        "to": [
+          2.2,
+          0.9
+        ],
+        "width": 0.2
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -2.4,
+            -1.6
+          ],
+          [
+            2.4,
+            -1.6
+          ],
+          [
+            2.4,
+            1.6
+          ],
+          [
+            -2.4,
+            1.6
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    2.1
+  ]
+}

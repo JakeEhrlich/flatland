@@ -1,0 +1,46 @@
+{
+  "schema": "pcb-component/1",
+  "name": "led-xinglight-2835-green",
+  "description": "XINGLIGHT XL-2835UGC-02 2835 emerald green LED, 510 nm dominant (520 nm peak), 60 mA max continuous, 200 mW, Vf 3.6 V max (3.3 typ), 120 deg, 6 cd (LCSC C2843870). 60 mA is the absolute maximum: PWM it",
+  "datasheet": {
+    "url": "https://www.lcsc.com/product-detail/C2843870.html"
+  },
+  "footprint": {
+    "url": "../footprints/LED_2835_XINGLIGHT.json",
+    "blake3": "1862ef1bb688bb1b15abaced7b41a659dbfc955b66d31ed4ca58f48b6fb5cc17"
+  },
+  "pins": [
+    {
+      "name": "A",
+      "pad": "A",
+      "description": "anode (-x pad)"
+    },
+    {
+      "name": "K",
+      "pad": "K",
+      "description": "cathode (+x pad, silkscreen bar)"
+    }
+  ],
+  "parameters": {
+    "lcsc": {
+      "default": "C2843870",
+      "description": "LCSC part; C2843870 = XL-2835UGC-02"
+    },
+    "vf_trim": {
+      "default": "0",
+      "description": "forward-voltage offset in volts for this LED (bin/part spread); the series source V<ref>_trim also measures the LED current: probe i(V<ref>_trim)"
+    }
+  },
+  "spice": {
+    "template": "D{ref} {pin:A} {ref}_m XL2835_GREEN\nV{ref}_trim {ref}_m {pin:K} DC {vf_trim}",
+    "model": "* XINGLIGHT XL-2835UGC-02 green, fitted for 3.30 V at 60 mA (JLCPCB lists 3.6 V max), tempco -2.5 mV/K; vf_trim=+0.30 is the maximum.\n.model XL2835_GREEN D(IS=2.725e-22 N=2.6 RS=2.5 EG=3.849 XTI=2 CJO=40p TT=5n BV=8)"
+  },
+  "metadata": {
+    "lcsc": "C2843870",
+    "manufacturer": "XINGLIGHT",
+    "mpn": "XL-2835UGC-02",
+    "assembly": true,
+    "rotation_offset": 0,
+    "rotation_note": "Footprint has the anode at -x and the cathode at +x. JLCPCB's reel zero-orientation for this part is not yet verified: check the polarity in their placement preview on the first order and record the correction here."
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "SMA",
+  "description": "SMA / DO-214AC diode: pads 2.5 x 1.8 mm at 4.3 mm centres (body 4.3 x 2.6, lead span 4.7-5.3). Pad 1 = cathode (bar, -x), pad 2 = anode, same convention as SOD-123.",
+  "pads": [
+    {
+      "name": "1",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -2.15,
+        0
+      ],
+      "size": [
+        2.5,
+        1.8
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "2",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        2.15,
+        0
+      ],
+      "size": [
+        2.5,
+        1.8
+      ],
+      "corner_radius": 0.2
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          -3.7,
+          -1.1
+        ],
+        "to": [
+          -3.7,
+          1.1
+        ],
+        "width": 0.2
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -3.8,
+            -1.4
+          ],
+          [
+            3.8,
+            -1.4
+          ],
+          [
+            3.8,
+            1.4
+          ],
+          [
+            -3.8,
+            1.4
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    1.9
+  ]
+}

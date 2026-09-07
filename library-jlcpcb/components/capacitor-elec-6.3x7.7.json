@@ -1,0 +1,46 @@
+{
+  "schema": "pcb-component/1",
+  "name": "capacitor-elec-6.3x7.7",
+  "description": "SMD aluminium electrolytic, V-chip D6.3 x 7.7 mm. LCSC per value: 47u/50V = C72523 (Lelon RVT1H470M0607, 2000 h @ 105 C); 100u/50V = C3151829 (RVT1H101M0607)",
+  "footprint": {
+    "url": "../footprints/CP_Elec_6.3x7.7.json",
+    "blake3": "68a59d4a967f4b3a2ac3387bc62416dafa0dbed8859611c07fafcda7d17f6a9e"
+  },
+  "pins": [
+    {
+      "name": "+",
+      "pad": "1",
+      "description": "positive"
+    },
+    {
+      "name": "-",
+      "pad": "2",
+      "description": "negative (black bar on the can)"
+    }
+  ],
+  "parameters": {
+    "value": {
+      "default": "47u",
+      "description": "capacitance (SPICE syntax)"
+    },
+    "esr": {
+      "default": "0.8",
+      "description": "series resistance in ohms (RVT 47u/50V: ~3 ohm at 120 Hz, well under 1 ohm above 10 kHz)"
+    },
+    "lcsc": {
+      "default": "C72523",
+      "description": "LCSC part number for this value"
+    }
+  },
+  "spice": {
+    "template": "C{ref} {pin:+} {ref}_e {value}\nR{ref}_esr {ref}_e {pin:-} {esr}"
+  },
+  "metadata": {
+    "manufacturer": "ROQANG",
+    "mpn": "RVT1H470M0607",
+    "lcsc": "C72523",
+    "assembly": true,
+    "rotation_offset": 0,
+    "rotation_note": "positive terminal is pad 1 at -x; the can's black bar sits over the NEGATIVE pad. Check JLCPCB's preview on the first order. LCSC lists the RVT series under ROQANG (Lelon-compatible V-chip size)."
+  }
+}

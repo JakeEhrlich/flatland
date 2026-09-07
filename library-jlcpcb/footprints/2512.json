@@ -1,0 +1,64 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "2512",
+  "description": "Chip resistor 2512 (6432 metric), 1 W class: pads 1.7 x 3.5 mm at 5.9 mm centres, IPC nominal",
+  "pads": [
+    {
+      "name": "1",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -2.95,
+        0
+      ],
+      "size": [
+        1.7,
+        3.5
+      ],
+      "corner_radius": 0.25
+    },
+    {
+      "name": "2",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        2.95,
+        0
+      ],
+      "size": [
+        1.7,
+        3.5
+      ],
+      "corner_radius": 0.25
+    }
+  ],
+  "silkscreen": [],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -4.1,
+            -2.0
+          ],
+          [
+            4.1,
+            -2.0
+          ],
+          [
+            4.1,
+            2.0
+          ],
+          [
+            -4.1,
+            2.0
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    2.5
+  ]
+}

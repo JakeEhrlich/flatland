@@ -1,0 +1,46 @@
+{
+  "schema": "pcb-component/1",
+  "name": "led-togialed-3030-amber",
+  "description": "TOGIALED TJ-S3030UG5W6TLC9Y-A5 3030 amber LED, 595 nm dominant (591 nm peak), 150 mA rated, 0.39 W, Vf 2.6 V typ at 150 mA (~2.4 V at 60 mA, extrapolated: MEASURE IT), 120 deg (LCSC C42389961)",
+  "datasheet": {
+    "url": "https://www.lcsc.com/product-detail/C42389961.html"
+  },
+  "footprint": {
+    "url": "../footprints/LED_3030_TOGIALED.json",
+    "blake3": "d4514341ed53852f70fca96b324bc84df5b375e88e5a6173963da6284b30cb5f"
+  },
+  "pins": [
+    {
+      "name": "A",
+      "pad": "A",
+      "description": "anode (-x pad)"
+    },
+    {
+      "name": "K",
+      "pad": "K",
+      "description": "cathode (+x pad, silkscreen bar)"
+    }
+  ],
+  "parameters": {
+    "lcsc": {
+      "default": "C42389961",
+      "description": "LCSC part; C42389961 = TJ-S3030UG5W6TLC9Y-A5"
+    },
+    "vf_trim": {
+      "default": "0",
+      "description": "forward-voltage offset in volts for this LED (bin/part spread); the series source V<ref>_trim also measures the LED current: probe i(V<ref>_trim)"
+    }
+  },
+  "spice": {
+    "template": "D{ref} {pin:A} {ref}_m TJ3030_AMBER\nV{ref}_trim {ref}_m {pin:K} DC {vf_trim}",
+    "model": "* TOGIALED 3030 amber (AlInGaP). Only the 150 mA point is published (2.6 V typ); the model passes through it with N=2, RS=1.5 and lands at 2.42 V @ 60 mA. That extrapolation is the least trustworthy Vf here and is what a series ballast resistor depends on. Tempco -2.5 mV/K.\n.model TJ3030_AMBER D(IS=1.726e-21 N=2.0 RS=1.5 EG=3.074 XTI=2 CJO=40p TT=5n BV=8)"
+  },
+  "metadata": {
+    "lcsc": "C42389961",
+    "manufacturer": "TOGIALED",
+    "mpn": "TJ-S3030UG5W6TLC9Y-A5",
+    "assembly": true,
+    "rotation_offset": 0,
+    "rotation_note": "Footprint has the anode at -x and the cathode at +x. JLCPCB's reel zero-orientation for this part is not yet verified: check the polarity in their placement preview on the first order and record the correction here."
+  }
+}
