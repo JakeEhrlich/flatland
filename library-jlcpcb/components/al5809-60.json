@@ -1,7 +1,7 @@
 {
   "schema": "pcb-component/1",
   "name": "al5809-60",
-  "description": "Diodes AL5809-60P1-7 two-terminal 60 mA (±5%) constant-current LED regulator, 2.5-60 V across IN-OUT, PowerDI-123, 1.24 W on a good pad (LCSC C154921). Parallel several for more current; PWM 100-200 Hz via a low-side MOSFET on OUT (0.5 ms min on/off)",
+  "description": "Diodes AL5809-60P1-7 two-terminal 60 mA (\u00b15%) constant-current LED regulator, 2.5-60 V across IN-OUT, PowerDI-123, 1.24 W on a good pad (LCSC C154921). Parallel several for more current; PWM 100-200 Hz via a low-side MOSFET on OUT (0.5 ms min on/off)",
   "datasheet": {
     "url": "https://www.diodes.com/assets/Datasheets/AL5809.pdf"
   },
@@ -35,8 +35,8 @@
     "manufacturer": "Diodes Incorporated",
     "mpn": "AL5809-60P1-7",
     "assembly": true,
-    "rotation_offset": 0,
-    "rotation_note": "Pad 1 = IN at +x (unmarked end), pad 2 = OUT at -x (the end with the marking bar; datasheet DS36625 rev 5-2 p.1 and p.13). Verified against the datasheet 2026-09-07 after JLCPCB queried the polarity. In JLCPCB's preview the banded end must sit on the OUT pad.",
+    "rotation_offset": 180,
+    "rotation_note": "JLCPCB's reel orientation is 180\u00b0 from this footprint (their preview on the led-panel order, 2026-09-07, put the banded OUT end on the IN pad at offset 0). With offset 180 the CPL places the banded OUT end (pad 2, -x) and the unmarked IN end (pad 1, +x) where the footprint has them. Datasheet DS36625 p.13: bar = OUT.",
     "polarity": "banded end = OUT (pin 2)"
   }
 }

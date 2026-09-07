@@ -85,7 +85,7 @@
     },
     "al5809-60": {
       "url": "components/al5809-60.json",
-      "blake3": "d5ec5a078c2b60fca6e52c098bc0fb5be027b8f749dd45a119bc298ce703346f",
+      "blake3": "e219db2e1b9b62c2086706fcfc51e828faa890024108a58eb9a97989c8428ddd",
       "description": "Diodes AL5809-60P1-7 two-terminal 60 mA (±5%) constant-current LED regulator, 2.5-60 V across IN-OUT, PowerDI-123, 1.24 W on a good pad (LCSC C154921). Parallel several for more current; PWM 100-200 Hz via a low-side MOSFET on OUT (0.5 ms min on/off)"
     }
   }
