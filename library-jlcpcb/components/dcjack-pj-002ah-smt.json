@@ -1,0 +1,40 @@
+{
+  "schema": "pcb-component/1",
+  "name": "dcjack-pj-002ah-smt",
+  "description": "CUI PJ-002AH-SMT-TR DC power jack, 5.5 mm barrel / 2.0 mm centre pin, 24 V 5 A, SMT with two plastic locating pegs (needs two non-plated holes; check peg length against the board thickness when the back is a heatsink). LCSC C22434687",
+  "datasheet": {
+    "url": "https://www.cuidevices.com/product/resource/pj-002ah-smt-tr.pdf"
+  },
+  "footprint": {
+    "url": "../footprints/BarrelJack_CUI_PJ-002AH-SMT.json",
+    "blake3": "fe78121fbb75b8060ffe65812ca695fd5d64a66ea14443e9f47a36c55db0f2d9"
+  },
+  "pins": [
+    {
+      "name": "PIN",
+      "pad": [
+        "1A",
+        "1B"
+      ],
+      "description": "centre pin (terminal 1, two solder tabs) -- the + side of a centre-positive adapter"
+    },
+    {
+      "name": "SLEEVE",
+      "pad": "3",
+      "description": "barrel sleeve (terminal 3)"
+    },
+    {
+      "name": "SW",
+      "pad": "2",
+      "description": "switch contact (terminal 2): connected to the sleeve until a plug is inserted; tie to the sleeve net if unused"
+    }
+  ],
+  "metadata": {
+    "lcsc": "C22434687",
+    "manufacturer": "CUI Devices",
+    "mpn": "PJ-002AH-SMT-TR",
+    "assembly": true,
+    "rotation_offset": 0,
+    "rotation_note": "footprint has the plug entering from -y; JLCPCB's reel zero-orientation is unverified -- check the placement preview on the first order and record the offset here"
+  }
+}

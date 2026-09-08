@@ -151,6 +151,10 @@ pub struct DesignRules {
     /// Narrowest sliver of pour fill worth keeping (defaults to `trace_width`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pour_min_width: Option<Length>,
+    /// Pour-to-hole distance for unplated holes and other-net drills (default 0.3 mm;
+    /// fabs want more around a drill than between copper features).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hole_clearance: Option<Length>,
     /// Width of the four thermal relief spokes.
     #[serde(default = "default_spoke_width")]
     pub thermal_spoke_width: Length,
@@ -179,6 +183,7 @@ impl Default for DesignRules {
             hole_annular_ring: Length::from_mm(0.5),
             thermal_gap: None,
             pour_min_width: None,
+            hole_clearance: None,
             thermal_spoke_width: default_spoke_width(),
             net_classes: IndexMap::new(),
         }
@@ -194,6 +199,9 @@ impl DesignRules {
     }
     pub fn pour_min_width(&self) -> Length {
         self.pour_min_width.unwrap_or(self.trace_width)
+    }
+    pub fn hole_clearance(&self) -> Length {
+        self.hole_clearance.unwrap_or_else(|| self.pour_clearance().max(Length::from_mm(0.3)))
     }
     pub fn class(&self, name: Option<&str>) -> (Length, Length) {
         match name.and_then(|n| self.net_classes.get(n)) {

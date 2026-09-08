@@ -996,7 +996,7 @@
     "rulesets": [
       {
         "url": "drc/jlcpcb-fr4-2layer.json",
-        "blake3": "c665f3792f715dbc347bd19e0f12a615abb1cd3d6266bd7b32ff7f2aedd11096"
+        "blake3": "aa6e38d15f8812a6fd5117106bbea5b3246cc94babe2da4d6b6e123090851065"
       }
     ],
     "waivers": [

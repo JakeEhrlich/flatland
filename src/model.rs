@@ -470,15 +470,18 @@ impl Board {
                 }
                 cut.push(ring);
             }
+            // Drills keep `hole_clearance` (more than copper-to-copper: a drill
+            // must not break out into the fill).
+            let mut hole_cut: Rings = Vec::new();
             for h in &self.holes {
                 if h.copper.is_none() || h.hole.net != pour.net {
-                    cut.push(h.ring.clone());
+                    hole_cut.push(h.ring.clone());
                 }
             }
             for pad in self.all_pads() {
                 if let Some(d) = pad.drill_ring() {
                     if pad.net.is_none() || pad.net != pour.net || !pad.plated {
-                        cut.push(d);
+                        hole_cut.push(d);
                     }
                 }
             }
@@ -490,6 +493,10 @@ impl Board {
             }
             if !cut.is_empty() {
                 let cut = geom::offset(&cut, clearance);
+                copper = geom::difference(&copper, &cut)?;
+            }
+            if !hole_cut.is_empty() {
+                let cut = geom::offset(&hole_cut, rules.hole_clearance().max(clearance));
                 copper = geom::difference(&copper, &cut)?;
             }
             // Slivers narrower than `pour_min_width` (a trace squeezing between

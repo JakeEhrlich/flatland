@@ -1,0 +1,42 @@
+{
+  "schema": "pcb-component/1",
+  "name": "al5809-20",
+  "description": "Diodes AL5809-20S1-7 two-terminal 20 mA (+-5%) constant-current LED regulator, 2.5-60 V across IN-OUT, SOD-123, 0.36 W (LCSC C332295). Same family as the al5809-60; for low-current strings such as 0805 indicator-class LEDs",
+  "datasheet": {
+    "url": "https://www.diodes.com/assets/Datasheets/AL5809.pdf"
+  },
+  "footprint": {
+    "url": "../footprints/SOD-123.json",
+    "blake3": "de4f68797c4c3ac69d3a4532350ff08bee8deab58e8b7aba08512eb373c906ef"
+  },
+  "pins": [
+    {
+      "name": "IN",
+      "pad": "2",
+      "description": "current input (LED cathode side for low-side use); the unmarked end"
+    },
+    {
+      "name": "OUT",
+      "pad": "1",
+      "description": "current output (to GND / PWM switch); the banded end, pad 1 of the SOD-123 footprint"
+    }
+  ],
+  "parameters": {
+    "current": {
+      "default": "20m",
+      "description": "regulated current (SPICE units), 19-21 mA for the -20 part"
+    }
+  },
+  "spice": {
+    "template": "B{ref} {pin:IN} {pin:OUT} I = {current} * max(0, min(1, (V({pin:IN},{pin:OUT}) - 1.5) / 1.0))\nR{ref}_p {pin:IN} {pin:OUT} 2e6"
+  },
+  "metadata": {
+    "lcsc": "C332295",
+    "manufacturer": "Diodes Incorporated",
+    "mpn": "AL5809-20S1-7",
+    "assembly": true,
+    "rotation_offset": 0,
+    "rotation_note": "SOD-123 band assumed to mark OUT as it does on the PowerDI-123 part (DS36625: bar = OUT); JLCPCB reel orientation unverified -- check the placement preview on the first order",
+    "polarity": "banded end = OUT (pad 1)"
+  }
+}

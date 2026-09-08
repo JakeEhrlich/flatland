@@ -1,0 +1,78 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "LED_0805_TZ",
+  "description": "0805 (2012 metric) chip LED, TUOZHAN P2-0805UVTCS2 datasheet 'Suggested Soldering PAD': two 1.2 x 1.25 mm pads, 0.9 mm gap. Drawn anode at -x, cathode at +x (silkscreen bar), matching the other LEDs in this library. The datasheet's polarity marks are ambiguous: verify the cathode end on the first parts.",
+  "pads": [
+    {
+      "name": "A",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -1.05,
+        0
+      ],
+      "size": [
+        1.2,
+        1.25
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "K",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        1.05,
+        0
+      ],
+      "size": [
+        1.2,
+        1.25
+      ],
+      "corner_radius": 0.2
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          1.95,
+          -0.7
+        ],
+        "to": [
+          1.95,
+          0.7
+        ],
+        "width": 0.2
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -2.4,
+            -0.95
+          ],
+          [
+            2.4,
+            -0.95
+          ],
+          [
+            2.4,
+            0.95
+          ],
+          [
+            -2.4,
+            0.95
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    1.5
+  ]
+}

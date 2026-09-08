@@ -1345,9 +1345,10 @@ pub fn run_rules(ctx: &Ctx, c: RulesCmd) -> Result<()> {
                     "hole_annular_ring" => r.hole_annular_ring = val,
                     "thermal_gap" => r.thermal_gap = Some(val),
                     "pour_min_width" => r.pour_min_width = Some(val),
+                    "hole_clearance" => r.hole_clearance = Some(val),
                     "thermal_spoke_width" => r.thermal_spoke_width = val,
                     other => {
-                        let names = ["trace_width", "clearance", "via_drill", "via_diameter", "pour_clearance", "mask_expansion", "paste_shrink", "silk_width", "silk_text_size", "edge_clearance", "hole_annular_ring", "thermal_gap", "thermal_spoke_width", "pour_min_width"];
+                        let names = ["trace_width", "clearance", "via_drill", "via_diameter", "pour_clearance", "mask_expansion", "paste_shrink", "silk_width", "silk_text_size", "edge_clearance", "hole_annular_ring", "thermal_gap", "thermal_spoke_width", "pour_min_width", "hole_clearance"];
                         let mut e = Error::msg(format!("unknown design rule `{other}`; rules are {}", list_names(names)));
                         if let Some(s) = suggest(other, names) {
                             e = e.help(s);
@@ -1369,8 +1370,8 @@ pub fn run_rules(ctx: &Ctx, c: RulesCmd) -> Result<()> {
         }
         RulesCmd::Show => {
             let r = &loaded.project.design_rules;
-            println!("trace_width {}\nclearance {}\nvia_drill {}\nvia_diameter {}\npour_clearance {}\nmask_expansion {}\npaste_shrink {}\nsilk_width {}\nsilk_text_size {}\nedge_clearance {}\nhole_annular_ring {}\nthermal_gap {}\nthermal_spoke_width {}\npour_min_width {}",
-                r.trace_width, r.clearance, r.via_drill, r.via_diameter, r.pour_clearance(), r.mask_expansion, r.paste_shrink, r.silk_width, r.silk_text_size, r.edge_clearance, r.hole_annular_ring, r.thermal_gap(), r.thermal_spoke_width, r.pour_min_width());
+            println!("trace_width {}\nclearance {}\nvia_drill {}\nvia_diameter {}\npour_clearance {}\nmask_expansion {}\npaste_shrink {}\nsilk_width {}\nsilk_text_size {}\nedge_clearance {}\nhole_annular_ring {}\nthermal_gap {}\nthermal_spoke_width {}\npour_min_width {}\nhole_clearance {}",
+                r.trace_width, r.clearance, r.via_drill, r.via_diameter, r.pour_clearance(), r.mask_expansion, r.paste_shrink, r.silk_width, r.silk_text_size, r.edge_clearance, r.hole_annular_ring, r.thermal_gap(), r.thermal_spoke_width, r.pour_min_width(), r.hole_clearance());
             for (n, c) in &r.net_classes {
                 println!("class {n}: width {} clearance {}", c.trace_width.map(|l| l.to_string()).unwrap_or("default".into()), c.clearance.map(|l| l.to_string()).unwrap_or("default".into()));
             }

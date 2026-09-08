@@ -137,6 +137,41 @@
       "url": "components/resistor-2512.json",
       "blake3": "21d3c0d4ad574d6c30504d0a2dd7bb1ea90ebd2697cae1f01fed21a40adfd1ba",
       "description": "Chip resistor 2512, 1 W. LCSC per value (all 1 W 200 V thick film): 62R 1% = C2999540 (low stock), 68R 5% = C25492, 82R 1% = C3000773 (low stock), 91R 1% = C878260, 100R 1% = C35218 — stock as of 2026-09-07"
+    },
+    "jst-ph-s7b-sm4": {
+      "url": "components/jst-ph-s7b-sm4.json",
+      "blake3": "06b92ec175ce4101e950c5fc6aec644f611f22bf27dfbc33be2194b00fefff89",
+      "description": "JST S7B-PH-SM4-TB(LF)(SN) PH 2.0 mm side-entry SMD header, 7 pins, 2 A / 100 V per pin, mates with PHR-7 housings (pre-crimped 7-pin PH cables are a commodity). LCSC C265453 (extended)"
+    },
+    "dcjack-pj-002ah-smt": {
+      "url": "components/dcjack-pj-002ah-smt.json",
+      "blake3": "27264fd1140397112854e0b87c604f9f67da8a041dbe9fadfa37a9e6ee465417",
+      "description": "CUI PJ-002AH-SMT-TR DC power jack, 5.5 mm barrel / 2.0 mm centre pin, 24 V 5 A, SMT with two plastic locating pegs (needs two non-plated holes; check peg length against the board thickness when the back is a heatsink). LCSC C22434687"
+    },
+    "led-xinglight-2835-yellowwhite": {
+      "url": "components/led-xinglight-2835-yellowwhite.json",
+      "blake3": "93907fde4235b4529cbaff32d30a218407ad66e563d91ad5e5c7778a807ac9e6",
+      "description": "XINGLIGHT XL-2835YWC-02 2835 phosphor-converted 'yellow white' LED, 1800-1900 K, 60 mA, 200 mW, Vf 3.0-3.4 V, 120 deg, 5.5-6.2 cd (~18 lm). Almost all of its blue pump is converted by a broad yellow phosphor, so it plays the 'lime' role in a colour mix: one wide band filling 520-650 nm (LCSC C7371920). Same footprint as the XL-2835 blue/green"
+    },
+    "jst-ph-s8b-sm4": {
+      "url": "components/jst-ph-s8b-sm4.json",
+      "blake3": "de3b988672b71d03d7f76ab4f6d21f09c62e9b5f109e3d725c3e2809adb41c8e",
+      "description": "JST S8B-PH-SM4-TB(LF)(SN) PH 2.0 mm side-entry SMD header, 8 pins, 2 A / 100 V per pin, mates with PHR-8 housings. LCSC C265121 (extended)"
+    },
+    "led-0805-violet-415": {
+      "url": "components/led-0805-violet-415.json",
+      "blake3": "91e3329692576fb8198ec23785a6645a9d65c6e4a41ba16121145af751d8e15e",
+      "description": "TUOZHAN P2-0805UVTCS2-0.8T 0805 violet LED, 410-420 nm peak (13 nm FWHM), 20 mA test / 30 mA max, Vf 2.8-3.4 V (3.0 typ), 90 mW, 120 deg, 10-50 mcd (LCSC C2827270). The violet primary below the whites' 450 nm pump; run on its own 20 mA regulator string"
+    },
+    "jst-ph-s9b-sm4": {
+      "url": "components/jst-ph-s9b-sm4.json",
+      "blake3": "aa8dcf52981f3e9197da17211cf5533eef5c94d07143e1c0fc6174930c683497",
+      "description": "JST S9B-PH-SM4-TB(LF)(SN) PH 2.0 mm side-entry SMD header, 9 pins, 2 A / 100 V per pin, mates with PHR-9 housings. LCSC C495694 (extended)"
+    },
+    "al5809-20": {
+      "url": "components/al5809-20.json",
+      "blake3": "0722b08ed0cb057ab664c081c145befc767d991c2b08d2d8541e723e43a8928d",
+      "description": "Diodes AL5809-20S1-7 two-terminal 20 mA (+-5%) constant-current LED regulator, 2.5-60 V across IN-OUT, SOD-123, 0.36 W (LCSC C332295). Same family as the al5809-60; for low-current strings such as 0805 indicator-class LEDs"
     }
   }
 }

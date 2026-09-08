@@ -35,7 +35,8 @@ computed from the current board every time it is loaded:
 2. clip it to the outline shrunk by `edge_clearance`;
 3. subtract all copper of *other* nets (and unassigned copper) on that
    layer — pads, traces, vias, plated hole rings — grown by the clearance;
-4. subtract non-plated holes and every drill not on the pour's net;
+4. subtract non-plated holes and every drill not on the pour's net, grown
+   by `hole_clearance` (a drill must not break out into the fill);
 5. subtract the boundaries of higher-priority pours on the same layer;
 6. remove every sliver of fill narrower than `pour_min_width` (default:
    `trace_width`) — a trace squeezed between two pads would otherwise leave

@@ -1,0 +1,62 @@
+{
+  "schema": "pcb-component/1",
+  "name": "jst-ph-s8b-sm4",
+  "description": "JST S8B-PH-SM4-TB(LF)(SN) PH 2.0 mm side-entry SMD header, 8 pins, 2 A / 100 V per pin, mates with PHR-8 housings. LCSC C265121 (extended)",
+  "datasheet": {
+    "url": "https://www.jst-mfg.com/product/pdf/eng/ePH.pdf"
+  },
+  "footprint": {
+    "url": "../footprints/JST_PH_S8B-PH-SM4-TB.json",
+    "blake3": "edb81cecb86db1da46b406100120a17150d0455e2c82f43299986af9768c8d08"
+  },
+  "pins": [
+    {
+      "name": "1",
+      "pad": "1"
+    },
+    {
+      "name": "2",
+      "pad": "2"
+    },
+    {
+      "name": "3",
+      "pad": "3"
+    },
+    {
+      "name": "4",
+      "pad": "4"
+    },
+    {
+      "name": "5",
+      "pad": "5"
+    },
+    {
+      "name": "6",
+      "pad": "6"
+    },
+    {
+      "name": "7",
+      "pad": "7"
+    },
+    {
+      "name": "8",
+      "pad": "8"
+    },
+    {
+      "name": "MP",
+      "pad": [
+        "MP1",
+        "MP2"
+      ],
+      "description": "mounting tabs (mechanical; leave unconnected or tie to GND)"
+    }
+  ],
+  "metadata": {
+    "lcsc": "C265121",
+    "manufacturer": "JST",
+    "mpn": "S8B-PH-SM4-TB(LF)(SN)",
+    "assembly": true,
+    "rotation_offset": 0,
+    "rotation_note": "footprint has pin 1 at -x and the cable entering from -y; JLCPCB's reel zero-orientation is unverified -- check the placement preview on the first order and record the offset here"
+  }
+}

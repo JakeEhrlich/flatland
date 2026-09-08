@@ -87,7 +87,8 @@
       "name": "pth-annular-ring",
       "for": "pad",
       "where": {
-        "kind": "through_hole"
+        "kind": "through_hole",
+        "plated": true
       },
       "check": {
         "min": {
@@ -100,7 +101,8 @@
       "name": "pth-annular-ring-recommended",
       "for": "pad",
       "where": {
-        "kind": "through_hole"
+        "kind": "through_hole",
+        "plated": true
       },
       "severity": "warning",
       "check": {

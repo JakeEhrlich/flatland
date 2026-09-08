@@ -434,3 +434,38 @@ fn design_rules() {
     let out = p.run(&["check"]).1;
     assert!(!out.contains("sliver"), "{out}");
 }
+
+#[test]
+fn gerber_pours_emit_in_priority_order() {
+    // Two overlapping pours on one layer: a board-wide GND at priority 0 and a VCC
+    // island at priority 1 cut out of it.  In RS-274X an LPC clear erases everything
+    // drawn before it, so the GND pour (whose holes include the island) has to be
+    // emitted before the island's fill or the island vanishes from the fab file.
+    let p = Proj::new("pourorder");
+    p.ok(&["init", "pours", "--layers", "F.Cu", "--index", library().to_str().unwrap()]);
+    p.ok(&["outline", "rect", "40", "30"]);
+    p.ok(&["add", "R1", "resistor-0603"]);
+    p.ok(&["add", "R2", "resistor-0603"]);
+    p.ok(&["place", "R1", "10,15"]);
+    p.ok(&["place", "R2", "30,15"]);
+    p.ok(&["connect", "R1.1", "R2.1", "--net", "VCC"]);
+    p.ok(&["connect", "R1.2", "R2.2", "--net", "GND"]);
+    // The island is declared first on purpose: emission order must not follow project order.
+    p.ok(&["pour", "new", "vcc", "--layer", "F.Cu", "--net", "VCC", "--rect", "5,5", "--size", "12,20", "--priority", "1"]);
+    p.ok(&["pour", "new", "gnd", "--layer", "F.Cu", "--net", "GND", "--follow-outline"]);
+    p.ok(&["gerbers"]);
+    let gtl = std::fs::read_to_string(p.build("gerbers/pours-F_Cu.gtl")).unwrap();
+    // The first region drawn is the GND pour: it reaches the far edge of the board.
+    let first = gtl.split("G36*").nth(1).unwrap();
+    let first = &first[..first.find("G37*").unwrap()];
+    let max_x = first
+        .lines()
+        .filter_map(|l| l.strip_prefix('X').and_then(|r| r.split('Y').next()).and_then(|x| x.parse::<i64>().ok()))
+        .max()
+        .unwrap();
+    assert!(max_x > 30_000_000, "first region should be the board-wide GND pour, max x = {max_x}:\n{first}");
+    // And the island's fill comes after the GND pour's clears.
+    let gnd_clear = gtl.find("%LPC*%").unwrap();
+    let island_fill = gtl.find("X5000000Y").or_else(|| gtl.find("X17000000Y")).expect("island region");
+    assert!(island_fill > gnd_clear, "VCC island must be drawn after the GND pour's LPC clears");
+}

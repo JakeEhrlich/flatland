@@ -1,0 +1,58 @@
+{
+  "schema": "pcb-component/1",
+  "name": "jst-ph-s7b-sm4",
+  "description": "JST S7B-PH-SM4-TB(LF)(SN) PH 2.0 mm side-entry SMD header, 7 pins, 2 A / 100 V per pin, mates with PHR-7 housings (pre-crimped 7-pin PH cables are a commodity). LCSC C265453 (extended)",
+  "datasheet": {
+    "url": "https://www.jst-mfg.com/product/pdf/eng/ePH.pdf"
+  },
+  "footprint": {
+    "url": "../footprints/JST_PH_S7B-PH-SM4-TB.json",
+    "blake3": "5c9eeea9e2cecc3ea3d93af63bab0eca1824d4bf65886f485ec4a25675cffd62"
+  },
+  "pins": [
+    {
+      "name": "1",
+      "pad": "1"
+    },
+    {
+      "name": "2",
+      "pad": "2"
+    },
+    {
+      "name": "3",
+      "pad": "3"
+    },
+    {
+      "name": "4",
+      "pad": "4"
+    },
+    {
+      "name": "5",
+      "pad": "5"
+    },
+    {
+      "name": "6",
+      "pad": "6"
+    },
+    {
+      "name": "7",
+      "pad": "7"
+    },
+    {
+      "name": "MP",
+      "pad": [
+        "MP1",
+        "MP2"
+      ],
+      "description": "mounting tabs (mechanical; leave unconnected or tie to GND)"
+    }
+  ],
+  "metadata": {
+    "lcsc": "C265453",
+    "manufacturer": "JST",
+    "mpn": "S7B-PH-SM4-TB(LF)(SN)",
+    "assembly": true,
+    "rotation_offset": 0,
+    "rotation_note": "footprint has pin 1 at -x and the cable entering from -y; JLCPCB's reel zero-orientation is unverified -- check the placement preview on the first order and record the offset here"
+  }
+}

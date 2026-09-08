@@ -1,0 +1,46 @@
+{
+  "schema": "pcb-component/1",
+  "name": "led-xinglight-2835-yellowwhite",
+  "description": "XINGLIGHT XL-2835YWC-02 2835 phosphor-converted 'yellow white' LED, 1800-1900 K, 60 mA, 200 mW, Vf 3.0-3.4 V, 120 deg, 5.5-6.2 cd (~18 lm). Almost all of its blue pump is converted by a broad yellow phosphor, so it plays the 'lime' role in a colour mix: one wide band filling 520-650 nm (LCSC C7371920). Same footprint as the XL-2835 blue/green",
+  "datasheet": {
+    "url": "https://www.lcsc.com/product-detail/C7371920.html"
+  },
+  "footprint": {
+    "url": "../footprints/LED_2835_XINGLIGHT.json",
+    "blake3": "1862ef1bb688bb1b15abaced7b41a659dbfc955b66d31ed4ca58f48b6fb5cc17"
+  },
+  "pins": [
+    {
+      "name": "A",
+      "pad": "A",
+      "description": "anode (-x pad)"
+    },
+    {
+      "name": "K",
+      "pad": "K",
+      "description": "cathode (+x pad, silkscreen bar)"
+    }
+  ],
+  "parameters": {
+    "lcsc": {
+      "default": "C7371920",
+      "description": "LCSC part; C7371920 = XL-2835YWC-02"
+    },
+    "vf_trim": {
+      "default": "0",
+      "description": "forward-voltage offset in volts for this LED (bin/part spread); the series source V<ref>_trim also measures the LED current: probe i(V<ref>_trim)"
+    }
+  },
+  "spice": {
+    "template": "D{ref} {pin:A} {ref}_m XL2835_YW\nV{ref}_trim {ref}_m {pin:K} DC {vf_trim}",
+    "model": "* XINGLIGHT XL-2835YWC-02 (InGaN pump + phosphor), fitted for 3.20 V at 60 mA (catalogue 3.0-3.4 V), tempco -2.5 mV/K; vf_trim=+0.20 is the maximum.\n.model XL2835_YW D(IS=1.698e-23 N=2.4 RS=2.0 EG=3.779 XTI=2 CJO=40p TT=5n BV=8)"
+  },
+  "metadata": {
+    "lcsc": "C7371920",
+    "manufacturer": "XINGLIGHT",
+    "mpn": "XL-2835YWC-02",
+    "assembly": true,
+    "rotation_offset": 0,
+    "rotation_note": "Footprint has the anode at -x and the cathode at +x. JLCPCB's reel zero-orientation for this part is not yet verified: check the polarity in their placement preview on the first order and record the correction here."
+  }
+}

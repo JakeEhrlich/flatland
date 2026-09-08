@@ -1,0 +1,149 @@
+{
+  "schema": "pcb-footprint/1",
+  "name": "BarrelJack_CUI_PJ-002AH-SMT",
+  "description": "CUI PJ-002AH-SMT 5.5/2.0 mm DC barrel jack, SMT. From the datasheet's Recommended PCB Layout: four 4.0 x 2.5 mm pads on 13.0 mm centres (17.0 outer / 9.0 inner span), rows 6.0 mm apart; two non-plated locating-peg holes on the centreline, 1.8 mm 1.4 mm behind the front pad row and 1.7 mm on the rear pad row. Drawn with the plug entering from -y: front face 2.4 mm ahead of the front pads, body 9.0 wide, rear 5.0 mm behind the rear pads. Pads: 1A/1B (-x, both = pin 1, centre pin), 3 (+x front, sleeve), 2 (+x rear, switch contact, closed to the sleeve with no plug inserted).",
+  "pads": [
+    {
+      "name": "1A",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -6.5,
+        -3.0
+      ],
+      "size": [
+        4.0,
+        2.5
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "1B",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        -6.5,
+        3.0
+      ],
+      "size": [
+        4.0,
+        2.5
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "3",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        6.5,
+        -3.0
+      ],
+      "size": [
+        4.0,
+        2.5
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "2",
+      "type": "smd",
+      "shape": "round_rect",
+      "at": [
+        6.5,
+        3.0
+      ],
+      "size": [
+        4.0,
+        2.5
+      ],
+      "corner_radius": 0.2
+    },
+    {
+      "name": "PEG1",
+      "type": "through_hole",
+      "shape": "circle",
+      "at": [
+        0,
+        -1.6
+      ],
+      "size": [
+        1.8,
+        1.8
+      ],
+      "drill": 1.8,
+      "plated": false
+    },
+    {
+      "name": "PEG2",
+      "type": "through_hole",
+      "shape": "circle",
+      "at": [
+        0,
+        3.0
+      ],
+      "size": [
+        1.7,
+        1.7
+      ],
+      "drill": 1.7,
+      "plated": false
+    }
+  ],
+  "silkscreen": [
+    {
+      "line": {
+        "from": [
+          -4.5,
+          -5.4
+        ],
+        "to": [
+          4.5,
+          -5.4
+        ],
+        "width": 0.2
+      }
+    },
+    {
+      "line": {
+        "from": [
+          -4.5,
+          8.0
+        ],
+        "to": [
+          4.5,
+          8.0
+        ],
+        "width": 0.15
+      }
+    }
+  ],
+  "courtyard": [
+    {
+      "polyline": {
+        "points": [
+          [
+            -8.8,
+            -5.8
+          ],
+          [
+            8.8,
+            -5.8
+          ],
+          [
+            8.8,
+            8.3
+          ],
+          [
+            -8.8,
+            8.3
+          ]
+        ]
+      }
+    }
+  ],
+  "label_at": [
+    0,
+    9.2
+  ]
+}

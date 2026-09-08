@@ -20,7 +20,7 @@ and the optional hash pins the referenced file's contents.
     "trace_width": 0.25, "clearance": 0.2, "via_drill": 0.4, "via_diameter": 0.8,
     "pour_clearance": null, "mask_expansion": 0.05, "paste_shrink": 0, "silk_width": 0.15,
     "silk_text_size": 1, "edge_clearance": 0.3, "hole_annular_ring": 0.5,
-    "thermal_gap": null, "thermal_spoke_width": 0.3, "pour_min_width": null,
+    "thermal_gap": null, "thermal_spoke_width": 0.3, "pour_min_width": null, "hole_clearance": null,
     "net_classes": { "power": { "trace_width": 0.5, "clearance": 0.3 } }
   },
   "outline": [

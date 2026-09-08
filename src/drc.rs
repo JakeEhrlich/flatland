@@ -211,7 +211,9 @@ pub fn collect(board: &Board) -> Result<Vec<Item>> {
         it.attrs.insert("height", pad.size[1].mm());
         if let Some(d) = pad.drill {
             it.attrs.insert("drill", d.mm());
-            it.attrs.insert("annular_ring", (pad.size[0].mm().min(pad.size[1].mm()) - d.mm()) / 2.0);
+            if pad.plated {
+                it.attrs.insert("annular_ring", (pad.size[0].mm().min(pad.size[1].mm()) - d.mm()) / 2.0);
+            }
         }
         it.plated = Some(pad.plated);
         it.pad_kind = Some(match pad.pad_type {
@@ -760,6 +762,7 @@ fn eval(board: &Board, items: &[Item], rule: &Rule, findings: &mut Vec<Finding>)
                     "hole_annular_ring" => rules.hole_annular_ring,
                     "thermal_spoke_width" => rules.thermal_spoke_width,
                     "pour_min_width" => rules.pour_min_width(),
+                    "hole_clearance" => rules.hole_clearance(),
                     _ => continue,
                 };
                 if have.mm() + 1e-6 < *v {

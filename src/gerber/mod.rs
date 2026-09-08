@@ -51,7 +51,14 @@ pub fn emit(board: &Board, dir: &Path, zip: bool) -> Result<Vec<PathBuf>> {
     for (idx, layer) in board.layers().iter().enumerate() {
         let mut g = Gerber::new(&format!("Copper,L{},{}", idx + 1, side_word(board, idx)), "Positive");
         // Pours first (their holes are polarity-cleared), then everything else on top.
-        for p in board.pours.iter().filter(|p| &p.pour.layer == layer) {
+        // Lowest priority first: a lower-priority pour's fill has the higher-priority
+        // pours' boundaries cut out of it as holes, and an LPC clear erases everything
+        // drawn before it, so a pour emitted before a lower-priority neighbour would be
+        // wiped out by that neighbour's hole (a power island declared before the ground
+        // pour vanished from the fab file this way).
+        let mut pours: Vec<_> = board.pours.iter().filter(|p| &p.pour.layer == layer).collect();
+        pours.sort_by_key(|p| p.pour.priority);
+        for p in pours {
             g.regions_with_holes(&p.copper);
         }
         // Traces as filled regions (flat ends, round joins), the same polygon the
