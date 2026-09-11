@@ -40,7 +40,7 @@
     "manufacturer": "XINGLIGHT",
     "mpn": "XL-2835YWC-02",
     "assembly": true,
-    "rotation_offset": 0,
-    "rotation_note": "Footprint has the anode at -x and the cathode at +x. JLCPCB's reel zero-orientation for this part is not yet verified: check the polarity in their placement preview on the first order and record the correction here."
+    "rotation_offset": 180,
+    "rotation_note": "JLCPCB's reel orientation for the YWC is 180 degrees from this footprint, unlike the UBC/UGC in the same package (their preview on the mug order, 2026-09-08, showed it backwards at offset 0). With 180 the cathode lands on the +x pad."
   }
 }

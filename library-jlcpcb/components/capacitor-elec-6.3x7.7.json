@@ -41,6 +41,6 @@
     "lcsc": "C72523",
     "assembly": true,
     "rotation_offset": 0,
-    "rotation_note": "positive terminal is pad 1 at -x; the can's black bar sits over the NEGATIVE pad. Check JLCPCB's preview on the first order. LCSC lists the RVT series under ROQANG (Lelon-compatible V-chip size)."
+    "rotation_note": "verified in JLCPCB's placement preview on the mug order, 2026-09-08: positive on pad 1 (-x) with offset 0. positive terminal is pad 1 at -x; the can's black bar sits over the NEGATIVE pad. Check JLCPCB's preview on the first order. LCSC lists the RVT series under ROQANG (Lelon-compatible V-chip size)."
   }
 }

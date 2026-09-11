@@ -7,7 +7,7 @@
   },
   "footprint": {
     "url": "../footprints/JST_PH_S9B-PH-SM4-TB.json",
-    "blake3": "d4f5a714e993d244eff748b088be8f20e0da18f81c9562140db3068a1c434efb"
+    "blake3": "7134c15d9244dff8d80f3ac75042e9c65eede34b3a223233ebbb387daac97ea2"
   },
   "pins": [
     {
@@ -61,6 +61,6 @@
     "mpn": "S9B-PH-SM4-TB(LF)(SN)",
     "assembly": true,
     "rotation_offset": 0,
-    "rotation_note": "footprint has pin 1 at -x and the cable entering from -y; JLCPCB's reel zero-orientation is unverified -- check the placement preview on the first order and record the offset here"
+    "rotation_note": "Footprint has pin 1 at -x and the cable entering from +y, the pin-pad side (verified on JLCPCB's 3D preview on the mug order, 2026-09-08, offset 0: the model matches the pads). To point the mouth at a board edge on the +x side, place at rotation 270; pin 1 then sits at the +y end."
   }
 }

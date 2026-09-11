@@ -40,7 +40,7 @@
     "manufacturer": "TUOZHAN",
     "mpn": "P2-0805UVTCS2-0.8T",
     "assembly": true,
-    "rotation_offset": 0,
-    "rotation_note": "anode at -x, cathode at +x in the footprint; the datasheet marks polarity inconsistently between its views, so confirm the cathode end in JLCPCB's placement preview and with a meter on the first board"
+    "rotation_offset": 180,
+    "rotation_note": "JLCPCB's reel orientation is 180 degrees from this footprint (their preview on the mug order, 2026-09-08, showed it backwards at offset 0). With 180 the cathode lands on the +x pad. The datasheet's own polarity marks remain ambiguous: confirm with a meter on the first board."
   }
 }

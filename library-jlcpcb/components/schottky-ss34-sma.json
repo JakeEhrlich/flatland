@@ -31,6 +31,6 @@
     "mpn": "SS34",
     "assembly": true,
     "rotation_offset": 0,
-    "rotation_note": "cathode bar at -x (pad 1); check JLCPCB's preview on the first order"
+    "rotation_note": "verified in JLCPCB's placement preview on the mug order, 2026-09-08: cathode bar at pad 1 (-x) with offset 0. cathode bar at -x (pad 1); check JLCPCB's preview on the first order"
   }
 }

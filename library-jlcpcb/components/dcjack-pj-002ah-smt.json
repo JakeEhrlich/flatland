@@ -7,7 +7,7 @@
   },
   "footprint": {
     "url": "../footprints/BarrelJack_CUI_PJ-002AH-SMT.json",
-    "blake3": "fe78121fbb75b8060ffe65812ca695fd5d64a66ea14443e9f47a36c55db0f2d9"
+    "blake3": "20a87a4f803f1c7d578bb03307bcf9c6b8d3111072313b9a3e3ecffe7d389420"
   },
   "pins": [
     {

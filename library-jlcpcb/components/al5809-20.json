@@ -35,8 +35,8 @@
     "manufacturer": "Diodes Incorporated",
     "mpn": "AL5809-20S1-7",
     "assembly": true,
-    "rotation_offset": 0,
-    "rotation_note": "SOD-123 band assumed to mark OUT as it does on the PowerDI-123 part (DS36625: bar = OUT); JLCPCB reel orientation unverified -- check the placement preview on the first order",
+    "rotation_offset": 180,
+    "rotation_note": "SOD-123: JLCPCB's reel orientation is 180 degrees from this footprint, the same as the PowerDI-123 part. Their preview on the mug order (2026-09-08) showed the band on the wrong end at CPL rotation 180 (design rotation 180 + offset 0); offset 180 puts the band on pad 1 (OUT). Band = OUT = pad 1.",
     "polarity": "banded end = OUT (pad 1)"
   }
 }

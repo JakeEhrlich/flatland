@@ -90,34 +90,7 @@
       "plated": false
     }
   ],
-  "silkscreen": [
-    {
-      "line": {
-        "from": [
-          -4.5,
-          -5.4
-        ],
-        "to": [
-          4.5,
-          -5.4
-        ],
-        "width": 0.2
-      }
-    },
-    {
-      "line": {
-        "from": [
-          -4.5,
-          8.0
-        ],
-        "to": [
-          4.5,
-          8.0
-        ],
-        "width": 0.15
-      }
-    }
-  ],
+  "silkscreen": [],
   "courtyard": [
     {
       "polyline": {

@@ -29,6 +29,7 @@
     "manufacturer": "JSCJ",
     "mpn": "2N7002",
     "assembly": true,
-    "rotation_offset": 0
+    "rotation_offset": 270,
+    "rotation_note": "JLCPCB's SOT-23 reel orientation is 90 degrees clockwise from this footprint: their preview on the mug order (2026-09-08) at offset 0 showed the two-lead side on top where the footprint has it on the right, with the pin-1 dot at top-right where pad 1 sits at bottom-right. Offset 270 turns the part clockwise by 90 so both line up: pins 1 (G) and 2 (S) on the footprint's pads 1 and 2, pin 3 (D) on pad 3."
   }
 }

@@ -1,7 +1,7 @@
 {
   "schema": "pcb-footprint/1",
   "name": "JST_PH_S7B-PH-SM4-TB",
-  "description": "JST PH 2.0 mm side-entry (horizontal) SMD header, 7 pins, S7B-PH-SM4-TB: pin pads 1.0 x 3.5 mm on 2.0 mm pitch at +y (the solder tails behind the housing), two 1.5 x 3.4 mm mounting tabs at the wire-entry corners (-y). The cable enters from -y; housing about 17.9 x 8.6 mm, 5.5 mm tall. Pin 1 at -x (silkscreen tick). Geometry from the KiCad JST_PH_S7B-PH-SM4-TB_1x07-1MP footprint, which follows JST drawing ePH.pdf.",
+  "description": "JST PH 2.0 mm side-entry (horizontal) SMD header, 7 pins, S7B-PH-SM4-TB: pin pads 1.0 x 3.5 mm on 2.0 mm pitch at +y, two 1.5 x 3.4 mm mounting tabs at -y. The cable enters from +y, the PIN-PAD side (verified against JLCPCB's 3D preview on the mug order, 2026-09-08; an earlier description had it backwards); housing about 17.9 x 8.6 mm, 5.5 mm tall. Pin 1 at -x (silkscreen tick). Geometry from the KiCad JST_PH_S7B-PH-SM4-TB_1x07-1MP footprint, which follows JST drawing ePH.pdf.",
   "pads": [
     {
       "name": "1",
@@ -142,19 +142,6 @@
           5.0
         ],
         "width": 0.2
-      }
-    },
-    {
-      "line": {
-        "from": [
-          -9.7,
-          -5.1
-        ],
-        "to": [
-          9.7,
-          -5.1
-        ],
-        "width": 0.15
       }
     }
   ],

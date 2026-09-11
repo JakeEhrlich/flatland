@@ -45,7 +45,7 @@
     },
     "mosfet-2n7002": {
       "url": "components/mosfet-2n7002.json",
-      "blake3": "1c3a8d098d8738379844db213205288d2f932df859888745a82d49962eff9af1",
+      "blake3": "2a8ff717d1ba9d748873cb6cf0aaff1b5d0d92936e10b15ccdc66f8d0c7078f8",
       "description": "JSCJ 2N7002 N-channel MOSFET, 60 V, 115 mA, Vgs(th) 1-2.5 V, SOT-23 pins 1=G 2=S 3=D (LCSC C8545, JLCPCB basic)"
     },
     "cj431-sot23": {
@@ -85,12 +85,12 @@
     },
     "al5809-60": {
       "url": "components/al5809-60.json",
-      "blake3": "e219db2e1b9b62c2086706fcfc51e828faa890024108a58eb9a97989c8428ddd",
+      "blake3": "7ef661834946a98b896c41be3d4b93908fdb6e5c03f1f64fbd6c3ecd30988539",
       "description": "Diodes AL5809-60P1-7 two-terminal 60 mA (±5%) constant-current LED regulator, 2.5-60 V across IN-OUT, PowerDI-123, 1.24 W on a good pad (LCSC C154921). Parallel several for more current; PWM 100-200 Hz via a low-side MOSFET on OUT (0.5 ms min on/off)"
     },
     "led-hongli-2835-hr6-6500k": {
       "url": "components/led-hongli-2835-hr6-6500k.json",
-      "blake3": "49fac41e5fae6f5e78340c878ef4d34ab57dc7cca911c990feda79505423f5bd",
+      "blake3": "806697ee18eb1060ec6ea9a83a00d8d6e2c5adbc4471e9bc7d92561928f81873",
       "description": "HONGLITRONIC HL-AM-2835H421W-S1-08-HR6 2835 white LED, 6500 K (6000-7000 K), Ra 95, SDCM<6, 60 mA, Vf 2.8-3.4 V (3.1 typ), 120 deg, ~22 lm (LCSC C516135)"
     },
     "led-hongli-2835-hr6-2800k": {
@@ -100,12 +100,12 @@
     },
     "led-xinglight-2835-blue": {
       "url": "components/led-xinglight-2835-blue.json",
-      "blake3": "b2fab5e7d835ddc1dcadc2d14df9ad119cb2972ded4f421f17bd1e332b8e5402",
+      "blake3": "a4334ba6da892873525c1df74e700f563be4e88c82a675f6597302a9712a83f5",
       "description": "XINGLIGHT XL-2835UBC-02 2835 blue LED, 460 nm dominant (465 nm peak), 60 mA max continuous, 200 mW, Vf 3.4 V max (3.2 typ), 120 deg, 1.75 cd (LCSC C2843871). Note 60 mA is the ABSOLUTE MAXIMUM, flat only to ~30 C ambient: run it PWM'd, not DC"
     },
     "led-xinglight-2835-green": {
       "url": "components/led-xinglight-2835-green.json",
-      "blake3": "7f94d7509f05952806d14ec51ec8c44fc145389c35b5b8dd6c2963f3c7e51d38",
+      "blake3": "0548f972a2bec607c4e6a5c98db76c6cf1b5f62aa14452eaf0af6b4c2371e120",
       "description": "XINGLIGHT XL-2835UGC-02 2835 emerald green LED, 510 nm dominant (520 nm peak), 60 mA max continuous, 200 mW, Vf 3.6 V max (3.3 typ), 120 deg, 6 cd (LCSC C2843870). 60 mA is the absolute maximum: PWM it"
     },
     "led-togialed-3030-amber": {
@@ -120,12 +120,12 @@
     },
     "schottky-ss34-sma": {
       "url": "components/schottky-ss34-sma.json",
-      "blake3": "07a8f3e0940e0a1d0f8abf5c097ee75e44342d3ea50199cab10facc39efa0cef",
+      "blake3": "053457949fd007e180a4d89e183f14b7df0e443f574ac263655df11d7b0ca441",
       "description": "SS34 Schottky diode, 40 V 3 A, Vf 0.55 V at 3 A (~0.35 V at 0.3 A), SMA/DO-214AC (LCSC C8678, JLCPCB basic). Reverse-supply protection for rails up to ~30 V"
     },
     "capacitor-elec-6.3x7.7": {
       "url": "components/capacitor-elec-6.3x7.7.json",
-      "blake3": "3e7bc16809754726d377f5cbc4cbf87850d2fb5da6b94befee12e5d4c827c2ef",
+      "blake3": "b2900f706aa4e052028312cc1d16caaffb8ea88952ee0d952da5cb0467030ccb",
       "description": "SMD aluminium electrolytic, V-chip D6.3 x 7.7 mm. LCSC per value: 47u/50V = C72523 (ROQANG RVT1H470M0607, 2000 h @ 105 C); 100u/50V = C3151829 (RVT1H101M0607)"
     },
     "solder-pad-1": {
@@ -140,37 +140,37 @@
     },
     "jst-ph-s7b-sm4": {
       "url": "components/jst-ph-s7b-sm4.json",
-      "blake3": "06b92ec175ce4101e950c5fc6aec644f611f22bf27dfbc33be2194b00fefff89",
+      "blake3": "72d363cf4b9e7ebed60cd4948be20d277fe291c668fdd6979f0df8edb07d6aff",
       "description": "JST S7B-PH-SM4-TB(LF)(SN) PH 2.0 mm side-entry SMD header, 7 pins, 2 A / 100 V per pin, mates with PHR-7 housings (pre-crimped 7-pin PH cables are a commodity). LCSC C265453 (extended)"
     },
     "dcjack-pj-002ah-smt": {
       "url": "components/dcjack-pj-002ah-smt.json",
-      "blake3": "27264fd1140397112854e0b87c604f9f67da8a041dbe9fadfa37a9e6ee465417",
+      "blake3": "eb51169d8f52d2e942af64684764674b78fa4ce55468add00f930a215fbb3cf9",
       "description": "CUI PJ-002AH-SMT-TR DC power jack, 5.5 mm barrel / 2.0 mm centre pin, 24 V 5 A, SMT with two plastic locating pegs (needs two non-plated holes; check peg length against the board thickness when the back is a heatsink). LCSC C22434687"
     },
     "led-xinglight-2835-yellowwhite": {
       "url": "components/led-xinglight-2835-yellowwhite.json",
-      "blake3": "93907fde4235b4529cbaff32d30a218407ad66e563d91ad5e5c7778a807ac9e6",
+      "blake3": "337e3bbcaad88d1716c1eb92db9649ecd5681d4bd7a1f9a51eae3a252aa74054",
       "description": "XINGLIGHT XL-2835YWC-02 2835 phosphor-converted 'yellow white' LED, 1800-1900 K, 60 mA, 200 mW, Vf 3.0-3.4 V, 120 deg, 5.5-6.2 cd (~18 lm). Almost all of its blue pump is converted by a broad yellow phosphor, so it plays the 'lime' role in a colour mix: one wide band filling 520-650 nm (LCSC C7371920). Same footprint as the XL-2835 blue/green"
     },
     "jst-ph-s8b-sm4": {
       "url": "components/jst-ph-s8b-sm4.json",
-      "blake3": "de3b988672b71d03d7f76ab4f6d21f09c62e9b5f109e3d725c3e2809adb41c8e",
+      "blake3": "9d78fc02cd68caff92d4713e3af89b50e0695390358c6652e36db331845513da",
       "description": "JST S8B-PH-SM4-TB(LF)(SN) PH 2.0 mm side-entry SMD header, 8 pins, 2 A / 100 V per pin, mates with PHR-8 housings. LCSC C265121 (extended)"
     },
     "led-0805-violet-415": {
       "url": "components/led-0805-violet-415.json",
-      "blake3": "91e3329692576fb8198ec23785a6645a9d65c6e4a41ba16121145af751d8e15e",
+      "blake3": "5f045daee1f3220a148a8cd7a5a6e184ce3f9d8b38b317b7834361b9c322425c",
       "description": "TUOZHAN P2-0805UVTCS2-0.8T 0805 violet LED, 410-420 nm peak (13 nm FWHM), 20 mA test / 30 mA max, Vf 2.8-3.4 V (3.0 typ), 90 mW, 120 deg, 10-50 mcd (LCSC C2827270). The violet primary below the whites' 450 nm pump; run on its own 20 mA regulator string"
     },
     "jst-ph-s9b-sm4": {
       "url": "components/jst-ph-s9b-sm4.json",
-      "blake3": "aa8dcf52981f3e9197da17211cf5533eef5c94d07143e1c0fc6174930c683497",
+      "blake3": "09372fd8d37ff928beebe06fde63d0d41f9da09f2cd97fc2902ad61053e7a17b",
       "description": "JST S9B-PH-SM4-TB(LF)(SN) PH 2.0 mm side-entry SMD header, 9 pins, 2 A / 100 V per pin, mates with PHR-9 housings. LCSC C495694 (extended)"
     },
     "al5809-20": {
       "url": "components/al5809-20.json",
-      "blake3": "0722b08ed0cb057ab664c081c145befc767d991c2b08d2d8541e723e43a8928d",
+      "blake3": "70cf0873662a9c25a4c83c58100d56a70227b8d95bc04761dce5b0c1562deced",
       "description": "Diodes AL5809-20S1-7 two-terminal 20 mA (+-5%) constant-current LED regulator, 2.5-60 V across IN-OUT, SOD-123, 0.36 W (LCSC C332295). Same family as the al5809-60; for low-current strings such as 0805 indicator-class LEDs"
     }
   }

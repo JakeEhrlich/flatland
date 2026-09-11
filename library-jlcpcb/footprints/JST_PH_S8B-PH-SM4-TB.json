@@ -1,7 +1,7 @@
 {
   "schema": "pcb-footprint/1",
   "name": "JST_PH_S8B-PH-SM4-TB",
-  "description": "JST PH 2.0 mm side-entry (horizontal) SMD header, 8 pins, S8B-PH-SM4-TB: pin pads 1.0 x 3.5 mm on 2.0 mm pitch at +y, two 1.5 x 3.4 mm mounting tabs at the wire-entry corners (-y), 18.7 mm apart. Cable enters from -y; housing about 19.9 x 8.6 mm, 5.5 mm tall. Pin 1 at -x (silkscreen tick). Same drawing as the 7-pin footprint (JST ePH.pdf via KiCad) with one more pitch.",
+  "description": "JST PH 2.0 mm side-entry (horizontal) SMD header, 8 pins, S8B-PH-SM4-TB: pin pads 1.0 x 3.5 mm on 2.0 mm pitch at +y, two 1.5 x 3.4 mm mounting tabs at the wire-entry corners (-y), 18.7 mm apart. Cable enters from +y, the pin-pad side (verified on JLCPCB's 3D preview, 2026-09-08); housing about 19.9 x 8.6 mm, 5.5 mm tall. Pin 1 at -x (silkscreen tick). Same drawing as the 7-pin footprint (JST ePH.pdf via KiCad) with one more pitch.",
   "pads": [
     {
       "name": "1",
@@ -156,19 +156,6 @@
           5.0
         ],
         "width": 0.2
-      }
-    },
-    {
-      "line": {
-        "from": [
-          -10.7,
-          -5.1
-        ],
-        "to": [
-          10.7,
-          -5.1
-        ],
-        "width": 0.15
       }
     }
   ],
