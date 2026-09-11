@@ -39,6 +39,7 @@ The command set is organised in families, each documented on its own page:
 | [pcb-drc](pcb-drc.md) | `check`, `drc …` — design rules, fab profiles, waivers |
 | [pcb-gerbers](pcb-gerbers.md) | `gerbers` — fabrication outputs |
 | [pcb-assembly](pcb-assembly.md) | `bom`, `pnp` — BOM and pick-and-place for SMT assembly |
+| [pcb-python](pcb-python.md) | the engine from Python: `Pcb.new`, methods per command, in memory |
 | [pcb-sim](pcb-sim.md) | `sim …` — ngspice simulation studies |
 
 The file formats are described in [SCHEMA.md](../SCHEMA.md) (`pcb schema`).

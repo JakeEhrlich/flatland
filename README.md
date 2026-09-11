@@ -88,6 +88,9 @@ and are built into the binary: `pcb docs` lists them, `pcb docs route` (or
 * `sh examples/led-driver.sh` — a single-sided through-hole LED driver:
   three studies (operating point, transient blink, −40…100 °C sweep of LED
   current), routing, renders, gerbers.
+* `python examples/led-panel.py` — the same panel through the **Python
+  bindings** (`python/`): the project built in memory with loops and
+  variables, written once at the end. See `pcb docs python`.
 * `sh examples/led-panel.sh` — a 60×60 mm single-layer **aluminium** LED
   panel: 32 OSRAM DURIS E 2835 CRI-90 LEDs in two 16-LED strings off a
   54 V Mean Well supply, AL5809 constant-current regulators, PWM-dimmed

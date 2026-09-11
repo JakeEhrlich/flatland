@@ -22,5 +22,6 @@ pub mod drc;
 pub mod gerber;
 pub mod sim;
 pub mod cli;
+pub mod session;
 
 pub use error::{Error, Result};

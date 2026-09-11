@@ -1,0 +1,15 @@
+[build-system]
+requires = ["maturin>=1.5,<2"]
+build-backend = "maturin"
+
+[project]
+name = "flatland"
+version = "0.1.0"
+description = "Python interface to the flatland PCB tools: build a board in memory, check, route, simulate, emit fab files"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+
+[tool.maturin]
+module-name = "flatland._native"
+python-source = "."
+features = ["pyo3/extension-module"]

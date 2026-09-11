@@ -1,2 +1,6 @@
 /target
 /examples/*/build
+python/.venv
+python/flatland/_native*
+python/**/__pycache__
+python/.pytest_cache

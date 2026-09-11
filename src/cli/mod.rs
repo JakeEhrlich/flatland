@@ -108,8 +108,14 @@ pub enum Command {
 
 pub fn run() -> Result<()> {
     let cli = Cli::parse();
-    let ctx = Ctx { project_arg: cli.project.clone() };
-    match cli.command {
+    let ctx = Ctx::files(cli.project.clone());
+    run_command(&ctx, cli.command)
+}
+
+/// Dispatch one parsed command against a context (file-backed or in-memory).
+pub fn run_command(ctx: &Ctx, command: Command) -> Result<()> {
+    let ctx = ctx;
+    match command {
         Command::Init(a) => edit::init(&ctx, a),
         Command::Index(c) => index_cmd::run_index(&ctx, c),
         Command::Component(c) => index_cmd::run_component(&ctx, c),
@@ -146,22 +152,77 @@ pub fn run() -> Result<()> {
 
 pub struct Ctx {
     pub project_arg: Option<PathBuf>,
+    /// When set, the project lives here instead of on disk: `load` clones it,
+    /// `save` stores it back, and the component library is cached across
+    /// commands. Used by the in-process API (`crate::session`).
+    pub memory: Option<std::rc::Rc<std::cell::RefCell<MemStore>>>,
+}
+
+/// In-memory project store for a session.
+pub struct MemStore {
+    /// Where the project would live; relative URLs resolve against it.
+    pub path: PathBuf,
+    pub project: Option<Project>,
+    lib_cache: Option<(String, std::rc::Rc<Library>)>,
+}
+
+impl MemStore {
+    pub fn new(path: PathBuf) -> MemStore {
+        MemStore { path, project: None, lib_cache: None }
+    }
 }
 
 /// A loaded project plus where it lives.
 pub struct Loaded {
     pub path: PathBuf,
     pub project: Project,
+    sink: Option<std::rc::Rc<std::cell::RefCell<MemStore>>>,
 }
 
 impl Ctx {
+    pub fn files(project_arg: Option<PathBuf>) -> Ctx {
+        Ctx { project_arg, memory: None }
+    }
+    pub fn in_memory(store: std::rc::Rc<std::cell::RefCell<MemStore>>) -> Ctx {
+        Ctx { project_arg: None, memory: Some(store) }
+    }
     pub fn load(&self) -> Result<Loaded> {
+        if let Some(m) = &self.memory {
+            let m_ref = m.borrow();
+            let project = m_ref.project.clone().ok_or_else(|| crate::error::Error::with_help("no project in this session yet", "run `init <name>` first, or open an existing project file"))?;
+            return Ok(Loaded { path: m_ref.path.clone(), project, sink: Some(m.clone()) });
+        }
         let path = store::find_project(self.project_arg.as_deref())?;
         let project = store::load_project(&path)?;
-        Ok(Loaded { path, project })
+        Ok(Loaded { path, project, sink: None })
     }
-    pub fn library(&self, loaded: &Loaded) -> Result<Library> {
-        Library::load(&loaded.project, &loaded.path)
+    /// Create the project (`pcb init`): written to `path`, or stored in memory.
+    pub fn create(&self, path: &Path, project: &Project, force: bool) -> Result<PathBuf> {
+        if let Some(m) = &self.memory {
+            let mut m = m.borrow_mut();
+            m.project = Some(project.clone());
+            m.lib_cache = None;
+            return Ok(m.path.clone());
+        }
+        if path.exists() && !force {
+            return Err(crate::error::Error::with_help(format!("`{}` already exists", path.display()), "pass --force to overwrite it, or choose another --dir"));
+        }
+        store::write_json(path, project)?;
+        Ok(path.to_path_buf())
+    }
+    pub fn library(&self, loaded: &Loaded) -> Result<std::rc::Rc<Library>> {
+        if let Some(m) = &self.memory {
+            let key = serde_json::to_string(&loaded.project.component_indexes).unwrap_or_default();
+            if let Some((k, lib)) = &m.borrow().lib_cache {
+                if *k == key {
+                    return Ok(lib.clone());
+                }
+            }
+            let lib = std::rc::Rc::new(Library::load(&loaded.project, &loaded.path)?);
+            m.borrow_mut().lib_cache = Some((key, lib.clone()));
+            return Ok(lib);
+        }
+        Ok(std::rc::Rc::new(Library::load(&loaded.project, &loaded.path)?))
     }
     pub fn board(&self, loaded: &Loaded) -> Result<crate::model::Board> {
         let lib = self.library(loaded)?;
@@ -171,6 +232,10 @@ impl Ctx {
 
 impl Loaded {
     pub fn save(&self) -> Result<()> {
+        if let Some(sink) = &self.sink {
+            sink.borrow_mut().project = Some(self.project.clone());
+            return Ok(());
+        }
         store::write_json(&self.path, &self.project)
     }
     pub fn dir(&self) -> &Path {
@@ -182,8 +247,6 @@ impl Loaded {
     }
 }
 
-/// Validate the whole project after an edit; on failure the edit is *not*
-/// saved and the error explains why.
 pub fn validate(ctx: &Ctx, loaded: &Loaded) -> Result<()> {
     ctx.board(loaded).map(|_| ())
 }

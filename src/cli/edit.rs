@@ -49,16 +49,22 @@ pub struct InitArgs {
     pub force: bool,
 }
 
-pub fn init(_ctx: &Ctx, a: InitArgs) -> Result<()> {
-    let dir = a.dir.unwrap_or_else(|| PathBuf::from("."));
-    std::fs::create_dir_all(&dir).map_err(|e| Error::io(format!("could not create `{}`", dir.display()), e))?;
-    let path = dir.join(PROJECT_FILENAME);
-    if path.exists() && !a.force {
-        return Err(Error::with_help(
-            format!("`{}` already exists", path.display()),
-            "pass --force to overwrite it, or choose another --dir",
-        ));
-    }
+pub fn init(ctx: &Ctx, a: InitArgs) -> Result<()> {
+    let path = match &ctx.memory {
+        Some(m) => m.borrow().path.clone(),
+        None => {
+            let dir = a.dir.unwrap_or_else(|| PathBuf::from("."));
+            std::fs::create_dir_all(&dir).map_err(|e| Error::io(format!("could not create `{}`", dir.display()), e))?;
+            let path = dir.join(PROJECT_FILENAME);
+            if path.exists() && !a.force {
+                return Err(Error::with_help(
+                    format!("`{}` already exists", path.display()),
+                    "pass --force to overwrite it, or choose another --dir",
+                ));
+            }
+            path
+        }
+    };
     let mut project = Project::new(&a.name);
     if let Some(layers) = a.layers {
         let layers: Vec<String> = layers.into_iter().filter(|l| !l.trim().is_empty()).collect();
@@ -72,7 +78,7 @@ pub fn init(_ctx: &Ctx, a: InitArgs) -> Result<()> {
         let _: ComponentIndex = store::read_json(&ip, "component index")?;
         project.component_indexes.push(FileRef::new(store::relative_url(&ip, &path)));
     }
-    store::write_json(&path, &project)?;
+    let path = ctx.create(&path, &project, a.force)?;
     println!("created {} ({} copper layer(s): {})", path.display(), project.stackup.copper_layers.len(), project.stackup.copper_layers.join(", "));
     if project.component_indexes.is_empty() {
         println!("next: add a component index with `pcb index add <index.json>` or create one with `pcb index new <dir>`");

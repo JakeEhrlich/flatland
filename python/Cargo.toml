@@ -1,0 +1,13 @@
+[package]
+name = "flatland-python"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "_native"
+crate-type = ["cdylib"]
+
+[dependencies]
+flatland = { path = ".." }
+pyo3 = { version = "0.29", features = ["extension-module"] }
