@@ -18,6 +18,7 @@ pcb pour list                                  # fill pieces, area, pads reached
 pcb pads [REFDES...] [--json]
 pcb trace add --layer L [--net NET] [--width W] [--chamfer C] POINT POINT [POINT...]
 pcb trace clear [--routed-only] [--net NET]
+pcb trace trim [--net NET] [--dry-run]
 pcb trace list
 
 pcb via add AT [--net NET] [--drill D] [--diameter D]
@@ -91,6 +92,15 @@ Traces have round joins and **flat ends**: the copper stops exactly at the
 last point. End a trace at or inside a pad; a round cap would poke out of
 any pad narrower than the trace.
 
+`pcb trace trim` shortens every trace end that lands on nothing of its own
+net — an overshoot past the last pad, a stub left by editing, a router
+wire whose other end was deleted — back to the point where the trace body
+first touches a pad, via, pour or other trace of the net, and removes
+traces that touch nothing at all. Pours refill the freed space on the next
+build. `--dry-run` lists the changes; the command refuses to apply a change
+that would split a net. The `dangling-trace` design rule reports the same
+ends.
+
 `--chamfer C`
 : Replace every right-angle corner of the polyline with a 45° cut `C` long
   (shortened where a leg is too short), so hand-drawn buses match the
@@ -136,6 +146,8 @@ pcb trace add --layer F.Cu --net GND --width 0.5 10.875,7 12,10
 pcb via add 12,10 --net GND
 pcb trace add --layer B.Cu --net GND 12,10 5,9.125
 pcb trace clear --routed-only                                # undo the autorouter only
+pcb trace trim --dry-run                                     # what stubs would go
+pcb trace trim                                               # shorten them; pours refill
 ```
 
 ## SEE ALSO

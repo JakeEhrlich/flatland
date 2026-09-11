@@ -1088,6 +1088,45 @@ pub fn run_pour(ctx: &Ctx, c: PourCmd) -> Result<()> {
 // ---------------------------------------------------------------------------
 // Traces & vias
 
+/// Walk from the first point of `pts` along the polyline until the trace body
+/// touches connecting copper; return the polyline from there on and how much
+/// was cut. `None` when no point of the trace touches anything.
+fn trim_start(pts: &[Point], width: Length, touches: &dyn Fn(Point) -> bool) -> Option<(Vec<Point>, Length)> {
+    if pts.len() < 2 {
+        return if pts.first().map_or(false, |p| touches(*p)) { Some((pts.to_vec(), Length::from_nm(0))) } else { None };
+    }
+    if touches(pts[0]) {
+        return Some((pts.to_vec(), Length::from_nm(0)));
+    }
+    let step = (width.nm() / 4).clamp(10_000, 50_000);
+    let mut cut: i64 = 0;
+    for i in 0..pts.len() - 1 {
+        let (a, b) = (pts[i], pts[i + 1]);
+        let (dx, dy) = ((b.x.nm() - a.x.nm()) as f64, (b.y.nm() - a.y.nm()) as f64);
+        let len = dx.hypot(dy);
+        let n = (len / step as f64).ceil().max(1.0) as i64;
+        for k in 1..=n {
+            let f = k as f64 / n as f64;
+            let p = Point::nm(a.x.nm() + (dx * f).round() as i64, a.y.nm() + (dy * f).round() as i64);
+            if touches(p) {
+                // One more step in, so the end overlaps rather than just enters.
+                let f2 = ((k + 1) as f64 / n as f64).min(1.0);
+                let p = Point::nm(a.x.nm() + (dx * f2).round() as i64, a.y.nm() + (dy * f2).round() as i64);
+                let f = f2;
+                let mut out = vec![p];
+                out.extend_from_slice(&pts[i + 1..]);
+                // Drop a duplicate if the cut landed exactly on the next vertex.
+                if out.len() >= 2 && out[0] == out[1] {
+                    out.remove(0);
+                }
+                return Some((out, Length::from_nm(cut + (len * f).round() as i64)));
+            }
+        }
+        cut += len.round() as i64;
+    }
+    None
+}
+
 /// Replace each corner that turns by roughly 90° with a 45° cut of length
 /// `c` (shortened where a leg is too short). Gentle bends and the endpoints
 /// are left alone.
@@ -1143,6 +1182,15 @@ pub enum TraceCmd {
         #[arg(long)]
         net: Option<String>,
     },
+    /// Shorten traces whose ends land on nothing of their net (stubs, overshoots) so a pour can refill the space; remove traces that touch nothing at all.
+    Trim {
+        /// Only this net.
+        #[arg(long)]
+        net: Option<String>,
+        /// Report what would change without changing it.
+        #[arg(long)]
+        dry_run: bool,
+    },
     List,
 }
 
@@ -1193,6 +1241,114 @@ pub fn run_trace(ctx: &Ctx, c: TraceCmd) -> Result<()> {
             loaded.save()?;
             println!("removed {} trace(s)/via(s)", before - after);
             Ok(())
+        }
+        TraceCmd::Trim { net, dry_run } => {
+            let board = ctx.board(&loaded)?;
+            let before_conn = board.connectivity()?;
+            let mut traces = loaded.project.traces.clone();
+            let mut notes: Vec<String> = Vec::new();
+            let mut trimmed_ends = 0;
+            let mut removed = 0;
+            // Iterate: a stub that ended on another stub may become trimmable once that one goes.
+            for _round in 0..3 {
+                let snapshot = traces.clone();
+                let mut changed = false;
+                let mut keep: Vec<Trace> = Vec::new();
+                for (i, t) in snapshot.iter().enumerate() {
+                    let Some(tn) = t.net.clone() else { keep.push(t.clone()); continue };
+                    if net.as_ref().map_or(false, |n| *n != tn) {
+                        keep.push(t.clone());
+                        continue;
+                    }
+                    // Copper of the same net on this layer, other than the trace itself.
+                    let mut others: crate::geom::Rings = Vec::new();
+                    for pad in board.all_pads() {
+                        if pad.net.as_deref() == Some(tn.as_str()) && pad.on_layer(&t.layer) {
+                            others.push(pad.copper.clone());
+                        }
+                    }
+                    for v in &loaded.project.vias {
+                        if v.net.as_deref() == Some(tn.as_str()) && (v.layers.is_empty() || v.layers.contains(&t.layer)) {
+                            others.push(crate::geom::circle(v.at, v.diameter));
+                        }
+                    }
+                    for (j, o) in snapshot.iter().enumerate() {
+                        if j != i && o.layer == t.layer && o.net.as_deref() == Some(tn.as_str()) {
+                            others.extend(crate::geom::stroke_flat(&o.points, o.width));
+                        }
+                    }
+                    for p in &board.pours {
+                        if p.pour.layer == t.layer && p.pour.net.as_deref() == Some(tn.as_str()) {
+                            others.extend(p.copper.iter().cloned());
+                        }
+                    }
+                    // The end point itself must lie inside connecting copper (a body that
+                    // merely grazes a pad is not a joint).
+                    let touches = |pt: Point| {
+                        let ins = others.iter().filter(|r| crate::geom::signed_area(r) > 0.0 && crate::geom::contains(r, pt)).count();
+                        let outs = others.iter().filter(|r| crate::geom::signed_area(r) <= 0.0 && crate::geom::contains(r, pt)).count();
+                        ins > outs
+                    };
+                    let mut pts = t.points.clone();
+                    let mut cut_here = Vec::new();
+                    // Trim the start, then the end (by reversing).
+                    let mut dead = false;
+                    for _side in 0..2 {
+                        match trim_start(&pts, t.width, &touches) {
+                            None => {
+                                dead = true;
+                                break;
+                            }
+                            Some((new_pts, cut)) => {
+                                if cut.nm() > 0 {
+                                    cut_here.push((pts[0], cut));
+                                }
+                                pts = new_pts;
+                            }
+                        }
+                        pts.reverse();
+                    }
+                    if dead {
+                        notes.push(format!("removed {} trace at {} on {}: it touched nothing of its net", tn, t.points[0], t.layer));
+                        removed += 1;
+                        changed = true;
+                        continue;
+                    }
+                    for (at, cut) in &cut_here {
+                        notes.push(format!("{} trace on {}: trimmed {cut} from the end at {at}", tn, t.layer));
+                        trimmed_ends += 1;
+                        changed = true;
+                    }
+                    let mut t2 = t.clone();
+                    t2.points = pts;
+                    keep.push(t2);
+                }
+                traces = keep;
+                if !changed {
+                    break;
+                }
+            }
+            for n in &notes {
+                println!("{n}");
+            }
+            if trimmed_ends == 0 && removed == 0 {
+                println!("nothing to trim: every trace end lands on copper of its net");
+                return Ok(());
+            }
+            println!("{}trimmed {trimmed_ends} end(s), removed {removed} trace(s); pours refill the space on the next build", if dry_run { "dry run: would have " } else { "" });
+            if dry_run {
+                return Ok(());
+            }
+            loaded.project.traces = traces;
+            let after = ctx.board(&loaded)?.connectivity()?;
+            for (n, islands) in &after {
+                let before = before_conn.iter().find(|(m, _)| m == n).map_or(1, |(_, i)| i.len());
+                if islands.len() > before {
+                    return Err(Error::with_help(format!("trimming would split net {n} ({} islands from {before}); nothing changed", islands.len()), "this is a bug worth reporting: a trimmed end should never have been the only connection"));
+                }
+            }
+            validate(ctx, &loaded)?;
+            loaded.save()
         }
         TraceCmd::List => {
             for (i, t) in loaded.project.traces.iter().enumerate() {

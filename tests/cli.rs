@@ -469,3 +469,34 @@ fn gerber_pours_emit_in_priority_order() {
     let island_fill = gtl.find("X5000000Y").or_else(|| gtl.find("X17000000Y")).expect("island region");
     assert!(island_fill > gnd_clear, "VCC island must be drawn after the GND pour's LPC clears");
 }
+
+#[test]
+fn trim_traces() {
+    let p = Proj::new("trim");
+    p.ok(&["init", "trim", "--index", library().to_str().unwrap()]);
+    p.ok(&["outline", "rect", "20", "16"]);
+    p.ok(&["add", "R1", "resistor-0603", "--at", "5,5"]);
+    p.ok(&["add", "R2", "resistor-0603", "--at", "10,5"]);
+    p.ok(&["connect", "R1.1", "R2.1", "--net", "A"]);
+    p.ok(&["connect", "R1.2", "R2.2", "--net", "GND"]);
+    // A trace that overshoots R2.1 by nearly 5 mm, and a stub touching nothing.
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.3", "4.125,5", "4.125,7", "9.125,7", "9.125,5", "14,5"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "GND", "--width", "0.3", "3,12", "8,12"]);
+    let out = p.run(&["check"]).1;
+    assert!(out.contains("dangling-trace"), "{out}");
+    let out = p.ok(&["trace", "trim", "--dry-run"]);
+    assert!(out.contains("dry run") && out.contains("removed GND trace"), "{out}");
+    let out = p.ok(&["trace", "trim"]);
+    assert!(out.contains("trimmed 1 end(s), removed 1 trace(s)"), "{out}");
+    let proj: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(p.dir.join("pcb.json")).unwrap()).unwrap();
+    let traces = proj["traces"].as_array().unwrap();
+    assert_eq!(traces.len(), 1);
+    let last = traces[0]["points"].as_array().unwrap().last().unwrap();
+    let x = last[0].as_f64().unwrap();
+    // Cut back to where the body still touches R2.1 (pad spans 8.6..9.65 in x).
+    assert!(x > 9.0 && x < 9.9, "trimmed end x = {x}");
+    let out = p.run(&["check"]).1;
+    assert!(!out.contains("dangling-trace"), "{out}");
+    let out = p.ok(&["trace", "trim"]);
+    assert!(out.contains("nothing to trim"), "{out}");
+}
