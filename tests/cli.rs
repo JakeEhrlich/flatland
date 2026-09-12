@@ -541,3 +541,55 @@ fn free_text() {
     p.ok(&["text", "remove", "1"]);
     assert!(p.ok(&["text", "list"]).contains("HELLO 54V") || p.ok(&["text", "list"]).contains("hello 54v"));
 }
+
+#[test]
+fn route_pin_and_undo() {
+    let p = Proj::new("routepin");
+    p.ok(&["init", "rp", "--layers", "F.Cu", "--index", library().to_str().unwrap()]);
+    p.ok(&["outline", "rect", "30", "20"]);
+    p.ok(&["rules", "set", "trace_width=0.3", "clearance=0.2"]);
+    p.ok(&["add", "R1", "resistor-0603", "--at", "5,10"]);
+    p.ok(&["add", "R2", "resistor-0603", "--at", "25,10"]);
+    p.ok(&["add", "R3", "resistor-0603", "--at", "15,10", "--rotation", "90"]); // in the way
+    p.ok(&["connect", "R1.2", "R2.1", "--net", "A"]);
+    p.ok(&["connect", "R3.1", "R3.2", "--net", "B"]);
+    p.ok(&["connect", "R1.1", "R2.2", "--net", "C"]);
+    // Dry run leaves the project alone.
+    let out = p.ok(&["route", "pin", "R1.2", "R2.1", "--dry-run"]);
+    assert!(out.contains("dry run: routed R1.2 -> R2.1 on F.Cu"), "{out}");
+    let proj: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(p.dir.join("pcb.json")).unwrap()).unwrap();
+    assert!(proj.get("traces").map_or(true, |t| t.as_array().unwrap().is_empty()));
+    // The real thing: goes round R3, lands on the pads, is DRC clean, and writes a crop.
+    let out = p.ok(&["route", "pin", "R1.2", "R2.1", "--png", "crop"]);
+    assert!(out.contains("routed R1.2 -> R2.1 on F.Cu") && out.contains("cropped"), "{out}");
+    assert!(p.build("pcb.png").exists());
+    let proj: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(p.dir.join("pcb.json")).unwrap()).unwrap();
+    let traces = proj["traces"].as_array().unwrap();
+    assert_eq!(traces.len(), 1);
+    let pts = traces[0]["points"].as_array().unwrap();
+    assert!(pts.len() >= 3, "should bend round R3: {pts:?}");
+    assert_eq!(pts[0][0].as_f64().unwrap(), 5.875); // R1.2 centre
+    let last = pts.last().unwrap();
+    assert_eq!(last[0].as_f64().unwrap(), 24.125); // R2.1 centre
+    let check = p.run(&["check"]).1;
+    assert!(check.contains("0 error(s)"), "{check}");
+    assert!(!check.contains("net A is not fully routed"), "{check}");
+    // Already connected now.
+    let out = p.fails(&["route", "pin", "R1.2", "R2.1"]);
+    assert!(out.contains("already connected"), "{out}");
+    // Waypoint: force the other way round.
+    p.ok(&["undo"]);
+    let proj: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(p.dir.join("pcb.json")).unwrap()).unwrap();
+    assert!(proj.get("traces").map_or(true, |t| t.as_array().unwrap().is_empty()), "undo should remove the trace");
+    let out = p.ok(&["route", "pin", "R1.2", "R2.1", "--via", "15,4"]);
+    assert!(out.contains("routed"), "{out}");
+    let proj: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(p.dir.join("pcb.json")).unwrap()).unwrap();
+    let pts = proj["traces"][0]["points"].as_array().unwrap();
+    assert!(pts.iter().any(|q| q[1].as_f64().unwrap() < 6.0), "should pass below R3 via the waypoint: {pts:?}");
+    // Blocked: a wall of another net from edge to edge, then ask for net C.
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "B", "--width", "1", "20,0.5", "20,19.5"]);
+    let out = p.fails(&["route", "pin", "R1.1", "R2.2"]);
+    assert!(out.contains("no route from R1.1 to R2.2") && out.contains("nearest approach"), "{out}");
+    let out = p.ok(&["undo"]);
+    assert!(out.contains("restored"), "{out}");
+}

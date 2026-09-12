@@ -39,6 +39,41 @@ pcb route --import FILE.ses
 yourself (for example after routing interactively in freerouting from the
 `--dsn-only` file). Existing routed traces are kept in this mode.
 
+## PIN TO PIN
+
+```
+pcb route pin FROM TO [--layer L] [--width W] [--via x,y]... [--via-cost MM] [--png full|crop] [--dry-run]
+pcb undo
+```
+
+`pcb route pin D8.K D9.A` draws one trace between two pins of a net and
+stops. It is built for an agent's edit loop: it takes tens of milliseconds,
+prints exactly what it drew, and with `--png crop` writes `build/pcb.png`
+showing the new trace and its surroundings so the result can be looked at
+before the next step. `pcb undo` puts the project back as it was.
+
+The route may start on any copper already joined to FROM (its pad, or a
+trace or via touching it) and end on any copper joined to TO, so a bus is
+extended rather than duplicated. Copper of other nets, keepouts and the
+board edge are avoided at the net's clearance; pours are ignored (they
+refill around the trace). On multi-layer boards the route may change layer
+through a via, charged `--via-cost` millimetres of trace; `--layer` pins it
+to one layer. `--via x,y` (repeatable) forces the route through waypoints,
+which is how to say "go round the other side": the router picks the
+shortest path, and you pick the topology.
+
+The result is a polyline of 0/45/90° segments, chamfered corners included,
+in the net class's width, checked against real geometry before it is
+added; the trace is stored as hand-drawn (`pcb route` and `pcb trace
+clear --routed-only` leave it alone). When no route exists the error says
+on which layer the search got closest, how far from the target, and which
+features were in the way there.
+
+Under the hood: an A* search over a grid (half the smaller of width and
+clearance per cell) with obstacles inflated by a distance transform, bend
+and hugging penalties for tidy results, then the cell path pulled into the
+fewest 45°-multiple segments whose corridor is free.
+
 ## OPTIONS
 
 `--passes N`

@@ -12,6 +12,7 @@ pcb init NAME [-d DIR] [-l LAYERS] [-i INDEX]... [--force]
 pcb status [--json]
 pcb check [--strict]
 pcb pads [REFDES...] [--json]
+pcb undo
 pcb schema [project|index|component|footprint|simulation]
 pcb docs [TOPIC]
 ```
@@ -82,6 +83,14 @@ sets and project rules from `pcb drc`. See pcb-drc(1) for the grammar,
 the bundled JLCPCB profiles and waivers. Exit status is non-zero on
 errors, or on warnings with `--strict`; `pcb gerbers` refuses to write
 while there are errors.
+
+## pcb undo
+
+`pcb undo` restores the project as it was before the last change. Every
+command that changes the project first copies the previous `pcb.json` to
+`build/undo/` (the last 20 are kept); undo pops the newest. In a Python
+session the same stack lives in memory. It is the other half of the
+try-look-keep-or-revert loop that `pcb route pin --png crop` is made for.
 
 ## pcb pads
 

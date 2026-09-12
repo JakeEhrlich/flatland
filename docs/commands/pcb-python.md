@@ -52,7 +52,8 @@ keyword arguments map to the command's `--flags`:
 | `text(text, at, layer=, size=, rotation=, width=)` | `text add` |
 | `status()`, `pads(*refs)`, `check(strict=, rule=)` | `status --json`, `pads --json`, `check --json` |
 | `drc_add(set)`, `drc_waive(rule, *features, reason=)`, `drc_rule(name, feature=, check=, where=, severity=)` | `drc add`, `drc waive`, `drc rule` |
-| `route(passes=, keep=)`, `visualize(what, output=, width=)` | `route`, `visualize` |
+| `route(passes=, keep=)`, `visualize(what, output=, width=, crop=)` | `route`, `visualize` |
+| `route_pin(from, to, layer=, width=, via=[(x,y),...], png=, dry_run=)`, `undo()` | `route pin`, `undo` |
 | `gerbers(force=)`, `bom(all=)`, `pnp(all=)` | `gerbers`, `bom`, `pnp` |
 | `sim_add(name, analysis, *args, probes=, params=, temperature=)`, `sim_run(*names)` | `sim add`, `sim run` |
 

@@ -18,6 +18,7 @@ pub mod model;
 pub mod viz;
 pub mod dsn;
 pub mod route;
+pub mod router;
 pub mod drc;
 pub mod gerber;
 pub mod sim;

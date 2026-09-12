@@ -14,6 +14,8 @@ pub struct Options {
     pub ratsnest: bool,
     pub labels: bool,
     pub grid: bool,
+    /// Show only this region (board coordinates) instead of the whole board.
+    pub crop: Option<(Point, Point)>,
 }
 
 const BG: &str = "#1c1c1e";
@@ -42,10 +44,10 @@ pub fn layer_color(board: &Board, layer: &str) -> &'static str {
 
 pub fn render(board: &Board, opts: &Options) -> Result<String> {
     // Extent.
-    let (lo, hi) = board.bbox().unwrap_or((Point::mm(0.0, 0.0), Point::mm(50.0, 30.0)));
+    let (lo, hi) = opts.crop.or_else(|| board.bbox()).unwrap_or((Point::mm(0.0, 0.0), Point::mm(50.0, 30.0)));
     let (x0, y0, x1, y1) = (lo.x.mm(), lo.y.mm(), hi.x.mm(), hi.y.mm());
     let extent = (x1 - x0).max(y1 - y0).max(10.0);
-    let pad = extent * 0.06 + 2.0;
+    let pad = if opts.crop.is_some() { 0.5 } else { extent * 0.06 + 2.0 };
     let (vx0, vy0, vx1, vy1) = (x0 - pad, y0 - pad, x1 + pad, y1 + pad);
     let mut svg = Svg::new(vx0, vy0, vx1, vy1, opts.from_bottom);
     svg.background = BG.into();

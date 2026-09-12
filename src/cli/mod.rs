@@ -84,6 +84,8 @@ pub enum Command {
     Status(inspect::StatusArgs),
     /// Check the design: connectivity, clearances, outline, unplaced parts.
     Check(inspect::CheckArgs),
+    /// Restore the project as it was before the last change (up to 20 steps).
+    Undo,
     /// Design-rule sets, project rules and waivers.
     #[command(subcommand)]
     Drc(drc_cmd::DrcCmd),
@@ -141,6 +143,7 @@ pub fn run_command(ctx: &Ctx, command: Command) -> Result<()> {
         Command::Rules(c) => edit::run_rules(&ctx, c),
         Command::Status(a) => inspect::status(&ctx, a),
         Command::Check(a) => inspect::check(&ctx, a),
+        Command::Undo => undo(ctx),
         Command::Drc(c) => drc_cmd::run_drc(&ctx, c),
         Command::Pads(a) => inspect::pads(&ctx, a),
         Command::Visualize(c) => output::run_visualize(&ctx, c),
@@ -168,13 +171,17 @@ pub struct MemStore {
     pub path: PathBuf,
     pub project: Option<Project>,
     lib_cache: Option<(String, std::rc::Rc<Library>)>,
+    /// Previous states, newest last (`pcb undo`).
+    pub undo: Vec<Project>,
 }
 
 impl MemStore {
     pub fn new(path: PathBuf) -> MemStore {
-        MemStore { path, project: None, lib_cache: None }
+        MemStore { path, project: None, lib_cache: None, undo: Vec::new() }
     }
 }
+
+pub const UNDO_DEPTH: usize = 20;
 
 /// A loaded project plus where it lives.
 pub struct Loaded {
@@ -235,11 +242,20 @@ impl Ctx {
 }
 
 impl Loaded {
+    /// Persist the project, keeping the previous state for `pcb undo`.
     pub fn save(&self) -> Result<()> {
         if let Some(sink) = &self.sink {
-            sink.borrow_mut().project = Some(self.project.clone());
+            let mut m = sink.borrow_mut();
+            if let Some(prev) = m.project.take() {
+                m.undo.push(prev);
+                if m.undo.len() > UNDO_DEPTH {
+                    m.undo.remove(0);
+                }
+            }
+            m.project = Some(self.project.clone());
             return Ok(());
         }
+        undo_snapshot(&self.path)?;
         store::write_json(&self.path, &self.project)
     }
     pub fn dir(&self) -> &Path {
@@ -249,6 +265,66 @@ impl Loaded {
     pub fn build_dir(&self) -> PathBuf {
         self.dir().join("build")
     }
+}
+
+/// Copy the current project file into `build/undo/` before it is overwritten.
+fn undo_snapshot(path: &Path) -> Result<()> {
+    if !path.exists() {
+        return Ok(());
+    }
+    let dir = path.parent().unwrap_or(Path::new(".")).join("build").join("undo");
+    std::fs::create_dir_all(&dir).map_err(|e| crate::error::Error::io(format!("could not create `{}`", dir.display()), e))?;
+    let existing = undo_files(&dir);
+    let next = existing.last().map(|(n, _)| n + 1).unwrap_or(1);
+    std::fs::copy(path, dir.join(format!("{next:06}.json"))).map_err(|e| crate::error::Error::io("could not snapshot the project for undo", e))?;
+    let mut all = undo_files(&dir);
+    while all.len() > UNDO_DEPTH {
+        let (_, p) = all.remove(0);
+        let _ = std::fs::remove_file(p);
+    }
+    Ok(())
+}
+
+/// (index, path) of the undo snapshots, oldest first.
+pub fn undo_files(dir: &Path) -> Vec<(u64, PathBuf)> {
+    let mut v: Vec<(u64, PathBuf)> = std::fs::read_dir(dir)
+        .map(|rd| {
+            rd.filter_map(|e| e.ok())
+                .filter_map(|e| {
+                    let p = e.path();
+                    let n = p.file_stem()?.to_str()?.parse::<u64>().ok()?;
+                    Some((n, p))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    v.sort();
+    v
+}
+
+/// `pcb undo`: restore the state before the last change.
+pub fn undo(ctx: &Ctx) -> Result<()> {
+    if let Some(m) = &ctx.memory {
+        let mut m = m.borrow_mut();
+        match m.undo.pop() {
+            Some(prev) => {
+                m.project = Some(prev);
+                println!("restored the project as it was before the last change ({} more undo step(s))", m.undo.len());
+                return Ok(());
+            }
+            None => return Err(crate::error::Error::msg("nothing to undo")),
+        }
+    }
+    let path = store::find_project(ctx.project_arg.as_deref())?;
+    let dir = path.parent().unwrap_or(Path::new(".")).join("build").join("undo");
+    let files = undo_files(&dir);
+    let Some((_, last)) = files.last() else {
+        return Err(crate::error::Error::with_help("nothing to undo", "snapshots are kept in build/undo/ from the second change on"));
+    };
+    std::fs::copy(last, &path).map_err(|e| crate::error::Error::io("could not restore the snapshot", e))?;
+    std::fs::remove_file(last).ok();
+    println!("restored the project as it was before the last change ({} more undo step(s))", files.len() - 1);
+    Ok(())
 }
 
 pub fn validate(ctx: &Ctx, loaded: &Loaded) -> Result<()> {

@@ -255,8 +255,27 @@ class Pcb:
         return self.run("route", *_flag("passes", passes), *_flag("keep", keep), *_flag("dsn-only", dsn_only),
                         *_flag("keep-redundant", keep_redundant))
 
-    def visualize(self, what: str = "pcb", *, output: str | os.PathLike | None = None, width: int | None = None) -> str:
-        return self.run("visualize", what, *_flag("output", None if output is None else os.fspath(output)), *_flag("width", width))
+    def visualize(self, what: str = "pcb", *, output: str | os.PathLike | None = None, width: int | None = None,
+                  crop: tuple[Point, Point] | None = None) -> str:
+        argv = ["visualize", what, *_flag("output", None if output is None else os.fspath(output)), *_flag("width", width)]
+        if crop is not None:
+            argv += ["--crop", _pt(crop[0]), _pt(crop[1])]
+        return self.run(*argv)
+
+    def route_pin(self, from_pin: str, to_pin: str, *, layer: str | None = None, width: float | None = None,
+                  via: Sequence[Point] = (), via_cost: float | None = None, png: str | None = None,
+                  dry_run: bool = False) -> str:
+        """One fast trace between two pins of a net (`pcb route pin`); `png="crop"` writes build/pcb.png
+        showing the new trace. Raises PcbError with the closest approach and blockers when no route exists."""
+        argv = ["route", "pin", from_pin, to_pin, *_flag("layer", layer), *_flag("width", width)]
+        for p in via:
+            argv += ["--via", _pt(p)]
+        argv += _flag("via-cost", via_cost) + _flag("png", png) + _flag("dry-run", dry_run)
+        return self.run(*argv)
+
+    def undo(self) -> str:
+        """Restore the project as it was before the last change."""
+        return self.run("undo")
 
     def gerbers(self, *, output: str | os.PathLike | None = None, force: bool = False) -> str:
         return self.run("gerbers", *_flag("output", None if output is None else os.fspath(output)), *_flag("force", force))
