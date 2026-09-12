@@ -162,6 +162,33 @@ in each file's description. Treat them as a starting point: capabilities
 change, and 2 oz copper or special finishes have their own numbers. `pcb
 drc new` writes a template to derive a profile for another fab.
 
+## KICAD
+
+```
+pcb export kicad [-o DIR] [--drc]
+```
+
+writes the board as `build/kicad/<name>.kicad_pcb` with a `.kicad_pro`
+beside it carrying the design rules and net classes, so KiCad's own DRC
+can be run on the same board as an independent check (`--drc` runs
+`kicad-cli pcb drc --refill-zones` and summarises the report; the JSON
+report is kept next to the board). The file opens in KiCad's editor too.
+
+What is exported and how: footprints at rotation 0 with every pad in its
+final place (pads of a multi-tab pin share a number and the footprint is
+marked so KiCad treats them as joined inside the part), silkscreen and
+courtyard lines, the outline as edge cuts, free text, traces as tracks,
+vias, pours as zones with the same clearance and thermal settings (KiCad
+fills them itself), free holes as one-pad footprints. Two conventions
+differ and are translated: KiCad's y axis points down, and KiCad tracks
+are round-ended, so each trace's ends are pulled back by half the width
+to land where the flat end stopped.
+
+Expect a few warnings that are KiCad's view, not defects: silkscreen
+clipped by solder mask (we clip at output, KiCad warns), and thermal or
+island differences where KiCad's fill differs from ours. KiCad is found
+at `$KICAD_CLI`, on `PATH`, or in `/Applications/KiCad`.
+
 ## OUTPUT
 
 Each finding is `severity: rule: message`; messages name the features

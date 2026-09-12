@@ -273,6 +273,10 @@ class Pcb:
         argv += _flag("via-cost", via_cost) + _flag("png", png) + _flag("dry-run", dry_run)
         return self.run(*argv)
 
+    def export_kicad(self, *, output: str | os.PathLike | None = None, drc: bool = False) -> str:
+        """Write a .kicad_pcb/.kicad_pro pair (and with drc=True run KiCad's DRC on it)."""
+        return self.run("export", "kicad", *_flag("output", None if output is None else os.fspath(output)), *_flag("drc", drc))
+
     def undo(self) -> str:
         """Restore the project as it was before the last change."""
         return self.run("undo")

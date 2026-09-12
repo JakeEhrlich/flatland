@@ -100,6 +100,9 @@ pub enum Command {
     Gerbers(output::GerbersArgs),
     /// Write the bill of materials (JLCPCB format by default).
     Bom(assembly::BomArgs),
+    /// Export to other tools (KiCad).
+    #[command(subcommand)]
+    Export(output::ExportCmd),
     /// Write the pick-and-place / component placement list (JLCPCB CPL format by default).
     Pnp(assembly::PnpArgs),
     /// Define and run SPICE simulations.
@@ -150,6 +153,7 @@ pub fn run_command(ctx: &Ctx, command: Command) -> Result<()> {
         Command::Route(a) => output::route(&ctx, a),
         Command::Gerbers(a) => output::gerbers(&ctx, a),
         Command::Bom(a) => assembly::bom(&ctx, a),
+        Command::Export(c) => output::run_export(ctx, c),
         Command::Pnp(a) => assembly::pnp(&ctx, a),
         Command::Sim(c) => sim_cmd::run_sim(&ctx, c),
         Command::Schema(a) => inspect::schema(&ctx, a),

@@ -593,3 +593,41 @@ fn route_pin_and_undo() {
     let out = p.ok(&["undo"]);
     assert!(out.contains("restored"), "{out}");
 }
+
+#[test]
+fn kicad_export() {
+    let p = Proj::new("kicad");
+    let jlc = Path::new(env!("CARGO_MANIFEST_DIR")).join("library-jlcpcb/index.json");
+    p.ok(&["init", "kc", "--index", jlc.to_str().unwrap(), "--index", library().to_str().unwrap()]);
+    p.ok(&["outline", "rect", "30", "20", "--radius", "1"]);
+    p.ok(&["rules", "set", "clearance=0.15"]);
+    p.ok(&["add", "J1", "wago-2060-452", "--at", "8,5"]);
+    p.ok(&["add", "R1", "jlcpcb:resistor-0603", "--param", "value=1k", "--at", "20,12"]);
+    p.ok(&["add", "D1", "led-0603-red", "--at", "25,12", "--side", "bottom"]);
+    p.ok(&["connect", "J1.1", "R1.1", "--net", "VIN"]);
+    p.ok(&["connect", "J1.2", "D1.K", "--net", "GND"]);
+    p.ok(&["connect", "R1.2", "D1.A", "--net", "LED"]);
+    p.ok(&["pour", "new", "gnd", "--layer", "B.Cu", "--net", "GND", "--follow-outline"]);
+    p.ok(&["text", "add", "KC", "--at", "15,17", "--size", "1"]);
+    p.ok(&["route", "pin", "J1.1", "R1.1"]);
+    // D1 is on the back: the LED route must change layer, and J1's ground tab needs a via
+    // down to the pour. Both routes are left to the router (the via is placed by hand).
+    let out = p.ok(&["route", "pin", "R1.2", "D1.A"]);
+    assert!(out.contains("1 via(s)"), "route to a back-side pad must use a via:\n{out}");
+    p.ok(&["via", "add", "--net", "GND", "12,9"]);
+    p.ok(&["route", "pin", "J1.2", "D1.K"]);
+    let check = p.run(&["check"]).1;
+    assert!(check.contains("0 error(s), 0 warning(s)"), "{check}");
+    let out = p.ok(&["export", "kicad"]);
+    assert!(out.contains("kc.kicad_pcb") && out.contains("kc.kicad_pro"), "{out}");
+    let pcb = std::fs::read_to_string(p.build("kicad/kc.kicad_pcb")).unwrap();
+    assert!(pcb.starts_with("(kicad_pcb"));
+    assert!(pcb.contains("(duplicate_pad_numbers_are_jumpers yes)"), "WAGO tabs share a pad number");
+    assert!(pcb.contains("(zone (net") && pcb.contains("(gr_text \"KC\"") && pcb.contains("(via (at"));
+    assert!(pcb.matches("(footprint ").count() == 3);
+    // With KiCad installed, its DRC must accept the file and find no errors.
+    if flatland::kicad::find_kicad_cli().is_some() {
+        let out = p.run(&["export", "kicad", "--drc"]).1;
+        assert!(out.contains("kicad drc: 0 error(s)"), "{out}");
+    }
+}

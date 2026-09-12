@@ -965,16 +965,6 @@
       "net": "GND",
       "drill": 0.3,
       "diameter": 0.6
-    },
-    {
-      "at": [
-        2,
-        2
-      ],
-      "net": "GND",
-      "drill": 0.3,
-      "diameter": 0.6,
-      "routed": true
     }
   ],
   "simulations": {

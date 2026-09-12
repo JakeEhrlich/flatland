@@ -196,14 +196,17 @@ pub fn run(ctx: &Ctx, a: RouteArgs) -> Result<()> {
         a.layer == b.layer && a.net == b.net && a.width == b.width && (a.points == b.points || a.points.iter().rev().eq(b.points.iter()))
     };
     let new_traces: Vec<crate::schema::Trace> = session.traces.into_iter().filter(|t| !hand.iter().any(|h| same(h, t))).collect();
-    let (nt, nv) = (new_traces.len(), session.vias.len());
+    // The same for vias the router echoes back.
+    let hand_vias: Vec<crate::schema::Via> = loaded.project.vias.iter().filter(|v| !v.routed).cloned().collect();
+    let new_vias: Vec<crate::schema::Via> = session.vias.into_iter().filter(|v| !hand_vias.iter().any(|h| h.at == v.at && h.net == v.net)).collect();
+    let (nt, nv) = (new_traces.len(), new_vias.len());
     // freerouting models wire ends as round caps and may stop a wide wire just
     // short of a narrow pad (the cap reaches it, the flat end does not) or
     // approach at an angle. Finish such ends at the pad centre.
     let finished = finish_wire_ends(&board, new_traces);
     let extended = finished.1;
     loaded.project.traces.extend(finished.0);
-    loaded.project.vias.extend(session.vias);
+    loaded.project.vias.extend(new_vias);
     let board = ctx.board(&loaded)?;
     let conn = board.connectivity()?;
     let unrouted: Vec<String> = conn.iter().filter(|(_, i)| i.len() > 1).map(|(n, i)| format!("{n} ({} islands)", i.len())).collect();

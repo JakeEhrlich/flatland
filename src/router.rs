@@ -391,7 +391,7 @@ impl<'a> Search<'a> {
             }
             let (l, rem) = (i / per, i % per);
             let (x, y) = (rem % w, rem / w);
-            if goal[rem] {
+            if goal[i] {
                 let mut path = vec![(l, x, y)];
                 let mut cur = i;
                 while parent[cur] != u32::MAX {
@@ -599,9 +599,10 @@ pub fn route_pin(board: &Board, req: &Request) -> Result<Outcome> {
         let mut grid = build_grid(board, &net, width, clearance, &layers, via_d)?;
         let per = grid.w * grid.h;
         // Start/goal cells: rasterise the islands (only on wanted layers).
+        let n_layers = grid.layers.len();
         let mut start_cells: Vec<(usize, usize, usize)> = Vec::new();
-        let mut goal_mask = vec![false; per];
-        let mut goal_cells: Vec<(usize, usize)> = Vec::new();
+        let mut goal_mask = vec![false; per * n_layers];
+        let mut goal_cells: Vec<(usize, usize, usize)> = Vec::new();
         for (li, layer) in grid.layers.iter().enumerate() {
             if let Some((_, rings)) = start.per_layer.iter().find(|(l, _)| *l == layer.name) {
                 for r in rings {
@@ -613,24 +614,24 @@ pub fn route_pin(board: &Board, req: &Request) -> Result<Outcome> {
             if let Some((_, rings)) = goal.per_layer.iter().find(|(l, _)| *l == layer.name) {
                 for r in rings {
                     rasterise(&grid, r, &mut |i| {
-                        goal_mask[i] = true;
-                        goal_cells.push((i % grid.w, i / grid.w));
+                        goal_mask[li * per + i] = true;
+                        goal_cells.push((li, i % grid.w, i / grid.w));
                     });
                 }
             }
         }
         // Island cells sit on same-net copper: make them free even if a neighbouring
         // other-net feature's inflation reaches them, and reject cells too tight to leave.
-        for l in &mut grid.layers {
-            for &(li, x, y) in &start_cells {
-                if grid_layer_index(&l.name, &layers) == li {
-                    let i = y * grid.w + x;
-                    l.free[i] = true;
+        for (li, l) in grid.layers.iter_mut().enumerate() {
+            for &(sl, x, y) in &start_cells {
+                if sl == li {
+                    l.free[y * grid.w + x] = true;
                 }
             }
-            for &(x, y) in &goal_cells {
-                let i = y * grid.w + x;
-                l.free[i] = true;
+            for &(gl, x, y) in &goal_cells {
+                if gl == li {
+                    l.free[y * grid.w + x] = true;
+                }
             }
         }
         if start_cells.is_empty() {
@@ -640,8 +641,8 @@ pub fn route_pin(board: &Board, req: &Request) -> Result<Outcome> {
             return Err(Error::msg(format!("{} has no copper on the routable layer(s)", req.to)));
         }
         let goal_bbox = {
-            let xs = goal_cells.iter().map(|c| c.0);
-            let ys = goal_cells.iter().map(|c| c.1);
+            let xs = goal_cells.iter().map(|c| c.1);
+            let ys = goal_cells.iter().map(|c| c.2);
             (xs.clone().min().unwrap(), ys.clone().min().unwrap(), xs.max().unwrap(), ys.max().unwrap())
         };
         let via_cost = (req.via_cost_mm / grid.cell.mm() * 10.0) as i64;
@@ -651,8 +652,10 @@ pub fn route_pin(board: &Board, req: &Request) -> Result<Outcome> {
         let mut cur_starts = start_cells.clone();
         for wp in &req.waypoints {
             let Some((wx, wy)) = grid.cell_of(*wp) else { return Err(Error::msg(format!("waypoint {wp} is off the board"))) };
-            let mut mask = vec![false; per];
-            mask[wy * grid.w + wx] = true;
+            let mut mask = vec![false; per * n_layers];
+            for li in 0..n_layers {
+                mask[li * per + wy * grid.w + wx] = true;
+            }
             let free_somewhere = grid.layers.iter().any(|l| l.free[wy * grid.w + wx]);
             if !free_somewhere {
                 return Err(Error::with_help(format!("waypoint {wp} is not routable (too close to other copper or the edge)"), "move it a little"));
@@ -758,10 +761,6 @@ pub fn route_pin(board: &Board, req: &Request) -> Result<Outcome> {
             "try a waypoint (`--via x,y`) or a narrower width",
         ))
     }
-}
-
-fn grid_layer_index(name: &str, layers: &[String]) -> usize {
-    layers.iter().position(|l| l == name).unwrap_or(usize::MAX)
 }
 
 fn blocked(grid: &Grid, m: &Miss) -> Outcome {

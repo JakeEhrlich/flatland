@@ -271,9 +271,9 @@ pub fn collect(board: &Board) -> Result<Vec<Item>> {
         items.push(it);
     }
     // Vias: copper disc, plus the hole.
-    for v in &project.vias {
+    for (vi, v) in project.vias.iter().enumerate() {
         let layers = if v.layers.is_empty() { all_layers.clone() } else { v.layers.clone() };
-        let mut it = item(Feature::Via, format!("via {} at {}", v.net.as_deref().unwrap_or("-"), v.at), vec![geom::circle(v.at, v.diameter)]);
+        let mut it = item(Feature::Via, format!("via #{vi} {} at {}", v.net.as_deref().unwrap_or("-"), v.at), vec![geom::circle(v.at, v.diameter)]);
         it.net = v.net.clone();
         it.layers = layers.clone();
         it.attrs.insert("drill", v.drill.mm());
@@ -282,7 +282,7 @@ pub fn collect(board: &Board) -> Result<Vec<Item>> {
         it.class = class_of(&v.net);
         it.plated = Some(true);
         items.push(it);
-        let mut h = item(Feature::Hole, format!("via hole at {}", v.at), vec![geom::circle(v.at, v.drill)]);
+        let mut h = item(Feature::Hole, format!("hole of via #{vi} at {}", v.at), vec![geom::circle(v.at, v.drill)]);
         h.net = v.net.clone();
         h.layers = layers;
         h.attrs.insert("drill", v.drill.mm());
@@ -326,8 +326,8 @@ pub fn collect(board: &Board) -> Result<Vec<Item>> {
         }
     }
     // Free holes (and the copper ring of plated ones).
-    for h in &board.holes {
-        let mut it = item(Feature::Hole, format!("hole at {}", h.hole.at), vec![h.ring.clone()]);
+    for (hi, h) in board.holes.iter().enumerate() {
+        let mut it = item(Feature::Hole, format!("hole #{hi} at {}", h.hole.at), vec![h.ring.clone()]);
         it.net = h.hole.net.clone();
         it.layers = all_layers.clone();
         it.attrs.insert("drill", h.hole.drill.mm());

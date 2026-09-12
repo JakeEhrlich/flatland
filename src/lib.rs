@@ -21,6 +21,7 @@ pub mod route;
 pub mod router;
 pub mod drc;
 pub mod gerber;
+pub mod kicad;
 pub mod sim;
 pub mod cli;
 pub mod session;

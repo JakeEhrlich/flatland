@@ -54,6 +54,7 @@ keyword arguments map to the command's `--flags`:
 | `drc_add(set)`, `drc_waive(rule, *features, reason=)`, `drc_rule(name, feature=, check=, where=, severity=)` | `drc add`, `drc waive`, `drc rule` |
 | `route(passes=, keep=)`, `visualize(what, output=, width=, crop=)` | `route`, `visualize` |
 | `route_pin(from, to, layer=, width=, via=[(x,y),...], png=, dry_run=)`, `undo()` | `route pin`, `undo` |
+| `export_kicad(output=, drc=)` | `export kicad` |
 | `gerbers(force=)`, `bom(all=)`, `pnp(all=)` | `gerbers`, `bom`, `pnp` |
 | `sim_add(name, analysis, *args, probes=, params=, temperature=)`, `sim_run(*names)` | `sim add`, `sim run` |
 

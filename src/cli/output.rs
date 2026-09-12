@@ -281,3 +281,51 @@ pub fn gerbers(ctx: &Ctx, a: GerbersArgs) -> Result<()> {
     }
     Ok(())
 }
+
+#[derive(Subcommand)]
+pub enum ExportCmd {
+    /// Write a KiCad board (`.kicad_pcb` + `.kicad_pro` with the design rules), for KiCad's DRC or editor.
+    Kicad {
+        /// Output directory (default `build/kicad`).
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+        /// Run `kicad-cli pcb drc` on the result and summarise the report.
+        #[arg(long)]
+        drc: bool,
+    },
+}
+
+pub fn run_export(ctx: &Ctx, c: ExportCmd) -> Result<()> {
+    match c {
+        ExportCmd::Kicad { output, drc } => {
+            let loaded = ctx.load()?;
+            let board = ctx.board(&loaded)?;
+            let dir = output.unwrap_or_else(|| loaded.build_dir().join("kicad"));
+            let ex = crate::kicad::write(&board, &dir)?;
+            println!("{}\n{}", ex.pcb.display(), ex.pro.display());
+            if !drc {
+                return Ok(());
+            }
+            let report = crate::kicad::run_drc(&ex.pcb)?;
+            let mut all: Vec<&crate::kicad::Violation> = report.violations.iter().chain(report.unconnected_items.iter()).collect();
+            all.sort_by(|a, b| b.severity.cmp(&a.severity).then_with(|| a.kind.cmp(&b.kind)));
+            let mut counts: indexmap::IndexMap<(String, String), usize> = indexmap::IndexMap::new();
+            for v in &all {
+                *counts.entry((v.severity.clone(), v.kind.clone())).or_insert(0) += 1;
+            }
+            for ((sev, kind), n) in &counts {
+                println!("{sev}: {kind} x{n}");
+                for v in all.iter().filter(|v| v.severity == *sev && v.kind == *kind).take(4) {
+                    println!("    {}", v.description);
+                }
+            }
+            let errors = all.iter().filter(|v| v.severity == "error").count();
+            let warnings = all.iter().filter(|v| v.severity == "warning").count();
+            println!("kicad drc: {errors} error(s), {warnings} warning(s) (report: {})", ex.pcb.with_extension("drc.json").display());
+            if errors > 0 {
+                return Err(Error::with_help("KiCad's DRC reports errors", "open the .kicad_pcb in KiCad to inspect them, or read the JSON report"));
+            }
+            Ok(())
+        }
+    }
+}

@@ -36,7 +36,7 @@ The command set is organised in families, each documented on its own page:
 | [pcb-copper](pcb-copper.md) | `pour …`, `trace …`, `via …` |
 | [pcb-visualize](pcb-visualize.md) | `visualize pcb`, `visualize netlist` |
 | [pcb-route](pcb-route.md) | `route` — freerouting autorouter |
-| [pcb-drc](pcb-drc.md) | `check`, `drc …` — design rules, fab profiles, waivers |
+| [pcb-drc](pcb-drc.md) | `check`, `drc …`, `export kicad` — design rules, fab profiles, waivers, KiCad DRC |
 | [pcb-gerbers](pcb-gerbers.md) | `gerbers` — fabrication outputs |
 | [pcb-assembly](pcb-assembly.md) | `bom`, `pnp` — BOM and pick-and-place for SMT assembly |
 | [pcb-python](pcb-python.md) | the engine from Python: `Pcb.new`, methods per command, in memory |
