@@ -1140,7 +1140,7 @@ pub fn run_pour(ctx: &Ctx, c: PourCmd) -> Result<()> {
             // that reaches no pad is floating copper and a net whose pads are
             // spread over several pieces is relying on traces for the rest.
             let board = ctx.board(&loaded)?;
-            for pr in &board.pours {
+            for pr in board.pours()? {
                 let p = &pr.pour;
                 let outers: Vec<&Ring> = pr.copper.iter().filter(|r| geom::signed_area(r) > 0.0).collect();
                 let area: f64 = pr.copper.iter().map(|r| geom::signed_area(r)).sum::<f64>() / 1e12;
@@ -1360,7 +1360,7 @@ pub fn run_trace(ctx: &Ctx, c: TraceCmd) -> Result<()> {
                             others.extend(crate::geom::stroke_flat(&o.points, o.width));
                         }
                     }
-                    for p in &board.pours {
+                    for p in board.pours()? {
                         if p.pour.layer == t.layer && p.pour.net.as_deref() == Some(tn.as_str()) {
                             others.extend(p.copper.iter().cloned());
                         }

@@ -9,7 +9,6 @@ use crate::schema::*;
 use crate::store;
 use crate::units::{Length, Point};
 use indexmap::IndexMap;
-use std::collections::HashSet;
 use std::path::Path;
 
 pub const BUILTIN_BASIC: &str = include_str!("../drc/basic.json");
@@ -34,6 +33,9 @@ pub struct Item {
     pub class: Option<String>,
     pub center: Point,
     pub extra: Vec<Point>,
+    /// Big polygons (pours) cut into grid tiles so a small feature is only
+    /// tested against the pieces near it: (bbox, rings).
+    pub tiles: Option<Vec<((Point, Point), Rings)>>,
 }
 
 #[derive(Clone, Debug, serde::Serialize)]
@@ -53,6 +55,8 @@ pub struct Report {
     pub findings: Vec<Finding>,
     pub rules_run: usize,
     pub sets: Vec<String>,
+    /// (stage or rule name, seconds) for `pcb check --timing`.
+    pub timing: Vec<(String, f64)>,
 }
 
 impl Report {
@@ -85,9 +89,11 @@ pub fn active_rules(project: &Project, project_path: &Path) -> Result<(Vec<(Stri
 
 pub fn run(board: &Board, project_path: &Path) -> Result<Report> {
     let (sets, own) = active_rules(&board.project, project_path)?;
+    let mut timing: Vec<(String, f64)> = Vec::new();
+    let t0 = std::time::Instant::now();
     let items = collect(board)?;
+    timing.push(("collect features".into(), t0.elapsed().as_secs_f64()));
     let mut findings = Vec::new();
-    let mut rules_run = 0;
     let layer_count = board.layers().len();
     for (name, set) in &sets {
         if let Some(a) = &set.applies {
@@ -105,14 +111,28 @@ pub fn run(board: &Board, project_path: &Path) -> Result<Report> {
                 });
             }
         }
-        for rule in &set.rules {
-            rules_run += 1;
-            eval(board, &items, rule, &mut findings)?;
-        }
     }
-    for rule in &own {
-        rules_run += 1;
-        eval(board, &items, rule, &mut findings)?;
+    // Rules are independent: run them across all cores.
+    let jobs: Vec<(String, &Rule)> = sets
+        .iter()
+        .flat_map(|(name, set)| set.rules.iter().map(move |r| (format!("{name}:{}", r.name), r)))
+        .chain(own.iter().map(|r| (format!("project:{}", r.name), r)))
+        .collect();
+    let rules_run = jobs.len();
+    use rayon::prelude::*;
+    let results: Vec<Result<(Vec<Finding>, String, f64)>> = jobs
+        .par_iter()
+        .map(|(label, rule)| {
+            let t = std::time::Instant::now();
+            let mut f = Vec::new();
+            eval(board, &items, rule, &mut f)?;
+            Ok((f, label.clone(), t.elapsed().as_secs_f64()))
+        })
+        .collect();
+    for r in results {
+        let (f, label, secs) = r?;
+        findings.extend(f);
+        timing.push((label, secs));
     }
     // Waivers.
     for f in &mut findings {
@@ -127,7 +147,7 @@ pub fn run(board: &Board, project_path: &Path) -> Result<Report> {
         }
     }
     findings.sort_by(|a, b| b.severity.cmp(&a.severity).then_with(|| a.rule.cmp(&b.rule)));
-    Ok(Report { findings, rules_run, sets: sets.iter().map(|(n, _)| n.clone()).collect() })
+    Ok(Report { findings, rules_run, sets: sets.iter().map(|(n, _)| n.clone()).collect(), timing })
 }
 
 // ---------------------------------------------------------------------------
@@ -161,6 +181,75 @@ fn item(kind: Feature, id: String, geom: Rings) -> Item {
         class: None,
         center,
         extra: vec![],
+        tiles: None,
+    }
+}
+
+const TILE_MM: f64 = 6.0;
+/// Offsets simplify outlines by up to 2 µm; morphological differences ignore
+/// anything thinner than this.
+const GEOM_TOLERANCE: Length = Length(5_000);
+const TILE_MIN_VERTICES: usize = 400;
+
+/// Cut a big polygon set into grid tiles (done once per feature).
+fn tile(rings: &Rings) -> Option<Vec<((Point, Point), Rings)>> {
+    let n: usize = rings.iter().map(|r| r.len()).sum();
+    if n < TILE_MIN_VERTICES {
+        return None;
+    }
+    let (lo, hi) = geom::bounds(rings)?;
+    let step = Length::from_mm(TILE_MM);
+    let mut rects: Vec<Ring> = Vec::new();
+    let mut y = lo.y;
+    while y < hi.y {
+        let mut x = lo.x;
+        let y1 = (y + step).min(hi.y);
+        while x < hi.x {
+            let x1 = (x + step).min(hi.x);
+            rects.push(vec![Point::nm(x.nm(), y.nm()), Point::nm(x1.nm(), y.nm()), Point::nm(x1.nm(), y1.nm()), Point::nm(x.nm(), y1.nm())]);
+            x = x1;
+        }
+        y = y1;
+    }
+    // Only the rings whose bounding box touches a tile can shape it: the outer
+    // ring(s) and the few holes inside. Passing all of a pour's cut-outs to every
+    // tile made tiling cost more than the checks it was speeding up.
+    let boxes: Vec<(Point, Point)> = rings.iter().map(|r| geom::bounds(&[r.clone()]).unwrap_or((Point::ORIGIN, Point::ORIGIN))).collect();
+    use rayon::prelude::*;
+    let tiles: Vec<((Point, Point), Rings)> = rects
+        .par_iter()
+        .filter_map(|rect| {
+            let (rlo, rhi) = (rect[0], rect[2]);
+            let subset: Rings = rings
+                .iter()
+                .zip(&boxes)
+                .filter(|(_, (blo, bhi))| !(bhi.x < rlo.x || rhi.x < blo.x || bhi.y < rlo.y || rhi.y < blo.y))
+                .map(|(r, _)| r.clone())
+                .collect();
+            if subset.is_empty() {
+                return None;
+            }
+            let piece = geom::intersection(&subset, &[rect.clone()]).ok()?;
+            if piece.is_empty() {
+                return None;
+            }
+            let bb = geom::bounds(&piece)?;
+            Some((bb, piece))
+        })
+        .collect();
+    Some(tiles)
+}
+
+/// Does `rings` overlap the item's geometry? Uses the item's tiles when it has them.
+fn overlaps_item(rings: &Rings, it: &Item) -> bool {
+    match &it.tiles {
+        Some(tiles) => {
+            let Some((lo, hi)) = geom::bounds(rings) else { return false };
+            tiles.iter().any(|((tlo, thi), piece)| {
+                !(hi.x < tlo.x || thi.x < lo.x || hi.y < tlo.y || thi.y < lo.y) && geom::overlaps(rings, piece)
+            })
+        }
+        None => geom::overlaps(rings, &it.geom),
     }
 }
 
@@ -259,8 +348,9 @@ pub fn collect(board: &Board) -> Result<Vec<Item>> {
         }
     }
     // Pours and their pieces.
-    for p in &board.pours {
+    for p in board.pours()? {
         let mut it = item(Feature::Pour, format!("pour {}", p.pour.name), p.copper.clone());
+        it.tiles = tile(&it.geom);
         it.net = p.pour.net.clone();
         it.layers = vec![p.pour.layer.clone()];
         it.attrs.insert("area", p.copper.iter().map(|r| geom::signed_area(r)).sum::<f64>() / 1e12);
@@ -554,6 +644,11 @@ fn eval(board: &Board, items: &[Item], rule: &Rule, findings: &mut Vec<Finding>)
                     if s.geom.is_empty() {
                         continue;
                     }
+                    // A pour is clipped to the outline minus `edge_clearance` when it is
+                    // filled; only a tighter rule needs the (expensive) geometry test.
+                    if s.kind == Feature::Pour && rules.edge_clearance.nm() >= d.nm() {
+                        continue;
+                    }
                     let grown = geom::offset(&s.geom, d - Length::from_nm(2_000));
                     let outside = geom::difference(&grown, &[o.clone()])?;
                     if outside.iter().any(|r| geom::signed_area(r) > 1e6) {
@@ -564,40 +659,59 @@ fn eval(board: &Board, items: &[Item], rule: &Rule, findings: &mut Vec<Finding>)
             }
             let d = resolve(min, rules, "clearance");
             let targets: Vec<&Item> = items.iter().filter(|it| selects(*to, it) && !it.geom.is_empty()).collect();
-            let mut seen: HashSet<(String, String)> = HashSet::new();
-            for s in &subjects {
-                if s.geom.is_empty() {
-                    continue;
+            let is_subject = |it: &Item| selects(rule.for_, it) && matches_where(&rule.where_, it);
+            // Each unordered pair is tested once, by exactly one side: the untiled
+            // side when only one is a pour (it grows itself and probes the pour's
+            // tiles), otherwise the side with the smaller id. A target that is not
+            // itself a subject is always tested from the subject.
+            let owns = |s: &Item, t: &Item| -> bool {
+                if !is_subject(t) {
+                    return true;
                 }
-                let grown = geom::offset(&s.geom, d - Length::from_nm(2_000));
-                for t in &targets {
-                    if std::ptr::eq(*s, *t) || s.id == t.id || !share_layer(s, t) || !related(*relation, s, t) {
-                        continue;
-                    }
-                    // Pads and the holes/mask of the same pad are one thing.
-                    if (s.kind == Feature::Hole || t.kind == Feature::Hole) && s.refdes.is_some() && s.refdes == t.refdes && s.center == t.center {
-                        continue;
-                    }
-                    if !bbox_near(&s.geom, &t.geom, d) {
-                        continue;
-                    }
-                    let key = if s.id < t.id { (s.id.clone(), t.id.clone()) } else { (t.id.clone(), s.id.clone()) };
-                    if !seen.insert(key) {
-                        continue;
-                    }
-                    if geom::overlaps(&grown, &t.geom) {
-                        let touching = geom::overlaps(&s.geom, &t.geom);
-                        let msg = if d.nm() <= 0 || touching {
-                            format!("{} and {} overlap", s.id, t.id)
-                        } else {
-                            format!("{} and {} are closer than {d}", s.id, t.id)
-                        };
-                        let mut feats = features_of(s);
-                        feats.extend(features_of(t));
-                        push(findings, rule, msg, Some(s.center), feats);
-                    }
+                match (s.tiles.is_some(), t.tiles.is_some()) {
+                    (true, false) => false,
+                    (false, true) => true,
+                    _ => s.id < t.id,
                 }
-            }
+            };
+            use rayon::prelude::*;
+            let found: Vec<Finding> = subjects
+                .par_iter()
+                .flat_map_iter(|s| {
+                    let mut out = Vec::new();
+                    if s.geom.is_empty() {
+                        return out;
+                    }
+                    // Growing a pour is expensive: do it only if some pair needs it.
+                    let mut grown: Option<Rings> = None;
+                    for t in &targets {
+                        if std::ptr::eq(*s, *t) || s.id == t.id || !share_layer(s, t) || !related(*relation, s, t) {
+                            continue;
+                        }
+                        // Pads and the holes/mask of the same pad are one thing.
+                        if (s.kind == Feature::Hole || t.kind == Feature::Hole) && s.refdes.is_some() && s.refdes == t.refdes && s.center == t.center {
+                            continue;
+                        }
+                        if !bbox_near(&s.geom, &t.geom, d) || !owns(s, t) {
+                            continue;
+                        }
+                        let g = grown.get_or_insert_with(|| geom::offset(&s.geom, d - Length::from_nm(2_000)));
+                        if overlaps_item(g, t) {
+                            let touching = geom::overlaps(&s.geom, &t.geom);
+                            let msg = if d.nm() <= 0 || touching {
+                                format!("{} and {} overlap", s.id, t.id)
+                            } else {
+                                format!("{} and {} are closer than {d}", s.id, t.id)
+                            };
+                            let mut feats = features_of(s);
+                            feats.extend(features_of(t));
+                            out.push(Finding { rule: rule.name.clone(), severity: rule.severity, message: msg, at: Some(s.center), features: feats, waived: None });
+                        }
+                    }
+                    out
+                })
+                .collect();
+            findings.extend(found);
         }
         Check::MinWidth(limit) => {
             let w = resolve(limit, rules, "width");
@@ -615,8 +729,17 @@ fn eval(board: &Board, items: &[Item], rule: &Rule, findings: &mut Vec<Finding>)
                 if s.geom.is_empty() {
                     continue;
                 }
+                // Pour fill narrower than `pour_min_width` is removed when the pour is
+                // filled, so the opening is only worth running for a tighter rule.
+                if matches!(s.kind, Feature::Pour | Feature::PourPiece) && rules.pour_min_width().nm() >= w.nm() {
+                    continue;
+                }
                 let opened = geom::open(&s.geom, w)?;
-                for (at, area) in significant(geom::difference(&s.geom, &opened)?, w) {
+                // The original shrunk by a few µm: offsets simplify their outlines by
+                // up to 2 µm, and without this a hairline along every edge would
+                // register as a sliver.
+                let core = geom::offset(&s.geom, -GEOM_TOLERANCE);
+                for (at, area) in significant(geom::difference(&core, &opened)?, w) {
                     push(findings, rule, format!("{} has a sliver narrower than {w} near {at} ({area:.2} mm²)", s.id), Some(at), features_of(s));
                 }
             }
@@ -627,6 +750,12 @@ fn eval(board: &Board, items: &[Item], rule: &Rule, findings: &mut Vec<Finding>)
             let mut groups: IndexMap<String, (Rings, Vec<String>, Point)> = IndexMap::new();
             for s in &subjects {
                 if s.geom.is_empty() {
+                    continue;
+                }
+                // A pour's internal gaps are its own clearance cut-outs (at least
+                // `pour_clearance` wide) and it joins same-net copper solidly, so it
+                // cannot hold a gap narrower than the rule; leave it out of the group.
+                if matches!(s.kind, Feature::Pour | Feature::PourPiece) {
                     continue;
                 }
                 let key = if is_copper_item(s) {
@@ -641,6 +770,14 @@ fn eval(board: &Board, items: &[Item], rule: &Rule, findings: &mut Vec<Finding>)
                 e.1.extend(features_of(s));
             }
             for (key, (rings, feats, _)) in groups {
+                // Only rings with a neighbour within the gap can form one: drop the
+                // rest before the (costly) closing, and skip groups with nothing left.
+                let boxes: Vec<(Point, Point)> = rings.iter().filter_map(|r| geom::bounds(&[r.clone()])).collect();
+                let near = |i: usize| boxes.iter().enumerate().any(|(j, b)| j != i && !(boxes[i].1.x + g < b.0.x || b.1.x + g < boxes[i].0.x || boxes[i].1.y + g < b.0.y || b.1.y + g < boxes[i].0.y));
+                let rings: Rings = rings.iter().enumerate().filter(|(i, _)| near(*i)).map(|(_, r)| r.clone()).collect();
+                if rings.is_empty() {
+                    continue;
+                }
                 let u = geom::union(&rings)?;
                 // Dilate then erode by exactly half; union with the original so the
                 // result is a superset of it and the difference is only what got
@@ -649,7 +786,8 @@ fn eval(board: &Board, items: &[Item], rule: &Rule, findings: &mut Vec<Finding>)
                 let half = Length::from_nm(g.nm() / 2);
                 let closed = geom::offset(&geom::offset(&u, half), -half);
                 let closed = geom::union(&[closed, u.clone()].concat())?;
-                let diff = geom::difference(&closed, &u)?;
+                // Subtract the original grown by a few µm (see min_width).
+                let diff = geom::difference(&closed, &geom::offset(&u, GEOM_TOLERANCE))?;
                 for (at, area) in significant(diff, g) {
                     push(findings, rule, format!("gap narrower than {g} in {} near {at} ({area:.2} mm²)", key.replace('|', " net ")), Some(at), feats.clone());
                 }

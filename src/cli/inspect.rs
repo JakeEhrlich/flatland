@@ -98,12 +98,27 @@ pub struct CheckArgs {
     /// List info-level findings (they are only counted otherwise).
     #[arg(long)]
     pub info: bool,
+    /// Report how long each rule took.
+    #[arg(long)]
+    pub timing: bool,
 }
 
 pub fn check(ctx: &Ctx, a: CheckArgs) -> Result<()> {
     let loaded = ctx.load()?;
+    let t_load = std::time::Instant::now();
     let board = ctx.board(&loaded)?;
+    let build_secs = t_load.elapsed().as_secs_f64();
+    let t_run = std::time::Instant::now();
     let mut report = crate::drc::run(&board, &loaded.path)?;
+    let run_secs = t_run.elapsed().as_secs_f64();
+    if a.timing {
+        eprintln!("timing: board build {build_secs:.3}s, rules {run_secs:.3}s");
+        let mut rows = report.timing.clone();
+        rows.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        for (name, secs) in rows.iter().take(15) {
+            eprintln!("  {secs:7.3}s  {name}");
+        }
+    }
     if let Some(r) = &a.rule {
         report.findings.retain(|f| &f.rule == r);
     }

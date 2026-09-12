@@ -153,7 +153,8 @@ pub struct Board {
     pub pin_nets: HashMap<String, String>,
     pub outline: Option<Ring>,
     pub holes: Vec<BoardHole>,
-    pub pours: Vec<PourResult>,
+    /// Computed pour fills, on first use (`pours()`): editing commands never need them.
+    pours: std::sync::OnceLock<std::result::Result<Vec<PourResult>, String>>,
 }
 
 impl Board {
@@ -297,8 +298,7 @@ impl Board {
             }
         }
 
-        let mut board = Board { path: path.to_path_buf(), project, instances, nets, pin_nets, outline, holes, pours: vec![] };
-        board.pours = board.compute_pours()?;
+        let board = Board { path: path.to_path_buf(), project, instances, nets, pin_nets, outline, holes, pours: std::sync::OnceLock::new() };
         Ok(board)
     }
 
@@ -475,6 +475,15 @@ impl Board {
         out
     }
 
+    /// The pour fills, computed on first use and cached.
+    pub fn pours(&self) -> Result<&[PourResult]> {
+        let r = self.pours.get_or_init(|| self.compute_pours().map_err(|e| e.to_string()));
+        match r {
+            Ok(v) => Ok(v.as_slice()),
+            Err(msg) => Err(Error::msg(msg.clone())),
+        }
+    }
+
     fn compute_pours(&self) -> Result<Vec<PourResult>> {
         let mut results = Vec::new();
         let rules = self.rules();
@@ -600,9 +609,6 @@ impl Board {
         for h in &self.holes {
             rings.push(h.ring.clone());
         }
-        for p in &self.pours {
-            rings.push(p.outline.clone());
-        }
         geom::bounds(&rings)
     }
 
@@ -644,7 +650,7 @@ impl Board {
                 for (_, ring) in self.copper_on_layer(layer).into_iter().filter(|(n, _)| n.as_deref() == Some(&net.name)) {
                     rings.push(ring);
                 }
-                for p in &self.pours {
+                for p in self.pours()? {
                     if p.pour.layer == *layer && p.pour.net.as_deref() == Some(&net.name) {
                         rings.extend(p.copper.iter().cloned());
                     }

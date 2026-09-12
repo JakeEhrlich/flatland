@@ -115,7 +115,7 @@ pub fn emit(board: &Board) -> Result<String> {
     // make it skip the net while its other traces carve the fill into
     // islands); the pour then merges with those traces.
     if n > 1 {
-        for p in &board.pours {
+        for p in board.pours()? {
             if let Some(net) = &p.pour.net {
                 let _ = writeln!(s, "    (plane {} (polygon {} 0{}))", quote(net), quote(&p.pour.layer), ring_coords(&p.outline));
             }

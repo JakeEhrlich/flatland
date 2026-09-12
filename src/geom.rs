@@ -312,6 +312,11 @@ pub fn intersection(subject: &[Ring], clip: &[Ring]) -> Result<Rings> {
     Ok(from_cpaths(r))
 }
 
+/// Inflate emits many near-coincident points along every arc; points that move
+/// the outline by less than this are dropped afterwards (2 µm, far below what a
+/// fab resolves), or every later boolean and offset pays for them again.
+const SIMPLIFY_NM: f64 = 2_000.0;
+
 /// Offset closed polygons outward (positive) or inward (negative) with round joins.
 pub fn offset(rings: &[Ring], delta: Length) -> Rings {
     if rings.is_empty() {
@@ -319,7 +324,7 @@ pub fn offset(rings: &[Ring], delta: Length) -> Rings {
     }
     // Union first so overlapping inputs offset as one region.
     let u = union(rings).unwrap_or_else(|_| rings.to_vec());
-    let p = to_cpaths(&u).inflate(delta.nm() as f64, JoinType::Round, EndType::Polygon, 2.0);
+    let p = to_cpaths(&u).inflate(delta.nm() as f64, JoinType::Round, EndType::Polygon, 2.0).simplify(SIMPLIFY_NM, false);
     from_cpaths(p)
 }
 
@@ -349,7 +354,7 @@ pub fn stroke(points: &[Point], width: Length) -> Rings {
         }
         return vec![];
     }
-    let p = CPaths::<One>::from(to_cpath(points)).inflate(width.nm() as f64 / 2.0, JoinType::Round, EndType::Round, 2.0);
+    let p = CPaths::<One>::from(to_cpath(points)).inflate(width.nm() as f64 / 2.0, JoinType::Round, EndType::Round, 2.0).simplify(SIMPLIFY_NM, false);
     from_cpaths(p)
 }
 
@@ -362,7 +367,7 @@ pub fn stroke_flat(points: &[Point], width: Length) -> Rings {
         }
         return vec![];
     }
-    let p = CPaths::<One>::from(to_cpath(points)).inflate(width.nm() as f64 / 2.0, JoinType::Round, EndType::Butt, 2.0);
+    let p = CPaths::<One>::from(to_cpath(points)).inflate(width.nm() as f64 / 2.0, JoinType::Round, EndType::Butt, 2.0).simplify(SIMPLIFY_NM, false);
     from_cpaths(p)
 }
 

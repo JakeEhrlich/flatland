@@ -84,7 +84,7 @@ pub fn render(board: &Board, opts: &Options) -> Result<String> {
         if !visible(l) {
             continue;
         }
-        for p in &board.pours {
+        for p in board.pours()? {
             if &p.pour.layer == *l {
                 svg.polygon(&p.outline, "none", 0.0, &format!("stroke=\"{}\" stroke-width=\"{}\" stroke-dasharray=\"{} {}\" stroke-opacity=\"0.6\"", layer_color(board, l), fmt_mm(thin), fmt_mm(thin * 8.0), fmt_mm(thin * 4.0)));
                 svg.polygons(&p.copper, layer_color(board, l), 0.45, "");

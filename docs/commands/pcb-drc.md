@@ -8,7 +8,7 @@ design must satisfy, as importable rule sets, project rules and waivers.
 ## SYNOPSIS
 
 ```
-pcb check [--strict] [--json] [--rule NAME] [--waived] [--info]
+pcb check [--strict] [--json] [--rule NAME] [--waived] [--info] [--timing]
 pcb drc profiles
 pcb drc add NAME|PATH
 pcb drc remove NAME|PATH
@@ -139,6 +139,18 @@ layer, or `top`/`bottom` for silk, mask and courtyards), `net`, `class`
 **Distances** are millimetres, or the string `"design"` for the project's
 own value (`clearance`, `edge_clearance` for `to: outline`, `trace_width`
 for `min_width`).
+
+## SPEED
+
+Rules run in parallel across cores, and within the clearance rules the
+subjects do too. Pours are cut into grid tiles once, so a small feature is
+only tested against the pieces of fill near it, and checks the pour
+generator already guarantees (fill narrower than `pour_min_width`, fill
+closer than `edge_clearance` to the edge, gaps inside a pour, which are its
+own clearance cut-outs) are skipped. `--timing` prints the slowest rules
+and stages. A release build (`cargo build --release`) is several times
+faster than the debug binary `cargo run` uses; scripts that loop on
+`pcb check` should point `PCB` at `target/release/pcb`.
 
 ## BUNDLED PROFILES
 

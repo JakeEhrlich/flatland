@@ -56,7 +56,7 @@ pub fn emit(board: &Board, dir: &Path, zip: bool) -> Result<Vec<PathBuf>> {
         // drawn before it, so a pour emitted before a lower-priority neighbour would be
         // wiped out by that neighbour's hole (a power island declared before the ground
         // pour vanished from the fab file this way).
-        let mut pours: Vec<_> = board.pours.iter().filter(|p| &p.pour.layer == layer).collect();
+        let mut pours: Vec<_> = board.pours()?.iter().filter(|p| &p.pour.layer == layer).collect();
         pours.sort_by_key(|p| p.pour.priority);
         for p in pours {
             g.regions_with_holes(&p.copper);
