@@ -194,7 +194,7 @@ const PAGES: &[(&str, &[&str], &str)] = &[
     ("pcb-project", &["init", "status", "check", "pads", "schema", "docs"], include_str!("../../docs/commands/pcb-project.md")),
     ("pcb-index", &["index", "component", "library", "footprint"], include_str!("../../docs/commands/pcb-index.md")),
     ("pcb-netlist", &["add", "remove", "set", "connect", "disconnect", "net", "netlist"], include_str!("../../docs/commands/pcb-netlist.md")),
-    ("pcb-board", &["outline", "hole", "stackup", "rules", "board"], include_str!("../../docs/commands/pcb-board.md")),
+    ("pcb-board", &["outline", "hole", "text", "stackup", "rules", "board"], include_str!("../../docs/commands/pcb-board.md")),
     ("pcb-place", &["place", "unplace", "label"], include_str!("../../docs/commands/pcb-place.md")),
     ("pcb-copper", &["pour", "trace", "via", "copper"], include_str!("../../docs/commands/pcb-copper.md")),
     ("pcb-visualize", &["visualize", "png", "svg", "render"], include_str!("../../docs/commands/pcb-visualize.md")),

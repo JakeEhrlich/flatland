@@ -100,6 +100,9 @@ pub fn render(board: &Board, opts: &Options) -> Result<String> {
             let pts: Vec<Point> = t.points.clone();
             svg.polyline_caps(&pts, false, layer_color(board, l), t.width.mm(), "butt", "stroke-opacity=\"0.9\"");
         }
+        for t in board.project.texts.iter().filter(|t| &t.layer == *l) {
+            svg.polygons(&board.text_copper(t), layer_color(board, l), 0.9, "");
+        }
     }
     // Pads, far side first, then through-hole.
     for l in &order {

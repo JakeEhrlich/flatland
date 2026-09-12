@@ -134,6 +134,10 @@ $PCB sim add worst-bin dc VS 50 58 0.25 --probe "i(VD1_trim)" --probe "i(VD17_tr
 $PCB sim add worst-bin-hot dc VS 50 58 0.25 --temperature 85 --probe "i(VD1_trim)" --probe "i(VD17_trim)" --probe "v(STR_A)" --probe "v(STR_B)" -P VP.value="DC 3.3" \
   $(for i in $(seq 1 32); do printf -- "-P D%d.vf_trim=0.36 " $i; done)
 
+# Board title on the silkscreen, in the free area beside the MOSFET.
+$PCB text add "LED PANEL 54V" --at 14,56.5 --size 1.5
+$PCB text add "PWM 200HZ" --at 14,54.3 --size 1.0
+
 # Labels: keep them out of the traces and off neighbouring pads.
 $PCB label CC1 CC2 CC3 CC4 CC5 CC6 --at 0,1.5 --size 0.7   # in the 1.5 mm gap between regulators
 $PCB label RIN --at 38,57.5 --absolute --size 0.7          # right of the resistors, clear of the gate trace

@@ -67,6 +67,8 @@ pub enum Feature {
     MaskOpening,
     Silk,
     SilkText,
+    /// Free text (`pcb text`), on silk or copper.
+    Text,
     Courtyard,
     Outline,
     Board,
@@ -88,6 +90,7 @@ impl std::fmt::Display for Feature {
             Feature::MaskOpening => "mask_opening",
             Feature::Silk => "silk",
             Feature::SilkText => "silk_text",
+            Feature::Text => "text",
             Feature::Courtyard => "courtyard",
             Feature::Outline => "outline",
             Feature::Board => "board",

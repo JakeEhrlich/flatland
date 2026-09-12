@@ -5,6 +5,10 @@ use crate::units::{Length, Point};
 
 type Stroke = &'static [(f32, f32)];
 
+pub fn has_glyph(c: char) -> bool {
+    !glyph(c).is_empty()
+}
+
 fn glyph(c: char) -> &'static [Stroke] {
     match c {
         'A' => &[&[(0.0, 0.0), (0.0, 4.0), (2.0, 6.0), (4.0, 4.0), (4.0, 0.0)], &[(0.0, 3.0), (4.0, 3.0)]],
@@ -60,6 +64,27 @@ fn glyph(c: char) -> &'static [Stroke] {
 /// Stroke a string centred at `center` with cap height `size`; `mirror`
 /// flips it for the bottom side so it reads correctly from below.
 pub fn render(text: &str, center: Point, size: Length, mirror: bool) -> Vec<Vec<Point>> {
+    render_rotated(text, center, size, 0.0, mirror)
+}
+
+/// `render` turned by `rotation` degrees counter-clockwise about `center`.
+pub fn render_rotated(text: &str, center: Point, size: Length, rotation: f64, mirror: bool) -> Vec<Vec<Point>> {
+    let (sn, cs) = rotation.to_radians().sin_cos();
+    render_flat(text, center, size, mirror)
+        .into_iter()
+        .map(|stroke| {
+            stroke
+                .into_iter()
+                .map(|p| {
+                    let (dx, dy) = ((p.x.nm() - center.x.nm()) as f64, (p.y.nm() - center.y.nm()) as f64);
+                    Point::nm(center.x.nm() + (dx * cs - dy * sn).round() as i64, center.y.nm() + (dx * sn + dy * cs).round() as i64)
+                })
+                .collect()
+        })
+        .collect()
+}
+
+fn render_flat(text: &str, center: Point, size: Length, mirror: bool) -> Vec<Vec<Point>> {
     let unit = size.nm() as f64 / 6.0;
     let advance = 5.5;
     let text = text.to_uppercase();

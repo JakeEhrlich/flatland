@@ -390,6 +390,12 @@ impl Board {
                 }
             }
         }
+        for t in self.project.texts.iter().filter(|t| t.silk_side() == Some(side)) {
+            let w = t.width.unwrap_or(rules.silk_width);
+            for stroke in crate::gerber::font::render_rotated(&t.text, t.at, t.size, t.rotation, side == Side::Bottom) {
+                art.extend(geom::stroke(&stroke, w));
+            }
+        }
         if art.is_empty() {
             return Ok(vec![]);
         }
@@ -448,6 +454,23 @@ impl Board {
             if let Some(c) = &h.copper {
                 out.push((h.hole.net.clone(), c.clone()));
             }
+        }
+        for t in self.project.texts.iter().filter(|t| t.layer == layer) {
+            for r in self.text_copper(t) {
+                out.push((None, r));
+            }
+        }
+        out
+    }
+
+    /// Stroked outline of a copper text (mirrored on the bottom side).
+    pub fn text_copper(&self, t: &Text) -> Rings {
+        let rules = self.rules();
+        let w = t.width.unwrap_or(rules.trace_width);
+        let mirror = self.stackup().layer_for_side(Side::Bottom) == t.layer && self.layers().len() > 1;
+        let mut out = Vec::new();
+        for stroke in crate::gerber::font::render_rotated(&t.text, t.at, t.size, t.rotation, mirror) {
+            out.extend(geom::stroke(&stroke, w));
         }
         out
     }

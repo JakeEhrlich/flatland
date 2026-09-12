@@ -921,6 +921,83 @@ pub enum HoleCmd {
     List,
 }
 
+#[derive(Subcommand)]
+pub enum TextCmd {
+    /// Put a string on the board, stroked with the built-in font (upper case, digits, - _ + . : / ( ) # *).
+    Add {
+        text: String,
+        /// Centre of the text.
+        #[arg(long, value_parser = point)]
+        at: Point,
+        /// `F.Silkscreen` (default), `B.Silkscreen`, or a copper layer.
+        #[arg(short, long, default_value = "F.Silkscreen")]
+        layer: String,
+        /// Cap height in mm (default: the `silk_text_size` rule).
+        #[arg(short, long, value_parser = length)]
+        size: Option<Length>,
+        /// Counter-clockwise degrees.
+        #[arg(short, long, value_parser = degrees, allow_negative_numbers = true, default_value = "0")]
+        rotation: f64,
+        /// Stroke width (default: `silk_width` on silk, `trace_width` on copper).
+        #[arg(short, long, value_parser = length)]
+        width: Option<Length>,
+    },
+    /// Remove the text with the given index (see `list`).
+    Remove { index: usize },
+    List,
+}
+
+pub fn run_text(ctx: &Ctx, c: TextCmd) -> Result<()> {
+    let mut loaded = ctx.load()?;
+    match c {
+        TextCmd::Add { text, at, layer, size, rotation, width } => {
+            let silk = layer == SILK_TOP || layer == SILK_BOTTOM;
+            if !silk && !loaded.project.stackup.copper_layers.iter().any(|l| *l == layer) {
+                let mut names: Vec<String> = vec![SILK_TOP.into(), SILK_BOTTOM.into()];
+                names.extend(loaded.project.stackup.copper_layers.iter().cloned());
+                return Err(Error::with_help(
+                    format!("no layer `{layer}`"),
+                    format!("layers are {}", list_names(names.iter().map(|s| s.as_str()))),
+                ));
+            }
+            if text.trim().is_empty() {
+                return Err(Error::msg("empty text"));
+            }
+            let unknown: Vec<char> = text.to_uppercase().chars().filter(|c| *c != ' ' && crate::gerber::font::has_glyph(*c) == false).collect();
+            if !unknown.is_empty() {
+                return Err(Error::with_help(
+                    format!("no glyph for {}", unknown.iter().map(|c| format!("`{c}`")).collect::<Vec<_>>().join(", ")),
+                    "the font has A-Z, 0-9 and - _ + . : / ( ) # * (lower case is upper-cased)",
+                ));
+            }
+            let size = size.unwrap_or(loaded.project.design_rules.silk_text_size);
+            loaded.project.texts.push(Text { text: text.clone(), at, layer: layer.clone(), size, rotation, width });
+            validate(ctx, &loaded)?;
+            loaded.save()?;
+            println!("text \"{text}\" on {layer} at {at}, {size} high{}", if rotation != 0.0 { format!(", rotated {rotation}°") } else { String::new() });
+            Ok(())
+        }
+        TextCmd::Remove { index } => {
+            if index >= loaded.project.texts.len() {
+                return Err(Error::with_help(format!("no text #{index}"), "`pcb text list` shows the indexes"));
+            }
+            let t = loaded.project.texts.remove(index);
+            loaded.save()?;
+            println!("removed text \"{}\"", t.text);
+            Ok(())
+        }
+        TextCmd::List => {
+            if loaded.project.texts.is_empty() {
+                println!("no free text; add some with `pcb text add \"...\" --at x,y`");
+            }
+            for (i, t) in loaded.project.texts.iter().enumerate() {
+                println!("#{i}: \"{}\" on {} at {} size {}{}", t.text, t.layer, t.at, t.size, if t.rotation != 0.0 { format!(" rot {}", t.rotation) } else { String::new() });
+            }
+            Ok(())
+        }
+    }
+}
+
 pub fn run_hole(ctx: &Ctx, c: HoleCmd) -> Result<()> {
     let mut loaded = ctx.load()?;
     match c {

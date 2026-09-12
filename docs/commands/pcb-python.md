@@ -49,6 +49,7 @@ keyword arguments map to the command's `--flags`:
 | `place(ref, at, rotation=, side=, lock=)`, `label(*refs, at=, absolute=, size=, hide=)` | `place`, `label` |
 | `pour(name, layer=, net=, follow_outline=, rect=, size=, priority=, solid=)` | `pour new` |
 | `trace(net, points, layer=, width=, chamfer=)`, `via(at, net=)`, `hole(at, drill, ...)`, `trim_traces()` | `trace add`, `via add`, `hole add`, `trace trim` |
+| `text(text, at, layer=, size=, rotation=, width=)` | `text add` |
 | `status()`, `pads(*refs)`, `check(strict=, rule=)` | `status --json`, `pads --json`, `check --json` |
 | `drc_add(set)`, `drc_waive(rule, *features, reason=)`, `drc_rule(name, feature=, check=, where=, severity=)` | `drc add`, `drc waive`, `drc rule` |
 | `route(passes=, keep=)`, `visualize(what, output=, width=)` | `route`, `visualize` |

@@ -74,6 +74,13 @@ pub fn emit(board: &Board, dir: &Path, zip: bool) -> Result<Vec<PathBuf>> {
         for pad in board.all_pads().filter(|p| p.on_layer(layer)) {
             g.region(&pad.copper);
         }
+        for t in board.project.texts.iter().filter(|t| &t.layer == layer) {
+            for r in board.text_copper(t) {
+                if crate::geom::signed_area(&r) > 0.0 {
+                    g.region(&r);
+                }
+            }
+        }
         for v in board.project.vias.iter().filter(|v| v.layers.is_empty() || v.layers.iter().any(|l| l == layer)) {
             g.flash_circle(v.at, v.diameter);
         }

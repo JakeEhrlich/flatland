@@ -500,3 +500,44 @@ fn trim_traces() {
     let out = p.ok(&["trace", "trim"]);
     assert!(out.contains("nothing to trim"), "{out}");
 }
+
+#[test]
+fn free_text() {
+    let p = Proj::new("text");
+    p.ok(&["init", "text", "--layers", "F.Cu", "--index", library().to_str().unwrap()]);
+    p.ok(&["outline", "rect", "30", "20"]);
+    p.ok(&["add", "R1", "resistor-0603", "--at", "5,5"]);
+    p.ok(&["add", "R2", "resistor-0603", "--at", "25,5"]);
+    p.ok(&["connect", "R1.2", "R2.2", "--net", "GND"]);
+    p.ok(&["connect", "R1.1", "R2.1", "--net", "A"]);
+    p.ok(&["pour", "new", "gnd", "--layer", "F.Cu", "--net", "GND", "--follow-outline"]);
+    let before = p.ok(&["pour", "list"]);
+    p.ok(&["gerbers"]);
+    let silk_before = std::fs::read_to_string(p.build("gerbers/text-F_Silkscreen.gto")).unwrap().matches("G36*").count();
+    let cu_before = std::fs::read_to_string(p.build("gerbers/text-F_Cu.gtl")).unwrap().matches("G36*").count();
+    let out = p.ok(&["text", "add", "hello 54v", "--at", "15,14", "--size", "2"]);
+    assert!(out.contains("F.Silkscreen"), "{out}");
+    p.ok(&["text", "add", "REV A", "--at", "15,10", "--layer", "F.Cu", "--size", "3", "--rotation", "-90"]);
+    let bad = p.fails(&["text", "add", "héllo", "--at", "1,1"]);
+    assert!(bad.contains("no glyph"), "{bad}");
+    let bad = p.fails(&["text", "add", "x", "--at", "1,1", "--layer", "B.Cu"]);
+    assert!(bad.contains("no layer"), "{bad}");
+    let list = p.ok(&["text", "list"]);
+    assert!(list.contains("#0") && list.contains("#1") && list.contains("rot -90"), "{list}");
+    // Copper text takes fill away from the pour; silk text does not.
+    let after = p.ok(&["pour", "list"]);
+    let area = |s: &str| s.lines().next().unwrap().split("—").nth(1).unwrap().trim().split(' ').next().unwrap().parse::<f64>().unwrap();
+    assert!(area(&after) < area(&before) - 10.0, "before {before} after {after}");
+    let out = p.run(&["check"]).1;
+    assert!(out.contains("0 error(s)"), "{out}");
+    p.ok(&["gerbers"]);
+    let silk = std::fs::read_to_string(p.build("gerbers/text-F_Silkscreen.gto")).unwrap().matches("G36*").count();
+    assert!(silk > silk_before, "silk should carry the text strokes ({silk_before} -> {silk})");
+    let cu = std::fs::read_to_string(p.build("gerbers/text-F_Cu.gtl")).unwrap().matches("G36*").count();
+    assert!(cu > cu_before, "copper should carry the text strokes ({cu_before} -> {cu})");
+    p.ok(&["route", "--dsn-only"]);
+    let dsn = std::fs::read_to_string(p.build("text.dsn")).unwrap();
+    assert!(dsn.matches("(keepout").count() >= 4, "copper text must be a router keepout:\n{dsn}");
+    p.ok(&["text", "remove", "1"]);
+    assert!(p.ok(&["text", "list"]).contains("HELLO 54V") || p.ok(&["text", "list"]).contains("hello 54v"));
+}

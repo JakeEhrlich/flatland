@@ -204,6 +204,12 @@ class Pcb:
     def via(self, at: Point, *, net: str | None = None, drill: float | None = None, diameter: float | None = None) -> str:
         return self.run("via", "add", _pt(at), *_flag("net", net), *_flag("drill", drill), *_flag("diameter", diameter))
 
+    def text(self, text: str, at: Point, *, layer: str = "F.Silkscreen", size: float | None = None,
+             rotation: float | None = None, width: float | None = None) -> str:
+        """Free text on silkscreen (default) or a copper layer, stroked with the built-in font."""
+        return self.run("text", "add", text, "--at", _pt(at), "--layer", layer, *_flag("size", size),
+                        *_flag("rotation", rotation), *_flag("width", width))
+
     def trim_traces(self, *, net: str | None = None, dry_run: bool = False) -> str:
         return self.run("trace", "trim", *_flag("net", net), *_flag("dry-run", dry_run))
 

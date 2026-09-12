@@ -62,6 +62,9 @@ pub enum Command {
     /// Manage drilled holes that are not part of a footprint.
     #[command(subcommand)]
     Hole(edit::HoleCmd),
+    /// Free text on silkscreen or copper.
+    #[command(subcommand)]
+    Text(edit::TextCmd),
     /// Manage copper pours (filled zones).
     #[command(subcommand)]
     Pour(edit::PourCmd),
@@ -130,6 +133,7 @@ pub fn run_command(ctx: &Ctx, command: Command) -> Result<()> {
         Command::Unplace(a) => edit::unplace(&ctx, a),
         Command::Label(a) => edit::label(&ctx, a),
         Command::Hole(c) => edit::run_hole(&ctx, c),
+        Command::Text(c) => edit::run_text(&ctx, c),
         Command::Pour(c) => edit::run_pour(&ctx, c),
         Command::Trace(c) => edit::run_trace(&ctx, c),
         Command::Via(c) => edit::run_via(&ctx, c),

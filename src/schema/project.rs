@@ -33,6 +33,9 @@ pub struct Project {
     pub nets: IndexMap<String, Net>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub holes: Vec<Hole>,
+    /// Free text on silkscreen or copper, stroked with the built-in font.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub texts: Vec<Text>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub pours: Vec<Pour>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -68,6 +71,7 @@ impl Project {
             components: IndexMap::new(),
             nets: IndexMap::new(),
             holes: vec![],
+            texts: vec![],
             pours: vec![],
             traces: vec![],
             vias: vec![],
@@ -294,6 +298,36 @@ pub struct Hole {
     pub diameter: Option<Length>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub net: Option<String>,
+}
+
+/// A string on the board. `layer` is `F.Silkscreen`, `B.Silkscreen` or a
+/// copper layer; copper text belongs to no net and is a keepout for pours
+/// and the router.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Text {
+    pub text: String,
+    pub at: Point,
+    pub layer: String,
+    /// Cap height.
+    pub size: Length,
+    #[serde(default)]
+    pub rotation: f64,
+    /// Stroke width (defaults to `silk_width` on silk, `trace_width` on copper).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub width: Option<Length>,
+}
+
+pub const SILK_TOP: &str = "F.Silkscreen";
+pub const SILK_BOTTOM: &str = "B.Silkscreen";
+
+impl Text {
+    pub fn silk_side(&self) -> Option<Side> {
+        match self.layer.as_str() {
+            SILK_TOP => Some(Side::Top),
+            SILK_BOTTOM => Some(Side::Bottom),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

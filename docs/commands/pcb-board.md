@@ -8,6 +8,8 @@ holes, layer stack and design rules.
 ## SYNOPSIS
 
 ```
+pcb text add TEXT --at x,y [--layer L] [--size MM] [--rotation DEG] [--width MM]
+pcb text list | pcb text remove INDEX
 pcb outline rect WIDTH HEIGHT [--at x,y] [--radius R]
 pcb outline circle DIAMETER [--center x,y]
 pcb outline add line FROM TO
@@ -138,6 +140,18 @@ pcb rules set trace_width=0.3 clearance=0.25 via_drill=0.3 via_diameter=0.6
 pcb rules class power --width 1 --clearance 0.3
 pcb net class VIN power
 ```
+
+## TEXT
+
+`pcb text add "54V IN" --at 8,9` strokes a string with the built-in font
+(upper case, digits, `- _ + . : / ( ) # *`; lower case is upper-cased),
+centred at the point, `silk_text_size` high unless `--size` says otherwise,
+turned by `--rotation`. `--layer F.Silkscreen` (default) or `B.Silkscreen`
+puts it on the legend, where it is clipped clear of pads like every other
+silkscreen and mirrored on the bottom side; a copper layer name etches it
+into copper, where it belongs to no net: pours keep their clearance from
+it, the router treats it as a keepout, and the design rules check it like
+any other copper. `pcb text list` and `pcb text remove INDEX` manage them.
 
 ## SEE ALSO
 

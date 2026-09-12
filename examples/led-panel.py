@@ -167,6 +167,10 @@ pcb.sim_add("worst-bin", "dc", "VS", 50, 58, 0.25,
 pcb.sim_add("worst-bin-hot", "dc", "VS", 50, 58, 0.25, temperature=85,
             probes=["i(VD1_trim)", "i(VD17_trim)", "v(STR_A)", "v(STR_B)"], params=worst)
 
+# ---- Board title on the silkscreen, in the free area beside the MOSFET.
+pcb.text("LED PANEL 54V", (14, 56.5), size=1.5)
+pcb.text("PWM 200HZ", (14, 54.3), size=1.0)
+
 # ---- Labels: out of the traces and off neighbouring pads.
 pcb.label(*CCS, at=(0, 1.5), size=0.7)                 # in the 1.5 mm gap between regulators
 pcb.label("RIN", at=(38, 57.5), absolute=True, size=0.7)  # right of the resistors

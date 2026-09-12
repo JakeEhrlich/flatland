@@ -103,6 +103,13 @@ pub fn emit(board: &Board) -> Result<String> {
             }
         }
     }
+    // Copper text belongs to no net: keep the router off it.
+    for t in board.project.texts.iter().filter(|t| layers.iter().any(|l| *l == t.layer)) {
+        let grown = geom::offset(&board.text_copper(t), rules.clearance);
+        for r in grown {
+            let _ = writeln!(s, "    (keepout \"\" (polygon {} 0{}))", quote(&t.layer), ring_coords(&r));
+        }
+    }
     // Pours become planes — but only on multi-layer boards. On a single
     // layer the router must draw the pour's net as traces (a plane would
     // make it skip the net while its other traces carve the fill into

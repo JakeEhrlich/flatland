@@ -349,6 +349,28 @@ pub fn collect(board: &Board) -> Result<Vec<Item>> {
             }
         }
     }
+    // Free text: copper text counts as copper, silk text as silk_text.
+    for t in &project.texts {
+        let on_copper = all_layers.contains(&t.layer);
+        let (layers, geom_rings, width) = if on_copper {
+            (vec![t.layer.clone()], board.text_copper(t), t.width.unwrap_or(rules.trace_width))
+        } else {
+            let side = t.silk_side().unwrap_or(Side::Top);
+            let w = t.width.unwrap_or(rules.silk_width);
+            let mut rings: Rings = Vec::new();
+            for st in crate::gerber::font::render_rotated(&t.text, t.at, t.size, t.rotation, side == Side::Bottom) {
+                rings.extend(geom::stroke(&st, w));
+            }
+            (vec![side_name(side).to_string()], rings, w)
+        };
+        let mut it = item(Feature::Text, format!("text \"{}\" at {}", t.text, t.at), geom_rings);
+        it.layers = layers;
+        it.attrs.insert("height", t.size.mm());
+        it.attrs.insert("width", width.mm());
+        it.center = t.at;
+        it.extra = if on_copper { vec![t.at] } else { vec![] }; // marker: copper text
+        items.push(it);
+    }
     // Outline and board.
     if let Some(o) = &board.outline {
         items.push(item(Feature::Outline, "board outline".into(), vec![o.clone()]));
@@ -398,9 +420,14 @@ fn is_copper(k: Feature) -> bool {
     matches!(k, Feature::Trace | Feature::Via | Feature::Pad | Feature::Pour)
 }
 
+fn is_copper_item(it: &Item) -> bool {
+    is_copper(it.kind) || (it.kind == Feature::Text && !it.extra.is_empty())
+}
+
 fn selects(f: Feature, it: &Item) -> bool {
     match f {
-        Feature::Copper => is_copper(it.kind),
+        Feature::Copper => is_copper_item(it),
+        Feature::SilkText => it.kind == Feature::SilkText || (it.kind == Feature::Text && it.extra.is_empty()),
         other => it.kind == other,
     }
 }
@@ -602,7 +629,7 @@ fn eval(board: &Board, items: &[Item], rule: &Rule, findings: &mut Vec<Finding>)
                 if s.geom.is_empty() {
                     continue;
                 }
-                let key = if is_copper(s.kind) {
+                let key = if is_copper_item(s) {
                     format!("{}|{}", s.layers.join(","), s.net.as_deref().unwrap_or("-"))
                 } else if matches!(s.kind, Feature::MaskOpening | Feature::Silk | Feature::SilkText | Feature::Courtyard) {
                     s.layers.join(",")

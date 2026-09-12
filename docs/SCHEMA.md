@@ -37,6 +37,7 @@ and the optional hash pins the referenced file's contents.
     }
   },
   "nets": { "GND": { "pins": ["R1.2", "U1.GND"], "class": "power" } },
+  "texts": [{ "text": "54V IN", "at": [8, 9], "layer": "F.Silkscreen", "size": 1, "rotation": 0 }],
   "holes": [ { "at": [3, 3], "drill": 3.2, "plated": false, "diameter": null, "net": null } ],
   "pours": [ { "name": "gnd", "layer": "B.Cu", "net": "GND", "edges": [ ...outline edges... ], "clearance": null, "priority": 0, "thermal": true } ],
   "traces": [ { "layer": "F.Cu", "net": "GND", "width": 0.25, "points": [[1, 1], [5, 1]], "routed": false } ],

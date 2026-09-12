@@ -1008,6 +1008,28 @@
       ]
     }
   },
+  "texts": [
+    {
+      "text": "LED PANEL 54V",
+      "at": [
+        14,
+        56.5
+      ],
+      "layer": "F.Silkscreen",
+      "size": 1.5,
+      "rotation": 0.0
+    },
+    {
+      "text": "PWM 200HZ",
+      "at": [
+        14,
+        54.3
+      ],
+      "layer": "F.Silkscreen",
+      "size": 1,
+      "rotation": 0.0
+    }
+  ],
   "pours": [
     {
       "name": "gnd",
