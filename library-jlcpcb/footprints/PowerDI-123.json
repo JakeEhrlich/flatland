@@ -1,7 +1,7 @@
 {
   "schema": "pcb-footprint/1",
   "name": "PowerDI-123",
-  "description": "Diodes PowerDI123 (Type B) suggested pads 1.05x1.50 on a 4.10 mm span; pad 1 (+x, marked/band end) is pin 1 \u2014 the silkscreen bar marks pad 2, which is the banded end of the package (for the AL5809 that is OUT; for a diode in this package, the cathode).",
+  "description": "Diodes PowerDI123 (Type B) suggested pads 1.05x1.50 on a 4.10 mm span; pad 1 (+x, marked/band end) is pin 1 \u2014 the silkscreen bar, just outside pad 2, marks pad 2, which is the banded end of the package (for the AL5809 that is OUT; for a diode in this package, the cathode).",
   "pads": [
     {
       "name": "1",
@@ -36,14 +36,14 @@
     {
       "line": {
         "from": [
-          -1.3,
-          -1.15
+          -2.35,
+          -0.9
         ],
         "to": [
-          -1.3,
-          1.15
+          -2.35,
+          0.9
         ],
-        "width": 0.25
+        "width": 0.2
       }
     }
   ],

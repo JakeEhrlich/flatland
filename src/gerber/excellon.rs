@@ -8,6 +8,8 @@ pub struct Drill {
     plated: bool,
     /// tool diameter (nm) -> list of (hole | slot)
     tools: IndexMap<i64, Vec<Op>>,
+    /// Copper layer count, for the X2 layer span (`Plated,1,N`).
+    layers: usize,
 }
 
 enum Op {
@@ -16,8 +18,8 @@ enum Op {
 }
 
 impl Drill {
-    pub fn new(plated: bool) -> Drill {
-        Drill { plated, tools: IndexMap::new() }
+    pub fn new(plated: bool, layers: usize) -> Drill {
+        Drill { plated, layers, tools: IndexMap::new() }
     }
     pub fn is_empty(&self) -> bool {
         self.tools.is_empty()
@@ -40,7 +42,7 @@ impl Drill {
         let mut s = String::new();
         s.push_str("M48\n");
         s.push_str("; DRILL file {flatland} \n");
-        let _ = writeln!(s, "; #@! TF.FileFunction,{}", if self.plated { "Plated,1,2,PTH" } else { "NonPlated,1,2,NPTH" });
+        let _ = writeln!(s, "; #@! TF.FileFunction,{}", if self.plated { format!("Plated,1,{},PTH", self.layers.max(1)) } else { format!("NonPlated,1,{},NPTH", self.layers.max(1)) });
         s.push_str("FMAT,2\nMETRIC\n");
         let mut sorted: Vec<(&i64, &Vec<Op>)> = self.tools.iter().collect();
         sorted.sort_by_key(|(d, _)| **d);

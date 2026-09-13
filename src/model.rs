@@ -411,7 +411,9 @@ impl Board {
             }
         }
         for v in &self.project.vias {
-            openings.push(geom::circle(v.at, v.diameter + rules.mask_expansion * 2));
+            if !rules.tent_vias {
+                openings.push(geom::circle(v.at, v.diameter + rules.mask_expansion * 2));
+            }
         }
         for h in &self.holes {
             match &h.copper {
@@ -434,7 +436,8 @@ impl Board {
     pub fn copper_on_layer(&self, layer: &str) -> Vec<(Option<String>, Ring)> {
         let mut out = Vec::new();
         for pad in self.all_pads() {
-            if pad.on_layer(layer) {
+            // An unplated hole "pad" is a drill, not copper.
+            if pad.on_layer(layer) && pad.plated {
                 out.push((pad.net.clone(), pad.copper.clone()));
             }
         }
@@ -655,6 +658,10 @@ impl Board {
                         rings.extend(p.copper.iter().cloned());
                     }
                 }
+                // A connection needs copper that overlaps, not copper that merely
+                // shares an edge (two flat trace ends meeting end to end etch to a
+                // hair): shrink every ring by a micron on its own before joining.
+                let rings = geom::erode_each(&rings, Length::from_nm(1_000));
                 let islands = geom::union(&rings)?;
                 // Group only by positive (outer) rings.
                 for island in islands.iter().filter(|r| geom::signed_area(r) > 0.0) {

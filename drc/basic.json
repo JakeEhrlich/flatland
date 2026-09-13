@@ -3,30 +3,190 @@
   "name": "basic",
   "description": "Built into pcb and always on: the board is complete and self-consistent. Process limits come from a fab rule set (`pcb drc add`).",
   "rules": [
-    { "name": "outline-exists", "for": "outline", "check": { "exists": true },
-      "description": "A board needs an outline before anything can be checked against it." },
-    { "name": "parts-placed", "for": "part", "check": { "placed": true },
-      "description": "Every non-virtual part has a placement." },
-    { "name": "copper-inside-outline", "for": "copper", "check": { "inside": "outline" },
-      "description": "Pads, traces, vias and pours lie within the outline." },
-    { "name": "holes-inside-outline", "for": "hole", "check": { "inside": "outline" } },
-    { "name": "copper-clearance", "for": "copper",
-      "check": { "clearance": { "to": "copper", "relation": "different_net", "min": "design" } },
-      "description": "Copper of different nets keeps the project's `clearance` rule." },
-    { "name": "copper-to-edge", "for": "copper", "severity": "warning",
-      "check": { "clearance": { "to": "outline", "min": "design" } },
-      "description": "Copper keeps the project's `edge_clearance` from the board edge." },
-    { "name": "pins-connected", "for": "pin", "severity": "warning", "check": { "connected": true },
-      "description": "A pin on no net is usually a forgotten connection (NC pins can be waived)." },
-    { "name": "net-pins", "for": "net", "severity": "warning", "check": { "min": { "pins": 2 } } },
-    { "name": "nets-routed", "for": "net", "severity": "warning", "check": { "connected": true },
-      "description": "Every net is one island of copper." },
-    { "name": "dangling-trace", "for": "trace", "severity": "warning", "check": { "connected": true },
-      "description": "Both ends of a trace land on copper of its net." },
-    { "name": "floating-copper", "for": "pour_piece", "severity": "warning", "check": { "connected": true },
-      "description": "Every piece of a pour reaches a pad of its net (pieces that do not are removed from output, but usually mean the fill is not doing what you think)." },
-    { "name": "courtyards", "for": "courtyard", "severity": "warning",
-      "check": { "clearance": { "to": "courtyard", "relation": "different_part", "min": 0 } },
-      "description": "Part bodies do not overlap." }
+    {
+      "name": "outline-exists",
+      "for": "outline",
+      "check": {
+        "exists": true
+      },
+      "description": "A board needs an outline before anything can be checked against it."
+    },
+    {
+      "name": "parts-placed",
+      "for": "part",
+      "check": {
+        "placed": true
+      },
+      "description": "Every non-virtual part has a placement."
+    },
+    {
+      "name": "copper-inside-outline",
+      "for": "copper",
+      "check": {
+        "inside": "outline"
+      },
+      "description": "Pads, traces, vias and pours lie within the outline."
+    },
+    {
+      "name": "holes-inside-outline",
+      "for": "hole",
+      "check": {
+        "inside": "outline"
+      }
+    },
+    {
+      "name": "copper-clearance",
+      "for": "copper",
+      "check": {
+        "clearance": {
+          "to": "copper",
+          "relation": "different_net",
+          "min": "design"
+        }
+      },
+      "description": "Copper of different nets keeps the project's `clearance` rule."
+    },
+    {
+      "name": "copper-to-edge",
+      "for": "copper",
+      "severity": "warning",
+      "check": {
+        "clearance": {
+          "to": "outline",
+          "min": "design"
+        }
+      },
+      "description": "Copper keeps the project's `edge_clearance` from the board edge."
+    },
+    {
+      "name": "pins-connected",
+      "for": "pin",
+      "severity": "warning",
+      "check": {
+        "connected": true
+      },
+      "description": "A pin on no net is usually a forgotten connection (NC pins can be waived)."
+    },
+    {
+      "name": "net-pins",
+      "for": "net",
+      "severity": "warning",
+      "check": {
+        "min": {
+          "pins": 2
+        }
+      }
+    },
+    {
+      "name": "nets-routed",
+      "for": "net",
+      "severity": "warning",
+      "check": {
+        "connected": true
+      },
+      "description": "Every net is one island of copper."
+    },
+    {
+      "name": "dangling-trace",
+      "for": "trace",
+      "severity": "warning",
+      "check": {
+        "connected": true
+      },
+      "description": "Both ends of a trace land on copper of its net."
+    },
+    {
+      "name": "floating-copper",
+      "for": "pour_piece",
+      "severity": "warning",
+      "check": {
+        "connected": true
+      },
+      "description": "Every piece of a pour reaches a pad of its net (pieces that do not are removed from output, but usually mean the fill is not doing what you think)."
+    },
+    {
+      "name": "courtyards",
+      "for": "courtyard",
+      "severity": "warning",
+      "check": {
+        "clearance": {
+          "to": "courtyard",
+          "relation": "different_part",
+          "min": 0
+        }
+      },
+      "description": "Part bodies do not overlap."
+    },
+    {
+      "name": "trace-junctions",
+      "for": "trace",
+      "check": {
+        "end_junctions": false
+      },
+      "description": "Two traces of one net may not meet only end to end: flat ends touching along a line or a wedge have no overlap and etch to a hair. Weld them (extend one into the other) or land both on a pad."
+    },
+    {
+      "name": "holes-overlap",
+      "for": "hole",
+      "check": {
+        "clearance": {
+          "to": "hole",
+          "relation": "any",
+          "min": 0
+        }
+      },
+      "description": "Two drills may not coincide or overlap (a via echoed twice by the router, a pad drilled twice)."
+    },
+    {
+      "name": "silk-over-opening",
+      "for": "silk",
+      "severity": "warning",
+      "check": {
+        "clearance": {
+          "to": "mask_opening",
+          "relation": "any",
+          "min": 0
+        }
+      },
+      "description": "Footprint silkscreen crossing a mask opening is clipped away at output; what remains may be a fragment."
+    },
+    {
+      "name": "silk-text-over-opening",
+      "for": "silk_text",
+      "severity": "warning",
+      "check": {
+        "clearance": {
+          "to": "mask_opening",
+          "relation": "any",
+          "min": 0
+        }
+      },
+      "description": "A reference designator or free text crossing a pad, via or hole opening is clipped to fragments at output."
+    },
+    {
+      "name": "silk-outside-outline",
+      "for": "silk",
+      "severity": "warning",
+      "check": {
+        "inside": "outline"
+      }
+    },
+    {
+      "name": "silk-text-outside-outline",
+      "for": "silk_text",
+      "severity": "warning",
+      "check": {
+        "inside": "outline"
+      }
+    },
+    {
+      "name": "via-single-layer",
+      "for": "via",
+      "severity": "info",
+      "check": {
+        "connected": true
+      },
+      "description": "A via joined to copper on one layer only (router anchor, test point): nothing crosses through it."
+    }
   ]
 }

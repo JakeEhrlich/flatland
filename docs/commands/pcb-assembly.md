@@ -115,3 +115,8 @@ pcb bom -f csv -o build/full-bom.csv --all
 ## SEE ALSO
 
 pcb-gerbers(1), pcb-index(1), pcb-place(1).
+
+Mid X/Y in the placement list is the centre of the part's plated pads, not
+the footprint origin: JLCPCB places at the part centre, and footprints
+whose origin is pin 1 (pin headers, connectors with mounting holes) would
+otherwise land up to a body length away.

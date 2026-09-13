@@ -205,7 +205,11 @@ pub fn run(ctx: &Ctx, a: RouteArgs) -> Result<()> {
     // approach at an angle. Finish such ends at the pad centre.
     let finished = finish_wire_ends(&board, new_traces);
     let extended = finished.1;
-    loaded.project.traces.extend(finished.0);
+    // Wires meeting end to end: merge equal widths into one polyline, extend a
+    // narrower one into the wider so the copper overlaps (a shared end line is
+    // no joint).
+    let (welded, merges, welds) = weld_junctions(finished.0);
+    loaded.project.traces.extend(welded);
     loaded.project.vias.extend(new_vias);
     let board = ctx.board(&loaded)?;
     let conn = board.connectivity()?;
@@ -213,6 +217,9 @@ pub fn run(ctx: &Ctx, a: RouteArgs) -> Result<()> {
     println!("imported {nt} trace segment(s) and {nv} via(s) from {}", ses_to_import.display());
     if extended > 0 {
         println!("extended {extended} wire end(s) to the centre of the pad they stop short of");
+    }
+    if merges + welds > 0 {
+        println!("joined {merges} wire(s) end to end and welded {welds} width change(s)");
     }
     if !a.keep_redundant {
         let dropped = prune_redundant_traces(ctx, &mut loaded, &conn)?;
@@ -264,6 +271,80 @@ fn finish_wire_ends(board: &crate::model::Board, wires: Vec<crate::schema::Trace
         })
         .collect();
     (out, n)
+}
+
+/// Join wires of one net that meet end to end. Equal widths become one
+/// polyline; where the width changes, the narrower wire is extended into the
+/// wider one by the wider one's half width so their copper overlaps.
+fn weld_junctions(mut wires: Vec<crate::schema::Trace>) -> (Vec<crate::schema::Trace>, usize, usize) {
+    use crate::units::Point;
+    let tol = 10_000i64;
+    let same = |a: Point, b: Point| (a.x.nm() - b.x.nm()).abs() <= tol && (a.y.nm() - b.y.nm()).abs() <= tol;
+    let (mut merges, mut welds) = (0usize, 0usize);
+    for w in &mut wires {
+        w.points.dedup();
+    }
+    wires.retain(|w| w.points.len() >= 2);
+    // Merge pass.
+    let mut changed = true;
+    while changed {
+        changed = false;
+        'outer: for i in 0..wires.len() {
+            for j in 0..wires.len() {
+                if i == j || wires[i].net != wires[j].net || wires[i].layer != wires[j].layer || wires[i].width != wires[j].width {
+                    continue;
+                }
+                let (a_end, b_start, b_end) = (*wires[i].points.last().unwrap(), wires[j].points[0], *wires[j].points.last().unwrap());
+                if same(a_end, b_start) || same(a_end, b_end) {
+                    let mut b = wires.remove(j);
+                    let i2 = if j < i { i - 1 } else { i };
+                    if same(*wires[i2].points.last().unwrap(), *b.points.last().unwrap()) {
+                        b.points.reverse();
+                    }
+                    wires[i2].points.extend(b.points.into_iter().skip(1));
+                    merges += 1;
+                    changed = true;
+                    break 'outer;
+                }
+            }
+        }
+    }
+    // Weld pass: different widths meeting end to end.
+    let n = wires.len();
+    for i in 0..n {
+        for j in 0..n {
+            if i == j || wires[i].net != wires[j].net || wires[i].layer != wires[j].layer || wires[i].width >= wires[j].width {
+                continue;
+            }
+            let wide_half = wires[j].width.nm() / 2;
+            let ends_j = [wires[j].points[0], *wires[j].points.last().unwrap()];
+            for end_of_i in [true, false] {
+                let (p_end, p_prev) = if end_of_i {
+                    let k = wires[i].points.len();
+                    (wires[i].points[k - 1], wires[i].points[k - 2])
+                } else {
+                    (wires[i].points[0], wires[i].points[1])
+                };
+                if !ends_j.iter().any(|e| same(*e, p_end)) {
+                    continue;
+                }
+                let (dx, dy) = ((p_end.x.nm() - p_prev.x.nm()) as f64, (p_end.y.nm() - p_prev.y.nm()) as f64);
+                let len = dx.hypot(dy);
+                if len <= 0.0 {
+                    continue;
+                }
+                let ext = Point::nm(p_end.x.nm() + (dx / len * wide_half as f64).round() as i64, p_end.y.nm() + (dy / len * wide_half as f64).round() as i64);
+                let k = wires[i].points.len();
+                if end_of_i {
+                    wires[i].points[k - 1] = ext;
+                } else {
+                    wires[i].points[0] = ext;
+                }
+                welds += 1;
+            }
+        }
+    }
+    (wires, merges, welds)
 }
 
 /// Remove router segments that add nothing: on boards without planes (one

@@ -276,6 +276,7 @@ fn describe_check(c: &Check) -> String {
         Check::Exists(b) => format!(": exists = {b}"),
         Check::Placed(b) => format!(": placed = {b}"),
         Check::DesignRules(m) => format!(": design rules at least {}", kv(m)),
+        Check::EndJunctions(b) => format!(": end-to-end junctions allowed = {b}"),
     }
 }
 

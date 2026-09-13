@@ -18,6 +18,7 @@ pcb net show NET
 pcb net rename OLD NEW
 pcb net class NET CLASS|-
 pcb net remove NET
+pcb net compare FILE
 ```
 
 ## pcb add REFDES COMPONENT
@@ -108,6 +109,7 @@ Assigns a net class defined with `pcb rules class` (`-` clears). Classes set
 trace width/clearance/via size for routing and hand traces.
 
 ## pcb net remove NET
+pcb net compare FILE
 
 Deletes the net: its pins become unconnected, its traces and vias are
 deleted, pours that referenced it become unassigned.
@@ -136,3 +138,11 @@ pcb connect R1.2 GND_PIN.1 --net GND              # one pin into an existing net
 ## SEE ALSO
 
 pcb(1), pcb-index(1), pcb-place(1), pcb-copper(1), pcb-sim(1).
+
+## pcb net compare FILE
+
+Compares the board's netlist with an external one and lists every pin
+that is on a different net, missing from one side, or on a net the other
+side lacks (a net that only differs in name is reported as a rename, not
+a difference). FILE is JSON, `{"NET": ["R1.1", "U1.3"], ...}`, or text
+lines `NET: R1.1 U1.3`. Exit status is non-zero when anything differs.

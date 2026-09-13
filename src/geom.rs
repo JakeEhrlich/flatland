@@ -371,6 +371,74 @@ pub fn stroke_flat(points: &[Point], width: Length) -> Rings {
     from_cpaths(p)
 }
 
+/// Turn a polygon set with holes into simple polygons: each hole is joined to
+/// its outer by a zero-width slit ("keyhole"), so writers with no polarity
+/// (RS-274X regions without LPC clears) can draw it without erasing anything
+/// underneath. Outers are returned in input order.
+pub fn fracture(rings: &[Ring]) -> Vec<Ring> {
+    let outers: Vec<&Ring> = rings.iter().filter(|r| signed_area(r) > 0.0).collect();
+    let holes: Vec<&Ring> = rings.iter().filter(|r| signed_area(r) < 0.0).collect();
+    let mut out = Vec::new();
+    for o in outers {
+        let mut poly: Ring = o.clone();
+        // Holes inside this outer, rightmost vertex first so each slit runs to the
+        // right into copper that is already part of `poly`.
+        let mut mine: Vec<(i64, Ring)> = holes
+            .iter()
+            .filter(|h| h.first().map_or(false, |q| contains(o, *q)))
+            .map(|h| (h.iter().map(|p| p.x.nm()).max().unwrap_or(0), (*h).clone()))
+            .collect();
+        mine.sort_by(|a, b| b.0.cmp(&a.0));
+        for (_, hole) in mine {
+            // Hole vertex with the largest x, and the nearest boundary edge of `poly`
+            // hit by a ray from it toward +x.
+            let (hi, hp) = hole.iter().enumerate().max_by_key(|(_, p)| p.x.nm()).map(|(i, p)| (i, *p)).unwrap();
+            let n = poly.len();
+            let mut best: Option<(usize, i64, Point)> = None; // (edge index, x of hit, hit point)
+            for i in 0..n {
+                let (a, b) = (poly[i], poly[(i + 1) % n]);
+                let (ay, by) = (a.y.nm(), b.y.nm());
+                if (ay <= hp.y.nm()) != (by <= hp.y.nm()) {
+                    let t = (hp.y.nm() - ay) as f64 / (by - ay) as f64;
+                    let x = a.x.nm() as f64 + t * (b.x.nm() - a.x.nm()) as f64;
+                    let xi = x.round() as i64;
+                    if xi >= hp.x.nm() && best.map_or(true, |(_, bx, _)| xi < bx) {
+                        best = Some((i, xi, Point::nm(xi, hp.y.nm())));
+                    }
+                }
+            }
+            let Some((edge, _, hit)) = best else { continue };
+            // Splice: ... poly[edge], hit, hole[hi], hole[hi+1..], hole[..hi], hole[hi], hit, poly[edge+1] ...
+            let mut spliced: Ring = Vec::with_capacity(n + hole.len() + 4);
+            spliced.extend_from_slice(&poly[..=edge]);
+            spliced.push(hit);
+            let m = hole.len();
+            for k in 0..=m {
+                spliced.push(hole[(hi + k) % m]);
+            }
+            spliced.push(hit);
+            spliced.extend_from_slice(&poly[edge + 1..]);
+            poly = spliced;
+        }
+        out.push(poly);
+    }
+    out
+}
+
+/// Shrink every ring on its own by `delta` (no union first), so rings that
+/// merely share an edge stop touching while overlapping ones still overlap.
+pub fn erode_each(rings: &[Ring], delta: Length) -> Rings {
+    let mut out = Vec::new();
+    for r in rings {
+        if r.len() < 3 {
+            continue;
+        }
+        let p = CPaths::<One>::from(to_cpath(r)).inflate(-(delta.nm() as f64), JoinType::Miter, EndType::Polygon, 2.0);
+        out.extend(from_cpaths(p));
+    }
+    out
+}
+
 /// Do any of `a` overlap any of `b`?
 pub fn overlaps(a: &[Ring], b: &[Ring]) -> bool {
     intersection(a, b).map(|r| r.iter().any(|ring| signed_area(ring).abs() > 0.0)).unwrap_or(false)

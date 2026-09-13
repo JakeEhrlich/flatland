@@ -159,6 +159,10 @@ pub struct DesignRules {
     /// fabs want more around a drill than between copper features).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hole_clearance: Option<Length>,
+    /// Cover vias with solder mask (no mask opening): removes via-to-pad mask dams
+    /// and exposed rings; JLCPCB tents on request.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub tent_vias: bool,
     /// Width of the four thermal relief spokes.
     #[serde(default = "default_spoke_width")]
     pub thermal_spoke_width: Length,
@@ -188,6 +192,7 @@ impl Default for DesignRules {
             thermal_gap: None,
             pour_min_width: None,
             hole_clearance: None,
+            tent_vias: false,
             thermal_spoke_width: default_spoke_width(),
             net_classes: IndexMap::new(),
         }

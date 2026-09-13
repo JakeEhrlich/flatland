@@ -55,6 +55,8 @@ pub struct Report {
     pub findings: Vec<Finding>,
     pub rules_run: usize,
     pub sets: Vec<String>,
+    /// Waivers that silenced nothing (stale, or misspelt features).
+    pub unused_waivers: Vec<String>,
     /// (stage or rule name, seconds) for `pcb check --timing`.
     pub timing: Vec<(String, f64)>,
 }
@@ -135,19 +137,30 @@ pub fn run(board: &Board, project_path: &Path) -> Result<Report> {
         timing.push((label, secs));
     }
     // Waivers.
+    let mut used = vec![false; board.project.drc.waivers.len()];
     for f in &mut findings {
-        for w in &board.project.drc.waivers {
+        for (wi, w) in board.project.drc.waivers.iter().enumerate() {
             if w.rule != f.rule {
                 continue;
             }
             if w.features.is_empty() || w.features.iter().any(|x| f.features.iter().any(|y| y == x)) {
                 f.waived = Some(w.reason.clone());
+                used[wi] = true;
                 break;
             }
         }
     }
+    let unused_waivers: Vec<String> = board
+        .project
+        .drc
+        .waivers
+        .iter()
+        .zip(&used)
+        .filter(|(_, u)| !**u)
+        .map(|(w, _)| format!("{} {}", w.rule, if w.features.is_empty() { "(all)".to_string() } else { w.features.join(" ") }))
+        .collect();
     findings.sort_by(|a, b| b.severity.cmp(&a.severity).then_with(|| a.rule.cmp(&b.rule)));
-    Ok(Report { findings, rules_run, sets: sets.iter().map(|(n, _)| n.clone()).collect(), timing })
+    Ok(Report { findings, rules_run, sets: sets.iter().map(|(n, _)| n.clone()).collect(), timing, unused_waivers })
 }
 
 // ---------------------------------------------------------------------------
@@ -305,6 +318,9 @@ pub fn collect(board: &Board) -> Result<Vec<Item>> {
             }
         }
         it.plated = Some(pad.plated);
+        if !pad.plated {
+            it.geom.clear(); // an unplated hole carries no copper; its drill is the Hole item
+        }
         it.pad_kind = Some(match pad.pad_type {
             PadType::Smd => "smd",
             PadType::ThroughHole => "through_hole",
@@ -381,9 +397,16 @@ pub fn collect(board: &Board) -> Result<Vec<Item>> {
             it.center = pad.center;
             items.push(it);
         }
-        for v in &project.vias {
-            let mut it = item(Feature::MaskOpening, format!("mask of via at {} ({})", v.at, side_name(side)), vec![geom::circle(v.at, v.diameter + rules.mask_expansion * 2)]);
-            it.net = v.net.clone();
+        if !rules.tent_vias {
+            for v in &project.vias {
+                let mut it = item(Feature::MaskOpening, format!("mask of via at {} ({})", v.at, side_name(side)), vec![geom::circle(v.at, v.diameter + rules.mask_expansion * 2)]);
+                it.net = v.net.clone();
+                it.layers = vec![side_name(side).to_string()];
+                items.push(it);
+            }
+        }
+        for h in board.holes.iter().filter(|h| h.copper.is_none()) {
+            let mut it = item(Feature::MaskOpening, format!("mask of hole at {} ({})", h.hole.at, side_name(side)), vec![geom::circle(h.hole.at, h.hole.drill + rules.mask_expansion * 2)]);
             it.layers = vec![side_name(side).to_string()];
             items.push(it);
         }
@@ -658,6 +681,17 @@ fn eval(board: &Board, items: &[Item], rule: &Rule, findings: &mut Vec<Finding>)
                 return Ok(());
             }
             let d = resolve(min, rules, "clearance");
+            // With `"design"`, the larger of the two nets' class clearances applies
+            // to every pair (pads included), as KiCad does.
+            let class_aware = matches!(min, Limit::Named(_)) && rule.for_ != Feature::Outline;
+            let pair_distance = |s: &Item, t: &Item| -> Length {
+                if !class_aware {
+                    return d;
+                }
+                let cs = rules.class(s.class.as_deref()).1;
+                let ct = rules.class(t.class.as_deref()).1;
+                cs.max(ct)
+            };
             let targets: Vec<&Item> = items.iter().filter(|it| selects(*to, it) && !it.geom.is_empty()).collect();
             let is_subject = |it: &Item| selects(rule.for_, it) && matches_where(&rule.where_, it);
             // Each unordered pair is tested once, by exactly one side: the untiled
@@ -682,8 +716,9 @@ fn eval(board: &Board, items: &[Item], rule: &Rule, findings: &mut Vec<Finding>)
                     if s.geom.is_empty() {
                         return out;
                     }
-                    // Growing a pour is expensive: do it only if some pair needs it.
-                    let mut grown: Option<Rings> = None;
+                    // Growing a pour is expensive: do it only if some pair needs it,
+                    // once per distinct distance.
+                    let mut grown: Vec<(Length, Rings)> = Vec::new();
                     for t in &targets {
                         if std::ptr::eq(*s, *t) || s.id == t.id || !share_layer(s, t) || !related(*relation, s, t) {
                             continue;
@@ -692,10 +727,14 @@ fn eval(board: &Board, items: &[Item], rule: &Rule, findings: &mut Vec<Finding>)
                         if (s.kind == Feature::Hole || t.kind == Feature::Hole) && s.refdes.is_some() && s.refdes == t.refdes && s.center == t.center {
                             continue;
                         }
+                        let d = pair_distance(s, t);
                         if !bbox_near(&s.geom, &t.geom, d) || !owns(s, t) {
                             continue;
                         }
-                        let g = grown.get_or_insert_with(|| geom::offset(&s.geom, d - Length::from_nm(2_000)));
+                        if !grown.iter().any(|(gd, _)| *gd == d) {
+                            grown.push((d, geom::offset(&s.geom, d - Length::from_nm(2_000))));
+                        }
+                        let g = &grown.iter().find(|(gd, _)| *gd == d).unwrap().1;
                         if overlaps_item(g, t) {
                             let touching = geom::overlaps(&s.geom, &t.geom);
                             let msg = if d.nm() <= 0 || touching {
@@ -875,6 +914,20 @@ fn eval(board: &Board, items: &[Item], rule: &Rule, findings: &mut Vec<Finding>)
                         }
                     }
                 }
+                Feature::Via => {
+                    // Connected on every layer it spans, or at least two.
+                    for s in &subjects {
+                        let touched: Vec<&String> = s
+                            .layers
+                            .iter()
+                            .filter(|l| items.iter().any(|o| o.id != s.id && matches!(o.kind, Feature::Pad | Feature::Trace | Feature::Pour) && o.net.is_some() && o.net == s.net && o.layers.contains(l) && geom::overlaps(&o.geom, &s.geom)))
+                            .collect();
+                        let ok = touched.len() >= 2;
+                        if ok != *want {
+                            push(findings, rule, format!("{} joins copper on {} layer(s) only ({})", s.id, touched.len(), touched.iter().map(|l| l.as_str()).collect::<Vec<_>>().join(", ")), Some(s.center), features_of(s));
+                        }
+                    }
+                }
                 Feature::Pad => {
                     for s in &subjects {
                         let Some(net) = &s.net else { continue };
@@ -909,6 +962,43 @@ fn eval(board: &Board, items: &[Item], rule: &Rule, findings: &mut Vec<Finding>)
                 let placed = s.attrs.get("placed").copied().unwrap_or(0.0) > 0.0;
                 if placed != *want {
                     push(findings, rule, format!("{} ({}) is not placed", s.id, s.component.as_deref().unwrap_or("?")), None, features_of(s));
+                }
+            }
+        }
+        Check::EndJunctions(allowed) => {
+            if *allowed {
+                return Ok(());
+            }
+            // A trace end that sits on no pad/via/ring of its net and coincides with
+            // another trace's end: the copper meets edge to edge, not face to face.
+            let traces: Vec<&Item> = items.iter().filter(|it| it.kind == Feature::Trace).collect();
+            let tol = Length::from_nm(10_000);
+            for s in &subjects {
+                if s.kind != Feature::Trace {
+                    continue;
+                }
+                for end in &s.extra {
+                    let on_pad = items.iter().any(|o| {
+                        matches!(o.kind, Feature::Pad | Feature::Via) && o.net.is_some() && o.net == s.net && share_layer(o, s) && o.geom.iter().filter(|r| geom::signed_area(r) > 0.0).any(|r| geom::contains(r, *end))
+                    });
+                    if on_pad {
+                        continue;
+                    }
+                    for t in &traces {
+                        if t.id == s.id || t.net != s.net || !share_layer(s, t) {
+                            continue;
+                        }
+                        if t.extra.iter().any(|e| (e.x.nm() - end.x.nm()).abs() <= tol.nm() && (e.y.nm() - end.y.nm()).abs() <= tol.nm()) {
+                            // A third piece of copper under the meeting point (a bus the
+                            // two ends both land on) makes it a real joint.
+                            let third = items.iter().any(|o| {
+                                is_copper_item(o) && o.id != s.id && o.id != t.id && o.net == s.net && share_layer(o, s) && o.geom.iter().filter(|r| geom::signed_area(r) > 0.0).any(|r| geom::contains(r, *end))
+                            });
+                            if !third && s.id < t.id {
+                                push(findings, rule, format!("{} and {} meet end to end at {end}: no overlap, the joint etches to a hair (weld them or land on a pad)", s.id, t.id), Some(*end), [features_of(s), features_of(t)].concat());
+                            }
+                        }
+                    }
                 }
             }
         }

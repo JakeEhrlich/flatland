@@ -450,6 +450,8 @@ pub fn disconnect(ctx: &Ctx, a: DisconnectArgs) -> Result<()> {
 pub enum NetCmd {
     /// List nets and their pins.
     List,
+    /// Compare the board's netlist with an external one: JSON `{"NET": ["R1.1", ...]}` or text lines `NET: R1.1 R2.2`.
+    Compare { file: PathBuf },
     /// Show one net.
     Show { name: String },
     /// Rename a net.
@@ -463,6 +465,93 @@ pub enum NetCmd {
 pub fn run_net(ctx: &Ctx, c: NetCmd) -> Result<()> {
     let mut loaded = ctx.load()?;
     match c {
+        NetCmd::Compare { file } => {
+            let text = store::read_text(&file)?;
+            let mut external: IndexMap<String, Vec<String>> = IndexMap::new();
+            if text.trim_start().starts_with('{') {
+                let v: serde_json::Value = serde_json::from_str(&text).map_err(|e| Error::msg(format!("{}: invalid JSON: {e}", file.display())))?;
+                let obj = v.as_object().ok_or_else(|| Error::msg("expected a JSON object of net -> [pins]"))?;
+                for (net, pins) in obj {
+                    let pins: Vec<String> = pins.as_array().map(|a| a.iter().filter_map(|p| p.as_str().map(|s| s.to_string())).collect()).unwrap_or_default();
+                    external.insert(net.clone(), pins);
+                }
+            } else {
+                for line in text.lines() {
+                    let line = line.trim();
+                    if line.is_empty() || line.starts_with('#') {
+                        continue;
+                    }
+                    let Some((net, rest)) = line.split_once(':') else { continue };
+                    external.insert(net.trim().to_string(), rest.split_whitespace().map(|s| s.to_string()).collect());
+                }
+            }
+            // Pin -> net on each side.
+            let mut ext_pin: IndexMap<String, String> = IndexMap::new();
+            for (net, pins) in &external {
+                for p in pins {
+                    ext_pin.insert(p.clone(), net.clone());
+                }
+            }
+            let mut board_pin: IndexMap<String, String> = IndexMap::new();
+            for (net, n) in &loaded.project.nets {
+                for p in &n.pins {
+                    board_pin.insert(p.clone(), net.clone());
+                }
+            }
+            let mut problems = 0;
+            for (pin, enet) in &ext_pin {
+                match board_pin.get(pin) {
+                    None => {
+                        println!("{pin}: on net {enet} in the file, on no net on the board");
+                        problems += 1;
+                    }
+                    Some(bnet) if bnet != enet => {
+                        // Same net under another name is fine if the pin sets match; report by name anyway.
+                        let same_set = external.get(enet).map(|pins| {
+                            let mut a: Vec<&str> = pins.iter().map(|s| s.as_str()).collect();
+                            a.sort();
+                            let mut b: Vec<&str> = loaded.project.nets[bnet].pins.iter().map(|s| s.as_str()).collect();
+                            b.sort();
+                            a == b
+                        }).unwrap_or(false);
+                        if !same_set {
+                            println!("{pin}: on net {enet} in the file, on net {bnet} on the board");
+                            problems += 1;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            for (pin, bnet) in &board_pin {
+                if !ext_pin.contains_key(pin) {
+                    println!("{pin}: on net {bnet} on the board, absent from the file");
+                    problems += 1;
+                }
+            }
+            for net in external.keys() {
+                if !loaded.project.nets.contains_key(net) {
+                    let renamed = external[net].first().and_then(|p| board_pin.get(p)).cloned();
+                    match renamed {
+                        Some(b) => println!("net {net} in the file is called {b} on the board"),
+                        None => {
+                            println!("net {net} in the file is missing from the board");
+                            problems += 1;
+                        }
+                    }
+                }
+            }
+            for net in loaded.project.nets.keys() {
+                if !external.contains_key(net) && !loaded.project.nets[net].pins.iter().any(|p| ext_pin.contains_key(p)) {
+                    println!("net {net} is on the board only");
+                    problems += 1;
+                }
+            }
+            println!("{problems} difference(s) between the board and {}", file.display());
+            if problems > 0 {
+                return Err(Error::msg("netlists differ"));
+            }
+            Ok(())
+        }
         NetCmd::List => {
             if loaded.project.nets.is_empty() {
                 println!("no nets yet; create them with `pcb connect <pin> <pin>`");
@@ -1282,10 +1371,14 @@ pub fn run_trace(ctx: &Ctx, c: TraceCmd) -> Result<()> {
     match c {
         TraceCmd::Add { layer, net, width, chamfer, points } => {
             let board = ctx.board(&loaded)?;
-            let points = match chamfer {
+            let mut points = match chamfer {
                 Some(c) => chamfer_corners(&points, c),
                 None => points,
             };
+            points.dedup();
+            if points.len() < 2 {
+                return Err(Error::msg("a trace needs two distinct points"));
+            }
             let net = match net {
                 Some(n) => {
                     if !loaded.project.nets.contains_key(&n) {
@@ -1585,9 +1678,10 @@ pub fn run_rules(ctx: &Ctx, c: RulesCmd) -> Result<()> {
                     "thermal_gap" => r.thermal_gap = Some(val),
                     "pour_min_width" => r.pour_min_width = Some(val),
                     "hole_clearance" => r.hole_clearance = Some(val),
+                    "tent_vias" => r.tent_vias = val.nm() != 0,
                     "thermal_spoke_width" => r.thermal_spoke_width = val,
                     other => {
-                        let names = ["trace_width", "clearance", "via_drill", "via_diameter", "pour_clearance", "mask_expansion", "paste_shrink", "silk_width", "silk_text_size", "edge_clearance", "hole_annular_ring", "thermal_gap", "thermal_spoke_width", "pour_min_width", "hole_clearance"];
+                        let names = ["trace_width", "clearance", "via_drill", "via_diameter", "pour_clearance", "mask_expansion", "paste_shrink", "silk_width", "silk_text_size", "edge_clearance", "hole_annular_ring", "thermal_gap", "thermal_spoke_width", "pour_min_width", "hole_clearance", "tent_vias"];
                         let mut e = Error::msg(format!("unknown design rule `{other}`; rules are {}", list_names(names)));
                         if let Some(s) = suggest(other, names) {
                             e = e.help(s);
@@ -1609,8 +1703,8 @@ pub fn run_rules(ctx: &Ctx, c: RulesCmd) -> Result<()> {
         }
         RulesCmd::Show => {
             let r = &loaded.project.design_rules;
-            println!("trace_width {}\nclearance {}\nvia_drill {}\nvia_diameter {}\npour_clearance {}\nmask_expansion {}\npaste_shrink {}\nsilk_width {}\nsilk_text_size {}\nedge_clearance {}\nhole_annular_ring {}\nthermal_gap {}\nthermal_spoke_width {}\npour_min_width {}\nhole_clearance {}",
-                r.trace_width, r.clearance, r.via_drill, r.via_diameter, r.pour_clearance(), r.mask_expansion, r.paste_shrink, r.silk_width, r.silk_text_size, r.edge_clearance, r.hole_annular_ring, r.thermal_gap(), r.thermal_spoke_width, r.pour_min_width(), r.hole_clearance());
+            println!("trace_width {}\nclearance {}\nvia_drill {}\nvia_diameter {}\npour_clearance {}\nmask_expansion {}\npaste_shrink {}\nsilk_width {}\nsilk_text_size {}\nedge_clearance {}\nhole_annular_ring {}\nthermal_gap {}\nthermal_spoke_width {}\npour_min_width {}\nhole_clearance {}\ntent_vias {}",
+                r.trace_width, r.clearance, r.via_drill, r.via_diameter, r.pour_clearance(), r.mask_expansion, r.paste_shrink, r.silk_width, r.silk_text_size, r.edge_clearance, r.hole_annular_ring, r.thermal_gap(), r.thermal_spoke_width, r.pour_min_width(), r.hole_clearance(), r.tent_vias);
             for (n, c) in &r.net_classes {
                 println!("class {n}: width {} clearance {}", c.trace_width.map(|l| l.to_string()).unwrap_or("default".into()), c.clearance.map(|l| l.to_string()).unwrap_or("default".into()));
             }

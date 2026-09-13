@@ -180,6 +180,9 @@ pub enum Check {
     Placed(bool),
     /// The project's design rules must be at least these values.
     DesignRules(IndexMap<String, f64>),
+    /// `false`: a trace end may not meet another trace only end to end (a
+    /// shared edge or a wedge is no joint; it etches to a hair).
+    EndJunctions(bool),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]

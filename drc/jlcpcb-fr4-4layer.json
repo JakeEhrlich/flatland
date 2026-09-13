@@ -59,8 +59,9 @@
       "for": "copper",
       "severity": "warning",
       "check": {
-        "min_gap": 0.09
-      }
+        "min_gap": 0.25
+      },
+      "description": "Same-net copper closer than 0.25 mm without touching (a pad beside its own via, a trace grazing its pad) is an etch sliver or an acid trap; JLCPCB's same-net spacing figure."
     },
     {
       "name": "via-drill",
@@ -179,6 +180,27 @@
           "height": 586
         }
       }
+    },
+    {
+      "name": "mask-bridge",
+      "for": "mask_opening",
+      "check": {
+        "min_gap": 0.05
+      },
+      "description": "Mask between openings thinner than 0.05 mm will not survive at all: two bare features sit exposed side by side under the finish."
+    },
+    {
+      "name": "via-near-pad",
+      "for": "via",
+      "severity": "warning",
+      "check": {
+        "clearance": {
+          "to": "pad",
+          "relation": "any",
+          "min": 0.2
+        }
+      },
+      "description": "An untented via inside or within 0.2 mm of a pad merges its mask opening with the pad's and wicks paste down the hole; escape by the pad's half extent plus the via radius plus 0.2 mm, or tent the vias (`rules set tent_vias=1`)."
     }
   ]
 }

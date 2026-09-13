@@ -7,7 +7,7 @@
   },
   "footprint": {
     "url": "../footprints/PowerDI-123.json",
-    "blake3": "24f2784ccbee05a3e8ab1e174142a35372ffe67c0c70d7261704aaf4e2b89afb"
+    "blake3": "55eb103362bca14302db1c9199816867965efa9ac5a367aaf2f8cd6b2a06240f"
   },
   "pins": [
     {

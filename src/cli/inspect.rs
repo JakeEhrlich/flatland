@@ -154,6 +154,9 @@ pub fn check(ctx: &Ctx, a: CheckArgs) -> Result<()> {
         for (rule, n) in hidden {
             println!("… {n} more {rule} finding(s) (`pcb check --rule {rule}` lists them)");
         }
+        for w in &report.unused_waivers {
+            println!("note: waiver `{w}` matched no finding (stale, or the feature is misspelt)");
+        }
         let (e, w, i) = (report.count(Severity::Error), report.count(Severity::Warning), report.count(Severity::Info));
         let waived = report.waived();
         println!(

@@ -59,7 +59,7 @@ pub fn emit(board: &Board, dir: &Path, zip: bool) -> Result<Vec<PathBuf>> {
         let mut pours: Vec<_> = board.pours()?.iter().filter(|p| &p.pour.layer == layer).collect();
         pours.sort_by_key(|p| p.pour.priority);
         for p in pours {
-            g.regions_with_holes(&p.copper);
+            g.regions_fractured(&p.copper);
         }
         // Traces as filled regions (flat ends, round joins), the same polygon the
         // DRC and pours see, so a wide link ending in a narrow pad has no cap
@@ -71,7 +71,7 @@ pub fn emit(board: &Board, dir: &Path, zip: bool) -> Result<Vec<PathBuf>> {
                 }
             }
         }
-        for pad in board.all_pads().filter(|p| p.on_layer(layer)) {
+        for pad in board.all_pads().filter(|p| p.on_layer(layer) && p.plated) {
             g.region(&pad.copper);
         }
         for t in board.project.texts.iter().filter(|t| &t.layer == layer) {
@@ -123,8 +123,10 @@ pub fn emit(board: &Board, dir: &Path, zip: bool) -> Result<Vec<PathBuf>> {
                 }
             }
         }
-        for v in &board.project.vias {
-            mask.flash_circle(v.at, v.diameter + rules.mask_expansion * 2);
+        if !rules.tent_vias {
+            for v in &board.project.vias {
+                mask.flash_circle(v.at, v.diameter + rules.mask_expansion * 2);
+            }
         }
         for h in &board.holes {
             match &h.copper {
@@ -145,7 +147,7 @@ pub fn emit(board: &Board, dir: &Path, zip: bool) -> Result<Vec<PathBuf>> {
         let silk_art = board.silkscreen(side)?;
         if !silk_art.is_empty() {
             let mut silk = Gerber::new(&format!("Legend,{sw}"), "Positive");
-            silk.regions_with_holes(&silk_art);
+            silk.regions_fractured(&silk_art);
             files.push(write(format!("{name}-{}.{ext_silk}", if side == Side::Top { "F_Silkscreen" } else { "B_Silkscreen" }), silk.finish())?);
         }
     }
@@ -158,8 +160,8 @@ pub fn emit(board: &Board, dir: &Path, zip: bool) -> Result<Vec<PathBuf>> {
     files.push(write(format!("{name}-Edge_Cuts.gko"), edge.finish())?);
 
     // ---- drills
-    let mut pth = excellon::Drill::new(true);
-    let mut npth = excellon::Drill::new(false);
+    let mut pth = excellon::Drill::new(true, board.layers().len());
+    let mut npth = excellon::Drill::new(false, board.layers().len());
     for pad in board.all_pads() {
         if let Some(d) = pad.drill {
             let target = if pad.plated { &mut pth } else { &mut npth };

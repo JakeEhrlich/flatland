@@ -114,6 +114,7 @@ mounting holes, plated holes used as test points or connections.
 | `thermal_gap` | pad-to-pour gap of a thermal relief (defaults to `pour_clearance`) | — |
 | `thermal_spoke_width` | width of the four relief spokes | 0.3 mm |
 | `pour_min_width` | pour fill narrower than this is removed (defaults to `trace_width`) | — |
+| `tent_vias` | `1`: vias get no mask opening (removes via-to-pad mask dams and exposed rings; JLCPCB tents on request) | 0 |
 | `hole_clearance` | pour distance from unplated holes and other-net drills (default: the larger of `pour_clearance` and 0.3 mm) | — |
 
 `class NAME --width W --clearance C --via-drill D --via-diameter D`

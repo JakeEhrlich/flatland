@@ -83,6 +83,14 @@ impl Gerber {
 
     /// Polygon set from Clipper: positive rings are filled, negative rings
     /// (holes) are cleared with LPC.
+    /// Polygons with holes, drawn without polarity clears (a clear would erase
+    /// whatever was drawn earlier inside it): holes are keyholed into their outers.
+    pub fn regions_fractured(&mut self, rings: &[Ring]) {
+        for r in geom::fracture(rings) {
+            self.region(&r);
+        }
+    }
+
     pub fn regions_with_holes(&mut self, rings: &[Ring]) {
         let outers: Vec<&Ring> = rings.iter().filter(|r| geom::signed_area(r) > 0.0).collect();
         let holes: Vec<&Ring> = rings.iter().filter(|r| geom::signed_area(r) < 0.0).collect();

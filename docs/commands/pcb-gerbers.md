@@ -44,7 +44,11 @@ Single-layer boards: the one copper layer is named `Bot` if its name starts
 with `B`, else `Top`; both mask files are still written (through-hole pads
 need openings on both sides).
 
-Traces are written as filled regions (the same flat-ended, round-joined
+Polygons with holes (pours, clipped silkscreen) are written as single
+regions with each hole joined to its outer by a zero-width keyhole, never
+as polarity clears: a clear erases whatever was drawn earlier inside it,
+which once deleted a reference designator sitting inside a footprint's
+silkscreen box. Traces are written as filled regions (the same flat-ended, round-joined
 polygon the design rules see) rather than aperture draws; pads, pours and
 plated rings are regions too, vias are flashes.
 

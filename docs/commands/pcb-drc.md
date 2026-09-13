@@ -34,9 +34,11 @@ Three sources of rules are active at once:
 
 1. **basic**, built into `pcb` and always on: the board is complete and
    self-consistent (outline present, parts placed, copper inside the
-   outline, different nets keep the project's `clearance`, nets routed,
-   pins connected, no dangling traces, no floating fill, part bodies do
-   not overlap).
+   outline, different nets keep the larger of their classes' `clearance`,
+   nets routed, pins connected, no dangling traces, no traces meeting only
+   end to end, no coincident drills, no floating fill, part bodies do not
+   overlap, silkscreen inside the outline and off mask openings, vias
+   joined on more than one layer).
 2. **Rule sets** referenced from `pcb.json` by URL and blake3 hash, exactly
    like component indexes: one file per fabrication process. `pcb drc
    profiles` lists the ones bundled with `pcb`; `pcb drc add NAME` copies
@@ -132,13 +134,25 @@ layer, or `top`/`bottom` for silk, mask and courtyards), `net`, `class`
 `placed: true`
 : Non-virtual parts have a placement.
 
+`end_junctions: false`
+: Traces of one net may not meet only end to end. Flat trace ends that
+  touch along a line or a wedge have no overlapping copper and etch to a
+  hair; connectivity does not count them as joined either. Weld them
+  (extend one into the other) or land both on a pad. `pcb route` does
+  this for the wires it imports.
+
 `design_rules: { rule: value }`
 : The project's own design rules (`pcb rules`) are at least these values —
   catches a project set up looser than the process before any geometry is.
 
 **Distances** are millimetres, or the string `"design"` for the project's
-own value (`clearance`, `edge_clearance` for `to: outline`, `trace_width`
-for `min_width`).
+own value: for `clearance` between copper that is the larger of the two
+items' net-class clearances (pads included, as KiCad does), otherwise the
+plain `clearance` rule; `edge_clearance` for `to: outline`; `trace_width`
+for `min_width`.
+
+A waiver that silences nothing is reported after the findings, so a
+stale or misspelt waiver is visible.
 
 ## SPEED
 

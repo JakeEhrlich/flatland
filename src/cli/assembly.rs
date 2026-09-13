@@ -191,16 +191,24 @@ pub fn pnp(ctx: &Ctx, a: PnpArgs) -> Result<()> {
             unplaced.push(p.inst.refdes.clone());
             continue;
         };
-        // Mid X/Y is the footprint origin (component centre); rotation is
+        // Mid X/Y is the centre of the part's copper pads (JLCPCB places at the part
+        // centre, and some footprints put their origin at pin 1); rotation is
         // counter-clockwise degrees plus any per-component offset that maps
         // our footprint orientation onto the vendor's reel orientation.
         let rot = (pl.rotation + p.rotation_offset).rem_euclid(360.0);
+        let mid = {
+            let rings: Vec<crate::geom::Ring> = p.inst.pads.iter().filter(|q| q.plated).map(|q| q.copper.clone()).collect();
+            match crate::geom::bounds(&rings) {
+                Some((lo, hi)) => crate::units::Point::nm((lo.x.nm() + hi.x.nm()) / 2, (lo.y.nm() + hi.y.nm()) / 2),
+                None => pl.at,
+            }
+        };
         let side = match pl.side {
             Side::Top => "Top",
             Side::Bottom => "Bottom",
         };
         match a.format {
-            Format::Jlcpcb => text.push_str(&format!("{},{:.4},{:.4},{},{}\n", p.inst.refdes, pl.at.x.mm(), pl.at.y.mm(), side, fmt_deg(rot))),
+            Format::Jlcpcb => text.push_str(&format!("{},{:.4},{:.4},{},{}\n", p.inst.refdes, mid.x.mm(), mid.y.mm(), side, fmt_deg(rot))),
             Format::Csv => text.push_str(&format!(
                 "{},{:.4},{:.4},{},{},{},{},{}\n",
                 p.inst.refdes,

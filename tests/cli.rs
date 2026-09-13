@@ -464,10 +464,11 @@ fn gerber_pours_emit_in_priority_order() {
         .max()
         .unwrap();
     assert!(max_x > 30_000_000, "first region should be the board-wide GND pour, max x = {max_x}:\n{first}");
-    // And the island's fill comes after the GND pour's clears.
-    let gnd_clear = gtl.find("%LPC*%").unwrap();
+    // Holes are keyholed into their outers: no polarity clears anywhere, so nothing
+    // drawn earlier can be erased; the island's fill still comes after the GND pour.
+    assert!(!gtl.contains("%LPC*%"), "regions must not use polarity clears");
     let island_fill = gtl.find("X5000000Y").or_else(|| gtl.find("X17000000Y")).expect("island region");
-    assert!(island_fill > gnd_clear, "VCC island must be drawn after the GND pour's LPC clears");
+    assert!(island_fill > gtl.find("G36*").unwrap(), "VCC island must be drawn after the GND pour");
 }
 
 #[test]
@@ -601,7 +602,7 @@ fn kicad_export() {
     p.ok(&["init", "kc", "--index", jlc.to_str().unwrap(), "--index", library().to_str().unwrap()]);
     p.ok(&["outline", "rect", "30", "20", "--radius", "1"]);
     p.ok(&["rules", "set", "clearance=0.15"]);
-    p.ok(&["add", "J1", "wago-2060-452", "--at", "8,5"]);
+    p.ok(&["add", "J1", "wago-2060-452", "--at", "9.5,5"]); // wire-entry ticks inside the outline
     p.ok(&["add", "R1", "jlcpcb:resistor-0603", "--param", "value=1k", "--at", "20,12"]);
     p.ok(&["add", "D1", "led-0603-red", "--at", "25,12", "--side", "bottom"]);
     p.ok(&["connect", "J1.1", "R1.1", "--net", "VIN"]);
@@ -630,4 +631,51 @@ fn kicad_export() {
         let out = p.run(&["export", "kicad", "--drc"]).1;
         assert!(out.contains("kicad drc: 0 error(s)"), "{out}");
     }
+}
+
+#[test]
+fn audit_checks() {
+    let p = Proj::new("audit");
+    p.ok(&["init", "au", "--index", library().to_str().unwrap()]);
+    p.ok(&["outline", "rect", "30", "20"]);
+    p.ok(&["add", "R1", "resistor-0603", "--at", "5,10"]);
+    p.ok(&["add", "R2", "resistor-0603", "--at", "25,10"]);
+    p.ok(&["connect", "R1.2", "R2.1", "--net", "A"]);
+    p.ok(&["connect", "R1.1", "R2.2", "--net", "B"]);
+    // Two traces meeting end to end (a width change): connectivity must not accept the
+    // shared edge as a joint, and trace-junctions must name the pair.
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.3", "5.875,10", "12,10"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.5", "12,10", "24.125,10"]);
+    let out = p.run(&["check"]).1;
+    assert!(out.contains("error: trace-junctions") && out.contains("meet end to end"), "{out}");
+    assert!(out.contains("net A is not fully routed"), "connectivity must not count an edge as contact:\n{out}");
+    // Overlapping by a hair fixes both.
+    p.ok(&["trace", "clear"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.3", "5.875,10", "12.25,10"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.5", "12,10", "24.125,10"]);
+    let out = p.run(&["check"]).1;
+    assert!(!out.contains("trace-junctions") && !out.contains("net A is not"), "{out}");
+    // Coincident vias are an error even at distance zero.
+    p.ok(&["via", "add", "--net", "B", "15,15"]);
+    p.ok(&["via", "add", "--net", "B", "15,15"]);
+    let out = p.run(&["check"]).1;
+    assert!(out.contains("error: holes-overlap"), "{out}");
+    p.ok(&["undo"]);
+    // Silk outside the outline and over an opening.
+    p.ok(&["text", "add", "OUT", "--at", "40,10"]);
+    p.ok(&["text", "add", "ON", "--at", "5,10", "--size", "1"]);
+    let out = p.run(&["check"]).1;
+    assert!(out.contains("silk-text-outside-outline") && out.contains("silk-text-over-opening"), "{out}");
+    // A stale waiver is reported.
+    p.ok(&["drc", "waive", "courtyards", "R9", "--reason", "nothing"]);
+    let out = p.run(&["check"]).1;
+    assert!(out.contains("matched no finding"), "{out}");
+    // Netlist compare: a swapped pin, a missing pin, a board-only net.
+    std::fs::write(p.dir.join("ext.txt"), "A: R1.2 R2.2\nB: R1.1\nC: R2.1\n").unwrap();
+    let out = p.fails(&["net", "compare", "ext.txt"]);
+    assert!(out.contains("R2.2: on net A in the file, on net B on the board"), "{out}");
+    assert!(out.contains("R2.1: on net C in the file, on net A on the board"), "{out}");
+    std::fs::write(p.dir.join("same.json"), "{\"A\": [\"R1.2\", \"R2.1\"], \"B\": [\"R1.1\", \"R2.2\"]}").unwrap();
+    let out = p.ok(&["net", "compare", "same.json"]);
+    assert!(out.contains("0 difference(s)"), "{out}");
 }
