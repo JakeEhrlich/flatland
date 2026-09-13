@@ -31,6 +31,8 @@ pub struct Item {
     pub footprint: Option<String>,
     pub component: Option<String>,
     pub class: Option<String>,
+    /// Parts: the BOM row this part lands on (component, value, LCSC number).
+    pub bom_row: Option<String>,
     pub center: Point,
     pub extra: Vec<Point>,
     /// Big polygons (pours) cut into grid tiles so a small feature is only
@@ -192,6 +194,7 @@ fn item(kind: Feature, id: String, geom: Rings) -> Item {
         footprint: None,
         component: None,
         class: None,
+        bom_row: None,
         center,
         extra: vec![],
         tiles: None,
@@ -507,6 +510,10 @@ pub fn collect(board: &Board) -> Result<Vec<Item>> {
         it.attrs.insert("pins", n.pins.len() as f64);
         items.push(it);
     }
+    let bom_rows: std::collections::HashMap<&str, (String, bool)> = crate::cli::assembly::parts(board)
+        .iter()
+        .map(|p| (p.inst.refdes.as_str(), (format!("{} {} {}", p.inst.component.name, p.value, p.lcsc.as_deref().unwrap_or("")), p.assemble)))
+        .collect();
     for i in &board.instances {
         for pin in &i.component.component.pins {
             let mut it = item(Feature::Pin, format!("{}.{}", i.refdes, pin.name), vec![]);
@@ -521,6 +528,10 @@ pub fn collect(board: &Board) -> Result<Vec<Item>> {
         it.footprint = i.component.footprint.as_ref().map(|f| f.footprint.name.clone());
         it.attrs.insert("placed", if i.is_placed() { 1.0 } else { 0.0 });
         it.attrs.insert("virtual", if i.component.is_virtual() { 1.0 } else { 0.0 });
+        if let Some((row, assemble)) = bom_rows.get(i.refdes.as_str()) {
+            it.bom_row = Some(row.clone());
+            it.attrs.insert("assemble", if *assemble { 1.0 } else { 0.0 });
+        }
         items.push(it);
     }
     Ok(items)
@@ -528,6 +539,12 @@ pub fn collect(board: &Board) -> Result<Vec<Item>> {
 
 // ---------------------------------------------------------------------------
 // Evaluation
+
+/// Split a designator into its letter prefix and the rest (`LED12` -> `LED`, `12`).
+fn designator_prefix(id: &str) -> (&str, &str) {
+    let n = id.chars().take_while(|c| c.is_ascii_alphabetic()).map(|c| c.len_utf8()).sum();
+    id.split_at(n)
+}
 
 fn is_copper(k: Feature) -> bool {
     matches!(k, Feature::Trace | Feature::Via | Feature::Pad | Feature::Pour)
@@ -1000,6 +1017,63 @@ fn eval(board: &Board, items: &[Item], rule: &Rule, findings: &mut Vec<Finding>)
                         }
                     }
                 }
+            }
+        }
+        Check::DesignatorFormat(want) => {
+            if !*want {
+                return Ok(());
+            }
+            let mut seen: IndexMap<String, &str> = IndexMap::new();
+            for s in &subjects {
+                let (prefix, rest) = designator_prefix(&s.id);
+                let bad = if s.id.is_empty() {
+                    Some("is empty".to_string())
+                } else if prefix.is_empty() {
+                    Some("starts with a digit; the fab reads the component type from a letter prefix".to_string())
+                } else if !rest.is_empty() && !rest.chars().all(|c| c.is_ascii_digit()) {
+                    Some(format!("has `{rest}` after its prefix; use letters followed by digits (R1, LED12)"))
+                } else if prefix.chars().any(|c| c.is_ascii_lowercase()) {
+                    Some("has lower-case letters; the fab upper-cases every designator, so it must not depend on case".to_string())
+                } else {
+                    None
+                };
+                if let Some(why) = bad {
+                    push(findings, rule, format!("designator {} {why}", s.id), None, features_of(s));
+                }
+                let key = s.id.to_ascii_uppercase();
+                if let Some(other) = seen.get(&key) {
+                    push(findings, rule, format!("designators {} and {other} differ only in case and become one part at the fab", s.id), None, features_of(s));
+                } else {
+                    seen.insert(key, s.id.as_str());
+                }
+            }
+        }
+        Check::BomPrefixes(want) => {
+            if !*want {
+                return Ok(());
+            }
+            // Parts that share a BOM row must share a prefix: JLCPCB reads the
+            // component type from the prefix and flags a row that seems to mix types.
+            let mut rows: IndexMap<&str, Vec<&Item>> = IndexMap::new();
+            for s in &subjects {
+                if s.attrs.get("assemble").copied().unwrap_or(1.0) == 0.0 || s.attrs.get("virtual").copied().unwrap_or(0.0) > 0.0 {
+                    continue;
+                }
+                if let Some(row) = &s.bom_row {
+                    rows.entry(row.as_str()).or_default().push(s);
+                }
+            }
+            for (row, parts) in rows {
+                let mut by_prefix: IndexMap<String, Vec<&str>> = IndexMap::new();
+                for p in &parts {
+                    by_prefix.entry(designator_prefix(&p.id).0.to_ascii_uppercase()).or_default().push(p.id.as_str());
+                }
+                if by_prefix.len() < 2 {
+                    continue;
+                }
+                let groups: Vec<String> = by_prefix.iter().map(|(pre, ids)| format!("{pre} ({})", ids.join(", "))).collect();
+                let feats: Vec<_> = parts.iter().flat_map(|p| features_of(p)).collect();
+                push(findings, rule, format!("one BOM row ({}) is split across designator prefixes {}: the fab reads a component type from each prefix and will ask whether these are really one part", row.trim(), groups.join(" and ")), None, feats);
             }
         }
         Check::DesignRules(mins) => {

@@ -436,6 +436,41 @@ fn design_rules() {
 }
 
 #[test]
+fn designator_rules() {
+    let p = Proj::new("designators");
+    p.ok(&["init", "des", "--index", library().to_str().unwrap()]);
+    p.ok(&["outline", "rect", "40", "20"]);
+    p.ok(&["drc", "add", "jlcpcb-fr4-2layer"]);
+    p.ok(&["add", "R1", "resistor-0603", "--at", "5,10", "-P", "value=10k"]);
+    p.ok(&["add", "R2", "resistor-0603", "--at", "15,10", "-P", "value=10k"]);
+    let out = p.run(&["check"]).1;
+    assert!(!out.contains("designator") && !out.contains("BOM row"), "{out}");
+    // The same part under a second prefix: JLCPCB reads two component types in one row.
+    p.ok(&["add", "RT1", "resistor-0603", "--at", "25,10", "-P", "value=10k"]);
+    let out = p.run(&["check"]).1;
+    assert!(out.contains("warning: bom-prefixes") && out.contains("R (R1, R2) and RT (RT1)"), "{out}");
+    // A different value is a different row: no complaint.
+    p.ok(&["remove", "RT1"]);
+    p.ok(&["add", "RT1", "resistor-0603", "--at", "25,10", "-P", "value=1k"]);
+    let out = p.run(&["check"]).1;
+    assert!(!out.contains("bom-prefixes"), "{out}");
+    // Format: lower case, digits first, a suffix after the number, a case collision.
+    p.ok(&["add", "r3", "resistor-0603", "--at", "35,10", "-P", "value=1k"]);
+    p.ok(&["add", "R_4", "resistor-0603", "--at", "35,5", "-P", "value=1k"]);
+    p.ok(&["add", "1R", "resistor-0603", "--at", "35,15", "-P", "value=1k"]);
+    p.ok(&["add", "R1A", "resistor-0603", "--at", "25,5", "-P", "value=1k"]);
+    let out = p.run(&["check"]).1;
+    assert!(out.contains("designator r3 has lower-case"), "{out}");
+    assert!(out.contains("designator R_4 has `_4`"), "{out}");
+    assert!(out.contains("designator 1R starts with a digit"), "{out}");
+    assert!(out.contains("designator R1A has `1A`"), "{out}");
+    // `r3` is also the same row as `R3` would be; a case collision is named explicitly.
+    p.ok(&["add", "R3", "resistor-0603", "--at", "25,15", "-P", "value=1k"]);
+    let out = p.run(&["check"]).1;
+    assert!(out.contains("differ only in case"), "{out}");
+}
+
+#[test]
 fn gerber_pours_emit_in_priority_order() {
     // Two overlapping pours on one layer: a board-wide GND at priority 0 and a VCC
     // island at priority 1 cut out of it.  In RS-274X an LPC clear erases everything

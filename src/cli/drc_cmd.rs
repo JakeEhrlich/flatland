@@ -277,6 +277,8 @@ fn describe_check(c: &Check) -> String {
         Check::Placed(b) => format!(": placed = {b}"),
         Check::DesignRules(m) => format!(": design rules at least {}", kv(m)),
         Check::EndJunctions(b) => format!(": end-to-end junctions allowed = {b}"),
+        Check::DesignatorFormat(b) => format!(": designator format checked = {b}"),
+        Check::BomPrefixes(b) => format!(": one designator prefix per BOM row = {b}"),
     }
 }
 

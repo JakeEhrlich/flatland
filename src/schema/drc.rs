@@ -183,6 +183,14 @@ pub enum Check {
     /// `false`: a trace end may not meet another trace only end to end (a
     /// shared edge or a wedge is no joint; it etches to a hair).
     EndJunctions(bool),
+    /// Parts: a reference designator is upper-case letters followed by digits
+    /// (`R1`, `LED12`), unique ignoring case, with no other characters.
+    DesignatorFormat(bool),
+    /// Parts: every part that lands on one BOM row (same component, value and
+    /// LCSC number) carries the same designator prefix. JLCPCB reads the
+    /// component type from the prefix and asks for confirmation when one row
+    /// seems to hold several types.
+    BomPrefixes(bool),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]

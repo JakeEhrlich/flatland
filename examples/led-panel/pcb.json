@@ -2225,7 +2225,7 @@
     "rulesets": [
       {
         "url": "drc/jlcpcb-aluminium-1layer.json",
-        "blake3": "e72352e528ca4ac9af3e8d86df8e707d0ecd13558c00e135c1eb36b6676eef8c"
+        "blake3": "147a52e6a9785eee377469fd4e73221dbb8979c2195bcfbd7a3da75423feb5f1"
       }
     ],
     "waivers": [

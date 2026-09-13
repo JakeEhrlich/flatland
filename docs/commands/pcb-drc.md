@@ -86,7 +86,7 @@ A rule set is a `pcb-drc/1` JSON file (`pcb schema drc`). Each rule
 | `board` | the board as a whole | `width`, `height`, `layers` |
 | `net` | a net | `pins` |
 | `pin` | a component pin | |
-| `part` | a component instance | `placed`, `virtual` |
+| `part` | a component instance | `placed`, `virtual`, `assemble` |
 
 **Filters** (`where`, every given field must match): `layer` (a copper
 layer, or `top`/`bottom` for silk, mask and courtyards), `net`, `class`
@@ -141,6 +141,22 @@ layer, or `top`/`bottom` for silk, mask and courtyards), `net`, `class`
   (extend one into the other) or land both on a pad. `pcb route` does
   this for the wires it imports.
 
+`designator_format: true`
+: Parts are named with upper-case letters followed by digits (`R1`,
+  `LED12`); a name may not start with a digit, hold other characters after
+  its prefix, use lower-case letters, or differ from another name only in
+  case. Fabs upper-case every designator and read the component type from
+  the letter prefix. A name with no digits (`RIN`) passes.
+
+`bom_prefixes: true`
+: Parts that land on one BOM row (same component, value and LCSC number,
+  as `pcb bom` groups them; parts marked not for assembly are skipped)
+  share one designator prefix. JLCPCB's BOM review determines the
+  component type from each prefix and holds the order for confirmation
+  when one row seems to contain several types: `D1..D8` and `LED1` on one
+  row of the same LED is exactly that. Rename so one part means one
+  prefix.
+
 `design_rules: { rule: value }`
 : The project's own design rules (`pcb rules`) are at least these values —
   catches a project set up looser than the process before any geometry is.
@@ -172,7 +188,8 @@ faster than the debug binary `cargo run` uses; scripts that loop on
 carry JLCPCB's published limits (trace/spacing, via and hole sizes,
 annular rings, hole-to-hole and hole-to-copper, copper-to-edge, mask dams,
 silkscreen, board size), read from jlcpcb.com/capabilities on the date
-in each file's description. Treat them as a starting point: capabilities
+in each file's description, plus the two designator rules their BOM
+review applies (`designator-format`, `bom-prefixes`, both warnings). Treat them as a starting point: capabilities
 change, and 2 oz copper or special finishes have their own numbers. `pcb
 drc new` writes a template to derive a profile for another fab.
 

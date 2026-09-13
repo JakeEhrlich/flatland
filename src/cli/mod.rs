@@ -1,7 +1,7 @@
 //! Command line interface. Every command loads the project, mutates or
 //! inspects it, and (for mutations) writes it back atomically.
 
-mod assembly;
+pub mod assembly;
 mod drc_cmd;
 mod edit;
 mod index_cmd;
