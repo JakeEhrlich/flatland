@@ -95,10 +95,10 @@
       <button data-pane="changes">changes <span id="nChanges"></span></button>
       <button data-pane="findings">findings <span id="nFindings"></span></button>
     </div>
-    <div class="pane on" id="pane-sel"><div id="selBody"><p style="color:var(--muted)">Click a part, pad, trace or via. Drag parts, trace vertices and segments, and vias. R rotates the selected part, Delete removes a selected trace or via.</p></div></div>
+    <div class="pane on" id="pane-sel"><div id="selBody"><p style="color:var(--muted)">Click a part, pad, trace or via. Drag parts, trace vertices and segments, and vias. R rotates the selected part, Delete removes a selected trace or via. Ctrl/⌘-Z undoes the last change, Shift adds redo.</p></div></div>
     <div class="pane" id="pane-changes">
       <div id="banner"></div>
-      <div class="actions"><button id="bUndo">undo last</button><button id="bCopy">copy as commands</button><button id="bClear" class="danger">clear all</button></div>
+      <div class="actions"><button id="bUndo" title="Ctrl/⌘-Z">undo</button><button id="bRedo" title="Ctrl/⌘-Shift-Z">redo</button><button id="bCopy">copy as commands</button><button id="bClear" class="danger">clear all</button></div>
       <div id="changesBody"></div>
     </div>
     <div class="pane" id="pane-findings"><div id="findingsBody"></div></div>
@@ -386,10 +386,26 @@ function takeBoard(j) {
 }
 async function load() { takeBoard(await api('/api/board')); }
 async function change(c) {
+  redoStack = [];
   try { takeBoard(await api('/api/change', c)); toast(board.changes[board.changes.length - 1].summary); }
   catch (e) { toast('rejected: ' + e.message.split('\n').pop().trim(), 4000); render(); }
 }
-$('bUndo').addEventListener('click', async () => { takeBoard(await api('/api/undo', {})); toast('undone'); });
+let redoStack = [];
+async function undo() {
+  if (!board || !board.changes.length) { toast('nothing to undo'); return; }
+  const last = board.changes[board.changes.length - 1];
+  takeBoard(await api('/api/undo', {}));
+  redoStack.push(last.change);
+  toast('undone: ' + last.summary);
+}
+async function redo() {
+  const c = redoStack.pop();
+  if (!c) { toast('nothing to redo'); return; }
+  try { takeBoard(await api('/api/change', c)); toast('redone: ' + board.changes[board.changes.length - 1].summary); }
+  catch (e) { toast('could not redo: ' + e.message.split('\n').pop().trim(), 4000); }
+}
+$('bUndo').addEventListener('click', undo);
+$('bRedo').addEventListener('click', redo);
 $('bClear').addEventListener('click', async () => { if (board.changes.length && !confirm('Discard all pending changes?')) return; takeBoard(await api('/api/clear', {})); });
 $('bCopy').addEventListener('click', async () => { const t = await (await fetch('/api/commands')).text(); try { await navigator.clipboard.writeText(t); toast('copied'); } catch { prompt('copy:', t); } });
 setInterval(async () => {
@@ -459,6 +475,8 @@ function deleteSel() {
 }
 document.addEventListener('keydown', ev => {
   if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'SELECT' || ev.target.tagName === 'TEXTAREA') { if (ev.key === 'Escape') ev.target.blur(); return; }
+  if ((ev.metaKey || ev.ctrlKey) && (ev.key === 'z' || ev.key === 'Z')) { ev.preventDefault(); if (ev.shiftKey) redo(); else undo(); return; }
+  if ((ev.metaKey || ev.ctrlKey) && (ev.key === 'y' || ev.key === 'Y')) { ev.preventDefault(); redo(); return; }
   if (ev.key === 'Escape') { if (mode) setMode(null); else { sel = null; highlightNet(null); applySelection(); showSelection(); } }
   else if (ev.key === 'Enter') finishDraw();
   else if (ev.key === 'r' || ev.key === 'R') rotateSel(ev.shiftKey ? -90 : 90);

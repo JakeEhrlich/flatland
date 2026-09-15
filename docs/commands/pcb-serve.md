@@ -52,8 +52,8 @@ local only. The page:
 * **pins a note** (N): text attached to a point, and to the part, trace
   or net under the click; **sketch note** draws a path first, for "route
   it like this";
-* lists the pending changes, undoes the last one, clears them, copies
-  them as commands.
+* lists the pending changes, undoes (Ctrl/⌘-Z) and redoes
+  (Ctrl/⌘-Shift-Z) them, clears them, copies them as commands.
 
 The page polls the project file: when the agent rebuilds `pcb.json` the
 board reloads. A change list recorded against an older file is shown as
