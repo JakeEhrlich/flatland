@@ -15,10 +15,21 @@ pcb gerbers [-o DIR] [--no-zip]
 Writes one file per layer into `DIR` (default `build/gerbers`), a
 `README.txt` listing them, and `<name>-gerbers.zip` containing everything
 (unless `--no-zip`). The board must have a closed outline. Nothing else is
-required, but you almost certainly want `pcb check` to pass first; a
-warning is printed if any connection is still unrouted, since the files
-would describe an incomplete board. Gerbers are a snapshot: re-run after
-routing or any other change.
+required, but `pcb check` runs first and refuses to write while it
+reports errors; an unrouted connection is one of them, since the files
+would describe an incomplete board (`--force` writes anyway). Gerbers are
+a snapshot: re-run after routing or any other change.
+
+After writing, the copper files and the plated drill file are read back
+and verified against the netlist from the files alone: every flash,
+region and stroke becomes a polygon, each layer's polygons are unioned
+into islands, plated drills join the islands they pass through, and the
+`TO.P` attribute on each pad region says which pad sits in which island.
+Pads grouped by island must match the nets: a net whose pads fall in
+several groups is reported as **open**, a group holding pads of several
+nets as a **short**, a pad with no copper as **missing**. The solder tabs
+of one pin count as joined by the part. `pcb gerbers --verify-only`
+runs only this read-back on the files already in the output directory.
 
 Files (`<name>` is the project name with spaces replaced by `_`; layer
 names have `.` replaced by `_`):

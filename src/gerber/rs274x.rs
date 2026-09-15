@@ -50,6 +50,23 @@ impl Gerber {
         format!("X{}Y{}", p.x.nm(), p.y.nm())
     }
 
+    /// X2 object attributes for what follows: `TO.P` (refdes, pad) names a
+    /// pad, `TO.N` its net. CAM tools show them; `pcb gerbers` reads them
+    /// back to verify the files against the netlist.
+    pub fn object(&mut self, pad: Option<(&str, &str)>, net: Option<&str>) {
+        if let Some((r, p)) = pad {
+            let _ = writeln!(self.body, "%TO.P,{},{}*%", r.replace(',', "_"), p.replace(',', "_"));
+        }
+        if let Some(n) = net {
+            let _ = writeln!(self.body, "%TO.N,{}*%", n.replace(',', "_"));
+        }
+    }
+
+    /// End the current object attributes.
+    pub fn object_end(&mut self) {
+        self.body.push_str("%TD*%\n");
+    }
+
     pub fn flash_circle(&mut self, at: Point, diameter: Length) {
         let d = self.aperture(diameter);
         let _ = writeln!(self.body, "D{d}*\n{}D03*", Self::coord(at));

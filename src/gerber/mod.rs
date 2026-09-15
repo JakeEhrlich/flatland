@@ -3,6 +3,7 @@
 pub mod excellon;
 pub mod font;
 pub mod rs274x;
+pub mod verify;
 
 use crate::error::{Error, Result};
 use crate::geom::{self, Ring};
@@ -59,20 +60,26 @@ pub fn emit(board: &Board, dir: &Path, zip: bool) -> Result<Vec<PathBuf>> {
         let mut pours: Vec<_> = board.pours()?.iter().filter(|p| &p.pour.layer == layer).collect();
         pours.sort_by_key(|p| p.pour.priority);
         for p in pours {
+            g.object(None, p.pour.net.as_deref());
             g.regions_fractured(&p.copper);
+            g.object_end();
         }
         // Traces as filled regions (flat ends, round joins), the same polygon the
         // DRC and pours see, so a wide link ending in a narrow pad has no cap
         // poking out of it.
         for t in board.project.traces.iter().filter(|t| &t.layer == layer) {
+            g.object(None, t.net.as_deref());
             for r in crate::geom::stroke_flat(&t.points, t.width) {
                 if crate::geom::signed_area(&r) > 0.0 {
                     g.region(&r);
                 }
             }
+            g.object_end();
         }
         for pad in board.all_pads().filter(|p| p.on_layer(layer) && p.plated) {
+            g.object(Some((&pad.refdes, &pad.pad_name)), pad.net.as_deref());
             g.region(&pad.copper);
+            g.object_end();
         }
         for t in board.project.texts.iter().filter(|t| &t.layer == layer) {
             for r in board.text_copper(t) {
@@ -82,11 +89,15 @@ pub fn emit(board: &Board, dir: &Path, zip: bool) -> Result<Vec<PathBuf>> {
             }
         }
         for v in board.project.vias.iter().filter(|v| v.layers.is_empty() || v.layers.iter().any(|l| l == layer)) {
+            g.object(None, v.net.as_deref());
             g.flash_circle(v.at, v.diameter);
+            g.object_end();
         }
-        for h in &board.holes {
+        for (i, h) in board.holes.iter().enumerate() {
             if let Some(c) = &h.copper {
+                g.object(Some(("HOLE", &i.to_string())), h.hole.net.as_deref());
                 g.region(c);
+                g.object_end();
             }
         }
         files.push(write(format!("{name}-{}.{}", layer.replace('.', "_"), copper_ext(board, idx)), g.finish())?);

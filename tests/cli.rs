@@ -586,6 +586,45 @@ fn covered_traces() {
 }
 
 #[test]
+fn gerber_verify() {
+    // The written gerbers are read back and their copper traced to pads by
+    // contact alone; tampering with the files must show up as an open or a short.
+    let p = Proj::new("gverify");
+    p.ok(&["init", "gv", "--layers", "F.Cu,B.Cu", "--index", library().to_str().unwrap()]);
+    p.ok(&["outline", "rect", "30", "20"]);
+    p.ok(&["add", "R1", "resistor-0603", "--at", "5,10"]);
+    p.ok(&["add", "R2", "resistor-0603", "--at", "25,10"]);
+    p.ok(&["connect", "R1.1", "R2.1", "--net", "A"]);
+    p.ok(&["connect", "R1.2", "R2.2", "--net", "GND"]);
+    // Net A crosses to the bottom and back through two vias; GND is a top trace.
+    p.ok(&["via", "add", "--net", "A", "15,15"]);
+    p.ok(&["via", "add", "--net", "A", "24.125,15"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.3", "4.125,10", "4.125,15", "15,15"]);
+    p.ok(&["trace", "add", "--layer", "B.Cu", "--net", "A", "--width", "0.3", "15,15", "24.125,15"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.3", "24.125,15", "24.125,10"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "GND", "--width", "0.3", "5.875,10", "5.875,5", "25.875,5", "25.875,10"]);
+    let out = p.ok(&["gerbers"]);
+    assert!(out.contains("gerbers verified against the netlist: 4 pad(s) on 2 copper layer(s)") && out.contains("2 plated drill(s)"), "{out}");
+    // Drop the via's drill: the top and bottom halves of net A no longer meet.
+    let drl = p.build("gerbers/gv-PTH.drl");
+    let original = std::fs::read_to_string(&drl).unwrap();
+    let tampered: String = original.lines().filter(|l| !l.starts_with("X15.000Y15.000")).map(|l| format!("{l}\n")).collect();
+    std::fs::write(&drl, tampered).unwrap();
+    let out = p.fails(&["gerbers", "--verify-only"]);
+    assert!(out.contains("open: net A is 2 separate pieces") && out.contains("1 open net(s), 0 short(s)"), "{out}");
+    std::fs::write(&drl, original).unwrap();
+    p.ok(&["gerbers", "--verify-only"]);
+    // A stray region on top from R1.1 across to the GND trace at x = 5.875 is a short.
+    let gtl = p.build("gerbers/gv-F_Cu.gtl");
+    let original = std::fs::read_to_string(&gtl).unwrap();
+    let bridge = "G36*\nX3900000Y9600000D02*\nX6000000Y9600000D01*\nX6000000Y9900000D01*\nX3900000Y9900000D01*\nX3900000Y9600000D01*\nG37*\n";
+    let tampered = original.replace("M02*", &format!("{bridge}M02*"));
+    std::fs::write(&gtl, tampered).unwrap();
+    let out = p.fails(&["gerbers", "--verify-only"]);
+    assert!(out.contains("short: one piece of copper in the gerbers joins A (") && out.contains("GND ("), "{out}");
+}
+
+#[test]
 fn free_text() {
     let p = Proj::new("text");
     p.ok(&["init", "text", "--layers", "F.Cu", "--index", library().to_str().unwrap()]);

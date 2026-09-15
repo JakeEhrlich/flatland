@@ -258,11 +258,19 @@ pub struct GerbersArgs {
     /// Write the files even if the design check reports errors.
     #[arg(long)]
     pub force: bool,
+    /// Do not write anything: read the gerbers and drill files already in the output
+    /// directory back and verify their copper against the netlist.
+    #[arg(long)]
+    pub verify_only: bool,
 }
 
 pub fn gerbers(ctx: &Ctx, a: GerbersArgs) -> Result<()> {
     let loaded = ctx.load()?;
     let board = ctx.board(&loaded)?;
+    if a.verify_only {
+        let dir = a.output.unwrap_or_else(|| loaded.build_dir().join("gerbers"));
+        return crate::gerber::verify::verify_dir(&board, &dir).map(|r| println!("{r}"));
+    }
     // Fab output goes through the design check first.
     let report = crate::drc::run(&board, &loaded.path)?;
     let errors = report.count(crate::schema::Severity::Error);
@@ -282,6 +290,13 @@ pub fn gerbers(ctx: &Ctx, a: GerbersArgs) -> Result<()> {
     let files = crate::gerber::emit(&board, &dir, !a.no_zip)?;
     for f in files {
         println!("{}", f.display());
+    }
+    // Read the files back and rebuild the netlist from their copper alone. A
+    // board written with --force is incomplete on purpose: report, don't fail.
+    match crate::gerber::verify::verify_dir(&board, &dir) {
+        Ok(summary) => println!("{summary}"),
+        Err(e) if a.force => eprintln!("warning: {e}"),
+        Err(e) => return Err(e),
     }
     Ok(())
 }
