@@ -52,6 +52,9 @@ $PCB pour new gnd_top --layer F.Cu --net GND --follow-outline
 $PCB pour new gnd_bottom --layer B.Cu --net GND --follow-outline
 # One stitching via so the bottom fill is actually ground (without it the fill is floating copper).
 $PCB via add --net GND 2,2
+# C1's ground pad ends up walled in by the THR and CTRL traces, a pocket of
+# top fill that reaches nothing else; this via ties the pocket to the bottom fill.
+$PCB via add --net GND 11.4375,3.95
 
 # Simulations
 # (no `op` study: an astable has no DC operating point, ngspice would not converge)

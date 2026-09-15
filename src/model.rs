@@ -663,17 +663,23 @@ impl Board {
                 // hair): shrink every ring by a micron on its own before joining.
                 let rings = geom::erode_each(&rings, Length::from_nm(1_000));
                 let islands = geom::union(&rings)?;
-                // Group only by positive (outer) rings.
+                // Group by outer ring, minus that ring's holes: a pad sitting in a
+                // pocket of the fill (its own fragment, walled off by other nets'
+                // traces) lies inside the big island's outline but on none of its
+                // copper. Counting it as joined hid an open ground on a built board.
+                let holes: Vec<&Ring> = islands.iter().filter(|r| geom::signed_area(r) < 0.0).collect();
                 for island in islands.iter().filter(|r| geom::signed_area(r) > 0.0) {
+                    let my_holes: Vec<&Ring> = holes.iter().copied().filter(|h| h.first().map_or(false, |p| geom::contains(island, *p))).collect();
+                    let on_island = |pt: Point| geom::contains(island, pt) && !my_holes.iter().any(|h| geom::contains(h, pt));
                     let mut first: Option<usize> = None;
                     let mut nodes: Vec<usize> = Vec::new();
                     for (i, (_, _, pads)) in pad_points.iter().enumerate() {
-                        if pads.iter().any(|(pt, layers)| layers.iter().any(|l| l == layer) && geom::contains(island, *pt)) {
+                        if pads.iter().any(|(pt, layers)| layers.iter().any(|l| l == layer) && on_island(*pt)) {
                             nodes.push(i);
                         }
                     }
                     for (vi, v) in vias.iter().enumerate() {
-                        if (v.layers.is_empty() || v.layers.iter().any(|l| l == layer)) && geom::contains(island, v.at) {
+                        if (v.layers.is_empty() || v.layers.iter().any(|l| l == layer)) && on_island(v.at) {
                             nodes.push(n_pads + vi);
                         }
                     }

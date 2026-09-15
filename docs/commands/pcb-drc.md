@@ -135,11 +135,13 @@ layer, or `top`/`bottom` for silk, mask and courtyards), `net`, `class`
 : Non-virtual parts have a placement.
 
 `end_junctions: false`
-: Traces of one net may not meet only end to end. Flat trace ends that
-  touch along a line or a wedge have no overlapping copper and etch to a
-  hair; connectivity does not count them as joined either. Weld them
-  (extend one into the other) or land both on a pad. `pcb route` does
-  this for the wires it imports.
+: Traces of one net may not meet only end to end. Two flat ends meeting
+  in line (a width change, or one wire continuing as another) share an
+  edge and no copper, and etch to a hair; connectivity does not count them
+  as joined either. Ends meeting at an angle overlap in a wedge across the
+  whole end edge and are fine. Weld the collinear ones (extend one into the
+  other) or land both on a pad. `pcb route` does this for the wires it
+  imports.
 
 `designator_format: true`
 : Parts are named with upper-case letters followed by digits (`R1`,

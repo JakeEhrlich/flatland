@@ -132,6 +132,11 @@ created itself.
 ## CONNECTIVITY
 
 After drawing, `pcb status` shows whether each net is one copper island.
+A fill fragment counts only where its copper really is: a pad walled in by
+other nets' traces sits in a pocket of the fill that reaches nothing else,
+and `status` (and the `nets-routed` rule) report the net as two islands
+even though the pocket lies inside the big fill's outline. Tie such a
+pocket to another layer with a via, or reroute the wall.
 Traces must actually reach into a pad's copper (end on the pad centre, or
 anywhere inside the pad) to count; `pcb visualize pcb` draws magenta
 airwires for what is still missing.

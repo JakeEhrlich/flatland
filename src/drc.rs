@@ -1011,7 +1011,11 @@ fn eval(board: &Board, items: &[Item], rule: &Rule, findings: &mut Vec<Finding>)
                             let third = items.iter().any(|o| {
                                 is_copper_item(o) && o.id != s.id && o.id != t.id && o.net == s.net && share_layer(o, s) && o.geom.iter().filter(|r| geom::signed_area(r) > 0.0).any(|r| geom::contains(r, *end))
                             });
-                            if !third && s.id < t.id {
+                            // Two traces meeting at an angle overlap in a wedge and are
+                            // joined across the whole end edge; only a collinear meeting
+                            // (or a width change) has no overlapping copper at all.
+                            let overlap = geom::overlaps(&geom::erode_each(&s.geom, Length::from_nm(1_000)), &geom::erode_each(&t.geom, Length::from_nm(1_000)));
+                            if !third && !overlap && s.id < t.id {
                                 push(findings, rule, format!("{} and {} meet end to end at {end}: no overlap, the joint etches to a hair (weld them or land on a pad)", s.id, t.id), Some(*end), [features_of(s), features_of(t)].concat());
                             }
                         }
