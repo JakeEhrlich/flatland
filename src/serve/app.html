@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pcb</title>
+<style>
+  :root { --bg:#1c1c1e; --panel:#26262a; --line:#3a3a40; --text:#e6e6e6; --muted:#9a9aa3; --accent:#6cb4ff; --err:#ff5c5c; --warn:#ffb347; --info:#7fd3ff; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--text); font:13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; overflow:hidden; }
+  #app { display:grid; grid-template-rows:auto 1fr auto; grid-template-columns:1fr 340px; height:100%; }
+  #bar { grid-column:1/3; display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; padding:6px 10px; background:var(--panel); border-bottom:1px solid var(--line); }
+  #bar .name { font-weight:600; margin-right:6px; }
+  #bar label { display:inline-flex; align-items:center; gap:4px; color:var(--muted); white-space:nowrap; cursor:pointer; }
+  #bar input[type=number], #bar input[type=text], #bar select { background:#141416; color:var(--text); border:1px solid var(--line); border-radius:4px; padding:3px 6px; font:inherit; }
+  #bar input[type=number] { width:64px; }
+  #bar input[type=text] { width:120px; }
+  button { background:#343440; color:var(--text); border:1px solid var(--line); border-radius:4px; padding:4px 9px; font:inherit; cursor:pointer; }
+  button:hover { background:#3f3f4c; }
+  button.on { background:var(--accent); color:#0a1a2a; border-color:var(--accent); }
+  button.danger { border-color:#7a3030; }
+  #view { grid-row:2; grid-column:1; width:100%; height:100%; touch-action:none; cursor:default; background:var(--bg); }
+  #view.mode { cursor:crosshair; }
+  #side { grid-row:2; grid-column:2; display:flex; flex-direction:column; border-left:1px solid var(--line); background:var(--panel); min-height:0; }
+  #tabs { display:flex; border-bottom:1px solid var(--line); }
+  #tabs button { flex:1; border:0; border-radius:0; background:transparent; padding:8px; color:var(--muted); }
+  #tabs button.on { color:var(--text); background:#2f2f36; }
+  .pane { display:none; overflow:auto; padding:10px; flex:1; min-height:0; }
+  .pane.on { display:block; }
+  .pane h3 { margin:0 0 6px; font-size:13px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+  .kv { display:grid; grid-template-columns:auto 1fr; gap:2px 10px; margin-bottom:10px; }
+  .kv div:nth-child(odd) { color:var(--muted); }
+  .row { padding:6px 8px; border:1px solid var(--line); border-radius:5px; margin-bottom:6px; cursor:pointer; }
+  .row:hover { background:#2f2f36; }
+  .row.error { border-left:3px solid var(--err); }
+  .row.warning { border-left:3px solid var(--warn); }
+  .row.info { border-left:3px solid var(--info); }
+  .row small { color:var(--muted); display:block; }
+  .row code { color:#cfe; font-size:12px; word-break:break-all; display:block; margin-top:2px; }
+  .pill { display:inline-block; padding:1px 6px; border-radius:10px; background:#3a3a44; color:var(--muted); font-size:11px; margin-left:4px; cursor:pointer; }
+  .pill:hover { background:#4a4a58; color:var(--text); }
+  #status { grid-column:1/3; display:flex; gap:16px; align-items:center; padding:4px 10px; background:var(--panel); border-top:1px solid var(--line); color:var(--muted); font-size:12px; }
+  #status .hint { color:var(--text); }
+  #banner { display:none; background:#5a2d2d; color:#ffd7d7; padding:6px 10px; border-radius:4px; margin-bottom:8px; }
+  #toast { position:fixed; left:50%; bottom:40px; transform:translateX(-50%); background:#333; color:#fff; padding:8px 14px; border-radius:6px; opacity:0; transition:opacity .2s; pointer-events:none; }
+  #toast.on { opacity:1; }
+  .actions { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  /* svg */
+  .pad { stroke:none; }
+  .pad:hover, .trace:hover, .via:hover { filter:brightness(1.35); }
+  .hl { filter:drop-shadow(0 0 0.35px #fff) brightness(1.5); }
+  .selected { filter:brightness(1.5); }
+  .handle { fill:#fff; stroke:#000; stroke-width:0.03; cursor:move; }
+  .handle:hover { fill:var(--accent); }
+  .courtyard { fill:none; stroke:#888; stroke-dasharray:0.2 0.15; }
+  .outline { fill:none; stroke:#e8d44d; }
+  .unrouted { stroke:#ff6ef0; stroke-dasharray:0.3 0.2; fill:none; }
+  .finding { fill:none; stroke-width:0.12; }
+  .finding.error { stroke:var(--err); }
+  .finding.warning { stroke:var(--warn); }
+  .finding.info { stroke:var(--info); }
+  .note-marker { fill:#ffe66d; stroke:#000; stroke-width:0.03; }
+  .note-path { fill:none; stroke:#ffe66d; stroke-dasharray:0.25 0.15; }
+  text { user-select:none; pointer-events:none; }
+  .preview { fill:none; stroke:#fff; stroke-opacity:0.7; }
+  .ghost { opacity:0.5; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bar">
+    <span class="name" id="title">pcb</span>
+    <span id="layers"></span>
+    <label><input type="checkbox" id="showPours" checked> pours</label>
+    <label><input type="checkbox" id="showSilk" checked> silk</label>
+    <label><input type="checkbox" id="showCourt" checked> courtyards</label>
+    <label><input type="checkbox" id="showLabels" checked> labels</label>
+    <label><input type="checkbox" id="showFindings" checked> findings</label>
+    <label>grid <input type="number" id="grid" value="0.1" step="0.05" min="0"> mm</label>
+    <label>layer <select id="drawLayer"></select></label>
+    <label>width <input type="number" id="drawWidth" step="0.05" min="0.05"> mm</label>
+    <button id="bTrace" title="T">draw trace</button>
+    <button id="bVia" title="V">add via</button>
+    <button id="bNote" title="N">note</button>
+    <button id="bSketch">sketch note</button>
+    <button id="bFit" title="F">fit</button>
+    <input type="text" id="search" placeholder="find refdes / net">
+  </div>
+  <svg id="view" xmlns="http://www.w3.org/2000/svg">
+    <g id="world" transform="scale(1,-1)"></g>
+  </svg>
+  <div id="side">
+    <div id="tabs">
+      <button data-pane="sel" class="on">selection</button>
+      <button data-pane="changes">changes <span id="nChanges"></span></button>
+      <button data-pane="findings">findings <span id="nFindings"></span></button>
+    </div>
+    <div class="pane on" id="pane-sel"><div id="selBody"><p style="color:var(--muted)">Click a part, pad, trace or via. Drag parts, trace vertices and segments, and vias. R rotates the selected part, Delete removes a selected trace or via.</p></div></div>
+    <div class="pane" id="pane-changes">
+      <div id="banner"></div>
+      <div class="actions"><button id="bUndo">undo last</button><button id="bCopy">copy as commands</button><button id="bClear" class="danger">clear all</button></div>
+      <div id="changesBody"></div>
+    </div>
+    <div class="pane" id="pane-findings"><div id="findingsBody"></div></div>
+  </div>
+  <div id="status"><span id="coords">—</span><span id="modeLabel"></span><span class="hint" id="hint"></span><span id="netLabel"></span></div>
+</div>
+<div id="toast"></div>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const svg = $('view'), world = $('world');
+let board = null;          // last payload
+let S = null;              // scene
+let vb = { x: 0, y: 0, w: 100, h: 60 }; // viewBox in flipped coords
+let sel = null;            // {kind:'part'|'trace'|'via'|'pad', ...}
+let selNet = null;
+let mode = null;           // null | 'trace' | 'via' | 'note' | 'sketch'
+let drawPts = [];
+let hover = null;
+let layerVis = {};
+let dragging = null;
+
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) if (attrs[k] !== undefined && attrs[k] !== null) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function toast(msg, ms = 2200) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('on'), ms); }
+function fmt(v) { return (Math.round(v * 1000) / 1000).toString(); }
+function ptStr(p) { return fmt(p[0]) + ',' + fmt(p[1]); }
+function ptsStr(ps) { return ps.map(ptStr).join(' -> '); }
+
+// ---- colours
+function layerColor(layer) {
+  const n = S.layers.length, i = S.layers.indexOf(layer);
+  if (n === 1) return '#d9534f';
+  if (i === 0) return '#d9534f';
+  if (i === n - 1) return '#4d8ee0';
+  return ['#4fc26a', '#e0a34d', '#b56de0', '#4dd6d9'][(i - 1) % 4];
+}
+function layerOrder() { // far side first
+  return S.layers.slice().reverse();
+}
+
+// ---- view transform
+function applyVb() { svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`); updateStrokeScale(); }
+function fit() {
+  const b = S.bbox; const pad = Math.max(b[2] - b[0], b[3] - b[1]) * 0.08 + 1;
+  const x0 = b[0] - pad, x1 = b[2] + pad, y0 = b[1] - pad, y1 = b[3] + pad;
+  const r = svg.clientWidth / Math.max(1, svg.clientHeight);
+  let w = x1 - x0, h = y1 - y0;
+  if (w / h < r) w = h * r; else h = w / r;
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  vb = { x: cx - w / 2, y: -cy - h / 2, w, h };
+  applyVb();
+}
+function pxToWorld() { return vb.w / Math.max(1, svg.clientWidth); } // world units per pixel
+function updateStrokeScale() {
+  const u = pxToWorld();
+  document.documentElement.style.setProperty('--u', u);
+  for (const e of world.querySelectorAll('.courtyard')) e.setAttribute('stroke-width', 1.2 * u);
+  for (const e of world.querySelectorAll('.outline')) e.setAttribute('stroke-width', 2 * u);
+  for (const e of world.querySelectorAll('.unrouted')) e.setAttribute('stroke-width', 1.5 * u);
+  for (const e of world.querySelectorAll('.handle')) e.setAttribute('r', 4 * u);
+  for (const e of world.querySelectorAll('.note-marker')) e.setAttribute('r', 6 * u);
+  for (const e of world.querySelectorAll('.note-path')) e.setAttribute('stroke-width', 2 * u);
+  for (const e of world.querySelectorAll('.finding')) e.setAttribute('stroke-width', 1.5 * u);
+  for (const e of world.querySelectorAll('.preview')) e.setAttribute('stroke-width', 1.5 * u);
+}
+function clientToWorld(ev) {
+  const m = world.getScreenCTM().inverse();
+  const p = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(m);
+  return [p.x, p.y];
+}
+svg.addEventListener('wheel', ev => {
+  ev.preventDefault();
+  const [wx, wy] = clientToWorld(ev);
+  const k = Math.exp(ev.deltaY * 0.0015);
+  const fx = wx, fy = -wy; // flipped coords
+  vb = { x: fx - (fx - vb.x) * k, y: fy - (fy - vb.y) * k, w: vb.w * k, h: vb.h * k };
+  applyVb();
+}, { passive: false });
+
+// ---- snapping
+function grid() { return parseFloat($('grid').value) || 0; }
+function snapGrid(v) { const g = grid(); return g > 0 ? Math.round(v / g) * g : v; }
+function snapTargets(opts) {
+  const t = [];
+  for (const p of S.parts) for (const pad of p.pads) t.push({ p: pad.center, net: pad.net, what: `${p.refdes}.${pad.name}` });
+  for (const v of S.vias) if (opts.via !== v.index) t.push({ p: v.at, net: v.net, what: `via #${v.index}` });
+  for (const tr of S.traces) if (opts.trace !== tr.index) for (const q of tr.points) t.push({ p: q, net: tr.net, what: `trace #${tr.index}` });
+  return t;
+}
+function snap(p, opts = {}) {
+  const tol = 8 * pxToWorld();
+  let best = null, bd = tol;
+  for (const t of snapTargets(opts)) {
+    const d = Math.hypot(t.p[0] - p[0], t.p[1] - p[1]);
+    if (d < bd) { bd = d; best = t; }
+  }
+  if (best) return { p: best.p.slice(), net: best.net, what: best.what };
+  let q = [snapGrid(p[0]), snapGrid(p[1])];
+  if (opts.from && !opts.free) {
+    const dx = q[0] - opts.from[0], dy = q[1] - opts.from[1];
+    const a = Math.atan2(dy, dx), step = Math.PI / 4, k = Math.round(a / step);
+    const dir = [Math.cos(k * step), Math.sin(k * step)];
+    const mag = dx * dir[0] + dy * dir[1];
+    if (k % 2 === 0) { q = [snapGrid(opts.from[0] + dir[0] * mag), snapGrid(opts.from[1] + dir[1] * mag)]; if (Math.abs(dir[0]) < 0.5) q[0] = opts.from[0]; else q[1] = opts.from[1]; }
+    else { const m = snapGrid(Math.abs(mag) / Math.SQRT2); q = [opts.from[0] + Math.sign(dir[0]) * m, opts.from[1] + Math.sign(dir[1]) * m]; }
+  }
+  return { p: q, net: null, what: null };
+}
+
+// ---- rendering
+function polyPoints(ps) { return ps.map(p => p[0] + ',' + p[1]).join(' '); }
+function ringPath(rings) { return rings.map(r => 'M' + r.map(p => p[0] + ' ' + p[1]).join('L') + 'Z').join(''); }
+function render() {
+  world.innerHTML = '';
+  const g = {};
+  const order = ['pours', 'copper', 'pads', 'vias', 'holes', 'silk', 'court', 'labels', 'texts', 'outline', 'unrouted', 'notes', 'findings', 'overlay'];
+  for (const k of order) g[k] = el('g', { id: 'g-' + k }, world);
+  // pours and traces per layer, far side first
+  for (const layer of layerOrder()) {
+    const vis = layerVis[layer] !== false;
+    const lg = el('g', { 'data-layer': layer, display: vis ? null : 'none' }, g.pours);
+    for (const p of S.pours) if (p.layer === layer) el('path', { d: ringPath(p.rings), fill: layerColor(layer), 'fill-opacity': 0.32, 'fill-rule': 'evenodd', class: 'pour', 'data-net': p.net || '' }, lg);
+    const tg = el('g', { 'data-layer': layer, display: vis ? null : 'none' }, g.copper);
+    for (const t of S.traces) if (t.layer === layer) {
+      el('polyline', { points: polyPoints(t.points), fill: 'none', stroke: layerColor(layer), 'stroke-width': t.width, 'stroke-linejoin': 'round', class: 'trace', 'data-trace': t.index, 'data-net': t.net || '' }, tg);
+    }
+    for (const t of S.texts) if (t.layer === layer) el('path', { d: ringPath(t.rings), fill: layerColor(layer), class: 'ctext' }, tg);
+  }
+  // parts
+  for (const part of S.parts) {
+    if (!part.placed) continue;
+    const pg = el('g', { class: 'part', 'data-refdes': part.refdes }, g.pads);
+    for (const pad of part.pads) {
+      for (const layer of pad.layers) {
+        if (layerVis[layer] === false) continue;
+        el('polygon', { points: polyPoints(pad.ring), fill: layerColor(layer), class: 'pad', 'data-refdes': part.refdes, 'data-pad': pad.name, 'data-net': pad.net || '', 'data-layer': layer }, pg);
+        break; // draw once, in the colour of the first visible layer (top wins)
+      }
+      if (pad.drill) el('circle', { cx: pad.center[0], cy: pad.center[1], r: pad.drill / 2, fill: '#1c1c1e', 'pointer-events': 'none' }, pg);
+    }
+    const sideColor = part.side === 'bottom' ? '#e39be3' : '#f2f2f2';
+    const sg = el('g', { class: 'silkg', 'data-refdes': part.refdes }, g.silk);
+    for (const s of part.silk) el(s.closed ? 'polygon' : 'polyline', { points: polyPoints(s.points), fill: 'none', stroke: sideColor, 'stroke-width': s.width, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'data-refdes': part.refdes }, sg);
+    for (const r of part.silk_polys) el('polygon', { points: polyPoints(r), fill: sideColor, 'data-refdes': part.refdes }, sg);
+    const cg = el('g', { 'data-refdes': part.refdes }, g.court);
+    for (const c of part.courtyard) el(c.closed ? 'polygon' : 'polyline', { points: polyPoints(c.points), class: 'courtyard' }, cg);
+    if (part.label && !part.label.hidden) {
+      const t = el('text', { transform: `translate(${part.label.at[0]} ${part.label.at[1]}) scale(1,-1)`, 'font-size': part.label.size, 'text-anchor': 'middle', 'dominant-baseline': 'middle', fill: sideColor, 'font-family': 'Helvetica, Arial, sans-serif', 'data-refdes': part.refdes }, g.labels);
+      t.textContent = part.refdes;
+      if (part.value) { const v = el('text', { transform: `translate(${part.label.at[0]} ${part.label.at[1] - part.label.size}) scale(1,-1)`, 'font-size': part.label.size * 0.8, 'text-anchor': 'middle', 'dominant-baseline': 'middle', fill: sideColor, 'font-family': 'Helvetica, Arial, sans-serif' }, g.labels); v.textContent = part.value; }
+    }
+  }
+  for (const v of S.vias) {
+    const vg = el('g', { class: 'via', 'data-via': v.index, 'data-net': v.net || '' }, g.vias);
+    el('circle', { cx: v.at[0], cy: v.at[1], r: v.diameter / 2, fill: '#b0b0b0' }, vg);
+    el('circle', { cx: v.at[0], cy: v.at[1], r: v.drill / 2, fill: '#1c1c1e', 'pointer-events': 'none' }, vg);
+  }
+  for (const h of S.holes) {
+    if (h.ring) el('polygon', { points: polyPoints(h.ring), fill: '#d9b44a' }, g.holes);
+    el('circle', { cx: h.at[0], cy: h.at[1], r: h.drill / 2, fill: '#1c1c1e', stroke: '#777', 'stroke-width': 0.03 }, g.holes);
+  }
+  for (const t of S.texts) if (!S.layers.includes(t.layer)) el('path', { d: ringPath(t.rings), fill: t.layer.startsWith('B') ? '#e39be3' : '#f2f2f2' }, g.silk);
+  if (S.outline) el('polygon', { points: polyPoints(S.outline), class: 'outline' }, g.outline);
+  for (const u of S.unrouted) el('line', { x1: u.from[0], y1: u.from[1], x2: u.to[0], y2: u.to[1], class: 'unrouted', 'data-net': u.net }, g.unrouted);
+  // pending notes
+  for (const c of board.changes) {
+    const ch = c.change;
+    if (ch.op !== 'note') continue;
+    if (ch.path) el('polyline', { points: polyPoints(ch.path), class: 'note-path' }, g.notes);
+    const at = ch.at || (ch.path && ch.path[0]);
+    if (at) { const m = el('circle', { cx: at[0], cy: at[1], class: 'note-marker' }, g.notes); m.addEventListener('pointerenter', () => setHint('note: ' + ch.text)); }
+  }
+  for (const f of S.findings) if (f.at && f.severity !== 'info') el('circle', { cx: f.at[0], cy: f.at[1], r: 0.6, class: 'finding ' + f.severity, 'data-msg': f.message }, g.findings);
+  applyVisibility();
+  applySelection();
+  updateStrokeScale();
+}
+function applyVisibility() {
+  $('g-pours').style.display = $('showPours').checked ? '' : 'none';
+  $('g-silk').style.display = $('showSilk').checked ? '' : 'none';
+  $('g-court').style.display = $('showCourt').checked ? '' : 'none';
+  $('g-labels').style.display = $('showLabels').checked ? '' : 'none';
+  $('g-findings').style.display = $('showFindings').checked ? '' : 'none';
+}
+function applySelection() {
+  for (const e of world.querySelectorAll('.hl, .selected')) e.classList.remove('hl', 'selected');
+  for (const e of world.querySelectorAll('.handle')) e.remove();
+  if (selNet) for (const e of world.querySelectorAll(`[data-net="${CSS.escape(selNet)}"]`)) e.classList.add('hl');
+  if (!sel) return;
+  if (sel.kind === 'part') for (const e of world.querySelectorAll(`[data-refdes="${CSS.escape(sel.refdes)}"]`)) e.classList.add('selected');
+  if (sel.kind === 'trace') {
+    const t = S.traces[sel.index];
+    const e = world.querySelector(`[data-trace="${sel.index}"]`); if (e) e.classList.add('selected');
+    t.points.forEach((p, i) => { const h = el('circle', { cx: p[0], cy: p[1], class: 'handle', 'data-handle': i }, $('g-overlay')); });
+  }
+  if (sel.kind === 'via') { const e = world.querySelector(`[data-via="${sel.index}"]`); if (e) e.classList.add('selected'); }
+  updateStrokeScale();
+}
+
+// ---- panels
+function setHint(s) { $('hint').textContent = s || ''; }
+function showSelection() {
+  const b = $('selBody');
+  if (!sel) { b.innerHTML = '<p style="color:var(--muted)">Click a part, pad, trace or via. Drag parts, trace vertices and segments, and vias. R rotates the selected part, Delete removes a selected trace or via.</p>'; return; }
+  let h = '';
+  if (sel.kind === 'part') {
+    const p = S.parts.find(x => x.refdes === sel.refdes);
+    h += `<h3>${p.refdes}</h3><div class="kv"><div>component</div><div>${p.component}</div><div>footprint</div><div>${p.footprint || '—'}</div>${p.value ? `<div>value</div><div>${p.value}</div>` : ''}${p.note ? `<div>note</div><div>${p.note}</div>` : ''}<div>at</div><div>${p.at ? ptStr(p.at) : 'unplaced'} rot ${p.rotation} ${p.side}${p.locked ? ' (locked)' : ''}</div></div>`;
+    h += `<div class="actions"><button onclick="rotateSel(90)">rotate +90 (R)</button><button onclick="rotateSel(-90)">−90</button><button onclick="noteOn('refdes','${p.refdes}')">note on ${p.refdes}</button></div>`;
+    h += '<h3>pads</h3>' + p.pads.map(pd => `<div>${pd.name}${pd.pins.length && pd.pins[0] !== pd.name ? ` (${pd.pins.join(', ')})` : ''} <span class="pill" onclick="highlightNet('${pd.net || ''}')">${pd.net || 'no net'}</span> <small style="color:var(--muted)">${ptStr(pd.center)}</small></div>`).join('');
+  } else if (sel.kind === 'trace') {
+    const t = S.traces[sel.index];
+    h += `<h3>trace #${t.index}</h3><div class="kv"><div>net</div><div><span class="pill" onclick="highlightNet('${t.net || ''}')">${t.net || 'no net'}</span></div><div>layer</div><div>${t.layer}</div><div>width</div><div>${t.width} mm</div><div>points</div><div>${ptsStr(t.points)}</div><div>origin</div><div>${t.routed ? 'autorouted' : 'hand drawn'}</div></div>`;
+    h += `<div class="actions"><button onclick="deleteSel()">delete (Del)</button><button onclick="noteOn('trace',${t.index})">note on this trace</button></div><p style="color:var(--muted)">Drag a vertex to move it, drag the trace body to shift a segment.</p>`;
+  } else if (sel.kind === 'via') {
+    const v = S.vias[sel.index];
+    h += `<h3>via #${v.index}</h3><div class="kv"><div>net</div><div><span class="pill" onclick="highlightNet('${v.net || ''}')">${v.net || 'no net'}</span></div><div>at</div><div>${ptStr(v.at)}</div><div>drill / dia</div><div>${v.drill} / ${v.diameter} mm</div></div><div class="actions"><button onclick="deleteSel()">delete (Del)</button></div>`;
+  }
+  b.innerHTML = h;
+}
+function showChanges() {
+  const b = $('changesBody');
+  $('nChanges').textContent = board.changes.length ? `(${board.changes.length})` : '';
+  const ban = $('banner');
+  if (board.stale) { ban.style.display = 'block'; ban.textContent = 'These changes were recorded against an older pcb.json. They are not applied to the view; clear them or have the agent apply them with --force.'; }
+  else ban.style.display = 'none';
+  if (!board.changes.length) { b.innerHTML = '<p style="color:var(--muted)">No pending changes. Everything you move, draw or note here is recorded for the agent (build/changes.json, `pcb changes`).</p>'; return; }
+  b.innerHTML = board.changes.map((c, i) => `<div class="row"><b>${i + 1}.</b> ${escapeHtml(c.summary)}${c.was ? `<small>was: ${escapeHtml(c.was)}</small>` : ''}<code>${escapeHtml(c.pcb)}</code></div>`).join('');
+}
+function showFindings() {
+  const b = $('findingsBody');
+  const f = S.findings;
+  $('nFindings').textContent = f.length ? `(${f.filter(x => x.severity === 'error').length}e ${f.filter(x => x.severity === 'warning').length}w)` : '';
+  if (!f.length) { b.innerHTML = '<p style="color:var(--muted)">No findings.</p>'; return; }
+  b.innerHTML = f.map((x, i) => `<div class="row ${x.severity}" data-f="${i}"><b>${x.rule}</b><small>${escapeHtml(x.message)}</small></div>`).join('');
+  for (const r of b.querySelectorAll('.row')) r.addEventListener('click', () => { const x = f[+r.dataset.f]; if (x.at) panTo(x.at); });
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function panTo(p, zoom) {
+  if (zoom) { vb.w = zoom; vb.h = zoom * svg.clientHeight / Math.max(1, svg.clientWidth); }
+  vb.x = p[0] - vb.w / 2; vb.y = -p[1] - vb.h / 2; applyVb();
+}
+for (const b of document.querySelectorAll('#tabs button')) b.addEventListener('click', () => {
+  for (const x of document.querySelectorAll('#tabs button')) x.classList.toggle('on', x === b);
+  for (const p of document.querySelectorAll('.pane')) p.classList.toggle('on', p.id === 'pane-' + b.dataset.pane);
+});
+function highlightNet(n) { selNet = n || null; $('netLabel').textContent = selNet ? 'net ' + selNet : ''; applySelection(); }
+
+// ---- server
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? {} : { method: 'POST', body: JSON.stringify(body) });
+  const j = await r.json();
+  if (j.error) throw new Error(j.error);
+  return j;
+}
+function takeBoard(j) {
+  const firstLoad = !board;
+  board = j; S = j.scene;
+  if (firstLoad) {
+    $('title').textContent = S.name;
+    document.title = S.name + ' — pcb';
+    const L = $('layers'); L.innerHTML = '';
+    for (const l of S.layers) {
+      const lab = document.createElement('label');
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = true;
+      cb.addEventListener('change', () => { layerVis[l] = cb.checked; render(); });
+      lab.appendChild(cb); lab.append(' '); const sw = document.createElement('span'); sw.style.cssText = `display:inline-block;width:10px;height:10px;background:${layerColor(l)};border-radius:2px`; lab.appendChild(sw); lab.append(' ' + l);
+      L.appendChild(lab);
+    }
+    const dl = $('drawLayer'); dl.innerHTML = S.layers.map(l => `<option>${l}</option>`).join('');
+    $('drawWidth').value = S.rules.trace_width;
+  }
+  // keep selection if it still exists
+  if (sel && sel.kind === 'trace' && !S.traces[sel.index]) sel = null;
+  if (sel && sel.kind === 'via' && !S.vias[sel.index]) sel = null;
+  render();
+  if (firstLoad) fit();
+  showSelection(); showChanges(); showFindings();
+}
+async function load() { takeBoard(await api('/api/board')); }
+async function change(c) {
+  try { takeBoard(await api('/api/change', c)); toast(board.changes[board.changes.length - 1].summary); }
+  catch (e) { toast('rejected: ' + e.message.split('\n').pop().trim(), 4000); render(); }
+}
+$('bUndo').addEventListener('click', async () => { takeBoard(await api('/api/undo', {})); toast('undone'); });
+$('bClear').addEventListener('click', async () => { if (board.changes.length && !confirm('Discard all pending changes?')) return; takeBoard(await api('/api/clear', {})); });
+$('bCopy').addEventListener('click', async () => { const t = await (await fetch('/api/commands')).text(); try { await navigator.clipboard.writeText(t); toast('copied'); } catch { prompt('copy:', t); } });
+setInterval(async () => {
+  if (!board || dragging || mode) return;
+  try { const v = await api('/api/version'); if (v.hash !== board.hash || v.changes !== board.changes.length || v.stale !== board.stale) { await load(); if (v.hash !== board.hash) toast('board reloaded from disk'); } } catch { }
+}, 1500);
+
+// ---- modes
+function setMode(m) {
+  mode = m; drawPts = [];
+  for (const [id, k] of [['bTrace', 'trace'], ['bVia', 'via'], ['bNote', 'note'], ['bSketch', 'sketch']]) $(id).classList.toggle('on', mode === k);
+  svg.classList.toggle('mode', !!mode);
+  $('modeLabel').textContent = mode ? ({ trace: 'drawing trace: click points, Enter/double-click to finish, Esc to cancel', via: 'click to place a via', note: 'click where the note belongs', sketch: 'sketch a path: click points, Enter to finish, then type the note' })[mode] : '';
+  clearPreview();
+}
+function clearPreview() { for (const e of $('g-overlay').querySelectorAll('.preview')) e.remove(); }
+$('bTrace').addEventListener('click', () => setMode(mode === 'trace' ? null : 'trace'));
+$('bVia').addEventListener('click', () => setMode(mode === 'via' ? null : 'via'));
+$('bNote').addEventListener('click', () => setMode(mode === 'note' ? null : 'note'));
+$('bSketch').addEventListener('click', () => setMode(mode === 'sketch' ? null : 'sketch'));
+$('bFit').addEventListener('click', fit);
+for (const id of ['showPours', 'showSilk', 'showCourt', 'showLabels', 'showFindings']) $(id).addEventListener('change', applyVisibility);
+$('search').addEventListener('keydown', ev => {
+  if (ev.key !== 'Enter') return;
+  const q = $('search').value.trim();
+  if (!q) return;
+  const p = S.parts.find(x => x.refdes.toLowerCase() === q.toLowerCase());
+  if (p && p.at) { sel = { kind: 'part', refdes: p.refdes }; applySelection(); showSelection(); panTo(p.at, Math.max(6, vb.w > 12 ? 12 : vb.w)); return; }
+  if (S.nets.some(n => n.toLowerCase() === q.toLowerCase())) { highlightNet(S.nets.find(n => n.toLowerCase() === q.toLowerCase())); return; }
+  toast('no part or net named ' + q);
+});
+function finishDraw() {
+  if (mode === 'trace') {
+    if (drawPts.length >= 2) {
+      const width = parseFloat($('drawWidth').value) || S.rules.trace_width;
+      const net = drawNet || selNet || null;
+      change({ op: 'add_trace', layer: $('drawLayer').value, net, width, points: drawPts.map(p => [+fmt(p[0]), +fmt(p[1])]) });
+    }
+    setMode(null);
+  } else if (mode === 'sketch') {
+    if (drawPts.length >= 2) {
+      const text = prompt('Note for this path:');
+      if (text) change({ op: 'note', text, path: drawPts.map(p => [+fmt(p[0]), +fmt(p[1])]) });
+    }
+    setMode(null);
+  }
+}
+let drawNet = null;
+function noteOn(kind, id) {
+  const text = prompt(kind === 'refdes' ? `Note about ${id}:` : `Note about trace #${id}:`);
+  if (!text) return;
+  const c = { op: 'note', text };
+  if (kind === 'refdes') { c.refdes = id; const p = S.parts.find(x => x.refdes === id); if (p && p.at) c.at = p.at; }
+  else { c.trace = id; const t = S.traces[id]; c.at = t.points[0]; }
+  change(c);
+}
+function rotateSel(d) {
+  if (!sel || sel.kind !== 'part') return;
+  const p = S.parts.find(x => x.refdes === sel.refdes);
+  if (!p.at) return;
+  change({ op: 'move_part', refdes: p.refdes, at: p.at, rotation: ((p.rotation + d) % 360 + 360) % 360 });
+}
+function deleteSel() {
+  if (!sel) return;
+  if (sel.kind === 'trace') { change({ op: 'delete_trace', trace: sel.index }); sel = null; }
+  if (sel.kind === 'via') { change({ op: 'delete_via', via: sel.index }); sel = null; }
+}
+document.addEventListener('keydown', ev => {
+  if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'SELECT' || ev.target.tagName === 'TEXTAREA') { if (ev.key === 'Escape') ev.target.blur(); return; }
+  if (ev.key === 'Escape') { if (mode) setMode(null); else { sel = null; highlightNet(null); applySelection(); showSelection(); } }
+  else if (ev.key === 'Enter') finishDraw();
+  else if (ev.key === 'r' || ev.key === 'R') rotateSel(ev.shiftKey ? -90 : 90);
+  else if (ev.key === 'Delete' || ev.key === 'Backspace') { deleteSel(); ev.preventDefault(); }
+  else if (ev.key === 't' || ev.key === 'T') setMode(mode === 'trace' ? null : 'trace');
+  else if (ev.key === 'v' || ev.key === 'V') setMode(mode === 'via' ? null : 'via');
+  else if (ev.key === 'n' || ev.key === 'N') setMode(mode === 'note' ? null : 'note');
+  else if (ev.key === 'f' || ev.key === 'F') fit();
+});
+
+// ---- pointer interaction
+function hitInfo(target) {
+  const e = target.closest ? target : null;
+  if (!e) return null;
+  const tr = e.closest('[data-trace]'); if (tr) return { kind: 'trace', index: +tr.dataset.trace, el: tr };
+  const via = e.closest('[data-via]'); if (via) return { kind: 'via', index: +via.dataset.via, el: via };
+  const pad = e.closest('.pad'); if (pad) return { kind: 'pad', refdes: pad.dataset.refdes, pad: pad.dataset.pad, net: pad.dataset.net, el: pad };
+  const part = e.closest('[data-refdes]'); if (part) return { kind: 'part', refdes: part.dataset.refdes, el: part };
+  return null;
+}
+svg.addEventListener('pointermove', ev => {
+  const w = clientToWorld(ev);
+  $('coords').textContent = fmt(w[0]) + ', ' + fmt(w[1]) + ' mm';
+  if (dragging) { dragMove(ev, w); return; }
+  if (mode === 'trace' || mode === 'sketch') {
+    clearPreview();
+    const s = mode === 'trace' ? snap(w, { from: drawPts[drawPts.length - 1], free: ev.shiftKey }) : { p: [snapGrid(w[0]), snapGrid(w[1])] };
+    const pts = drawPts.concat([s.p]);
+    if (pts.length >= 2) el('polyline', { points: polyPoints(pts), class: 'preview', 'stroke-width': mode === 'trace' ? (parseFloat($('drawWidth').value) || 0.25) : 1.5 * pxToWorld(), 'stroke-linejoin': 'round' }, $('g-overlay'));
+    el('circle', { cx: s.p[0], cy: s.p[1], r: 4 * pxToWorld(), class: 'preview' }, $('g-overlay'));
+    setHint(s.what ? 'snap to ' + s.what + (s.net ? ' (' + s.net + ')' : '') : ptStr(s.p));
+    return;
+  }
+  const h = hitInfo(ev.target);
+  if (h && h.kind === 'pad') setHint(`${h.refdes}.${h.pad} — ${h.net || 'no net'}`);
+  else if (h && h.kind === 'trace') { const t = S.traces[h.index]; setHint(`trace #${t.index} ${t.net || ''} ${t.layer} w ${t.width}`); }
+  else if (h && h.kind === 'via') { const v = S.vias[h.index]; setHint(`via #${v.index} ${v.net || ''}`); }
+  else if (h && h.kind === 'part') setHint(h.refdes);
+  else if (ev.target.classList && ev.target.classList.contains('finding')) setHint(ev.target.dataset.msg);
+  else setHint('');
+});
+svg.addEventListener('pointerdown', ev => {
+  if (ev.button !== 0) { startPan(ev); return; }
+  const w = clientToWorld(ev);
+  if (mode === 'trace') {
+    const s = snap(w, { from: drawPts[drawPts.length - 1], free: ev.shiftKey });
+    if (drawPts.length === 0) drawNet = s.net || null; else if (!drawNet && s.net) drawNet = s.net;
+    if (drawPts.length && Math.hypot(s.p[0] - drawPts[drawPts.length - 1][0], s.p[1] - drawPts[drawPts.length - 1][1]) < 1e-6) { finishDraw(); return; }
+    drawPts.push(s.p); return;
+  }
+  if (mode === 'sketch') { drawPts.push([snapGrid(w[0]), snapGrid(w[1])]); return; }
+  if (mode === 'via') {
+    const s = snap(w);
+    const net = s.net || selNet || prompt('Net for the via (blank for none):') || null;
+    change({ op: 'add_via', at: s.p.map(v => +fmt(v)), net }); setMode(null); return;
+  }
+  if (mode === 'note') {
+    const h = hitInfo(ev.target);
+    const text = prompt('Note:'); if (!text) { setMode(null); return; }
+    const c = { op: 'note', text, at: [+fmt(w[0]), +fmt(w[1])] };
+    if (h && (h.kind === 'part' || h.kind === 'pad')) c.refdes = h.refdes;
+    if (h && h.kind === 'trace') c.trace = h.index;
+    if (h && h.kind === 'pad' && h.net) c.net = h.net;
+    change(c); setMode(null); return;
+  }
+  // select / drag
+  const handle = ev.target.closest && ev.target.closest('.handle');
+  if (handle && sel && sel.kind === 'trace') { startDrag(ev, { kind: 'vertex', index: sel.index, vertex: +handle.dataset.handle }); return; }
+  const h = hitInfo(ev.target);
+  if (!h) { sel = null; applySelection(); showSelection(); startPan(ev); return; }
+  if (h.kind === 'pad' || h.kind === 'part') {
+    const part = S.parts.find(x => x.refdes === h.refdes);
+    if (h.kind === 'pad') highlightNet(h.net || null);
+    sel = { kind: 'part', refdes: h.refdes }; applySelection(); showSelection();
+    if (part.at && !part.locked) startDrag(ev, { kind: 'part', refdes: h.refdes, start: w, at: part.at });
+    return;
+  }
+  if (h.kind === 'trace') {
+    const t = S.traces[h.index];
+    if (sel && sel.kind === 'trace' && sel.index === h.index) {
+      // drag a segment: nearest one to the pointer
+      let best = 0, bd = Infinity;
+      for (let i = 0; i + 1 < t.points.length; i++) { const d = segDist(w, t.points[i], t.points[i + 1]); if (d < bd) { bd = d; best = i; } }
+      startDrag(ev, { kind: 'segment', index: h.index, seg: best, start: w, points: t.points.map(p => p.slice()) });
+    } else { sel = { kind: 'trace', index: h.index }; highlightNet(t.net || null); applySelection(); showSelection(); }
+    return;
+  }
+  if (h.kind === 'via') {
+    const v = S.vias[h.index];
+    sel = { kind: 'via', index: h.index }; highlightNet(v.net || null); applySelection(); showSelection();
+    startDrag(ev, { kind: 'via', index: h.index, start: w, at: v.at });
+  }
+});
+svg.addEventListener('dblclick', ev => { if (mode === 'trace' || mode === 'sketch') { ev.preventDefault(); finishDraw(); } });
+function segDist(p, a, b) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy;
+  let t = l2 ? ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2 : 0; t = Math.max(0, Math.min(1, t));
+  return Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy));
+}
+function startPan(ev) { dragging = { kind: 'pan', cx: ev.clientX, cy: ev.clientY, vb: { ...vb } }; svg.setPointerCapture(ev.pointerId); }
+function startDrag(ev, d) { dragging = d; dragging.moved = false; svg.setPointerCapture(ev.pointerId); }
+function dragMove(ev, w) {
+  const d = dragging;
+  if (d.kind === 'pan') { const u = pxToWorld(); vb.x = d.vb.x - (ev.clientX - d.cx) * u; vb.y = d.vb.y - (ev.clientY - d.cy) * u; applyVb(); return; }
+  d.moved = true;
+  if (d.kind === 'part') {
+    const dx = snapGrid(w[0] - d.start[0]), dy = snapGrid(w[1] - d.start[1]);
+    d.to = [d.at[0] + dx, d.at[1] + dy];
+    for (const e of world.querySelectorAll(`g[data-refdes="${CSS.escape(d.refdes)}"], text[data-refdes="${CSS.escape(d.refdes)}"]`)) {
+      if (e.tagName === 'text') { const at = e.getAttribute('transform').match(/translate\(([-\d.]+) ([-\d.]+)\)/); if (!e._base) e._base = [+at[1], +at[2]]; e.setAttribute('transform', `translate(${e._base[0] + dx} ${e._base[1] + dy}) scale(1,-1)`); }
+      else e.setAttribute('transform', `translate(${dx} ${dy})`);
+    }
+    setHint(`${d.refdes} → ${ptStr(d.to)}`);
+  } else if (d.kind === 'vertex') {
+    const t = S.traces[d.index];
+    const s = snap(w, { free: true, trace: d.index });
+    t.points[d.vertex] = s.p;
+    const e = world.querySelector(`[data-trace="${d.index}"]`); e.setAttribute('points', polyPoints(t.points));
+    const h = $('g-overlay').querySelector(`[data-handle="${d.vertex}"]`); if (h) { h.setAttribute('cx', s.p[0]); h.setAttribute('cy', s.p[1]); }
+    setHint(`vertex ${d.vertex} → ${ptStr(s.p)}` + (s.what ? ' (' + s.what + ')' : ''));
+  } else if (d.kind === 'segment') {
+    const t = S.traces[d.index];
+    const dx = snapGrid(w[0] - d.start[0]), dy = snapGrid(w[1] - d.start[1]);
+    const a = d.points[d.seg], b = d.points[d.seg + 1];
+    // shift the segment along its normal only, so it stays parallel
+    const ux = b[0] - a[0], uy = b[1] - a[1], L = Math.hypot(ux, uy) || 1, nx = -uy / L, ny = ux / L;
+    const off = dx * nx + dy * ny;
+    const pts = d.points.map(p => p.slice());
+    pts[d.seg] = [snapGrid(a[0] + nx * off), snapGrid(a[1] + ny * off)];
+    pts[d.seg + 1] = [snapGrid(b[0] + nx * off), snapGrid(b[1] + ny * off)];
+    t.points = pts;
+    const e = world.querySelector(`[data-trace="${d.index}"]`); e.setAttribute('points', polyPoints(pts));
+    pts.forEach((p, i) => { const h = $('g-overlay').querySelector(`[data-handle="${i}"]`); if (h) { h.setAttribute('cx', p[0]); h.setAttribute('cy', p[1]); } });
+    setHint(`segment ${d.seg} shifted ${fmt(off)} mm`);
+  } else if (d.kind === 'via') {
+    const s = snap(w, { free: true, via: d.index });
+    d.to = s.p;
+    const e = world.querySelector(`[data-via="${d.index}"]`); e.setAttribute('transform', `translate(${s.p[0] - d.at[0]} ${s.p[1] - d.at[1]})`);
+    setHint(`via → ${ptStr(s.p)}`);
+  }
+}
+svg.addEventListener('pointerup', ev => {
+  const d = dragging; dragging = null;
+  if (!d || d.kind === 'pan') return;
+  if (!d.moved) return;
+  if (d.kind === 'part' && d.to) {
+    const p = S.parts.find(x => x.refdes === d.refdes);
+    if (Math.hypot(d.to[0] - p.at[0], d.to[1] - p.at[1]) < 1e-6) { render(); return; }
+    change({ op: 'move_part', refdes: d.refdes, at: d.to.map(v => +fmt(v)), rotation: p.rotation });
+  } else if (d.kind === 'vertex' || d.kind === 'segment') {
+    const t = S.traces[d.index];
+    change({ op: 'set_trace_points', trace: d.index, points: t.points.map(p => [+fmt(p[0]), +fmt(p[1])]) });
+  } else if (d.kind === 'via' && d.to) {
+    change({ op: 'move_via', via: d.index, to: d.to.map(v => +fmt(v)) });
+  }
+});
+svg.addEventListener('contextmenu', ev => ev.preventDefault());
+window.addEventListener('resize', () => { if (S) { const r = svg.clientWidth / Math.max(1, svg.clientHeight); vb.h = vb.w / r; applyVb(); } });
+
+window.addEventListener('error', ev => { setHint('script error: ' + ev.message); toast('script error: ' + ev.message, 8000); });
+window.addEventListener('unhandledrejection', ev => { setHint('error: ' + (ev.reason && ev.reason.message || ev.reason)); toast('error: ' + (ev.reason && ev.reason.message || ev.reason), 8000); });
+if (window.__BOARD__) { try { takeBoard(window.__BOARD__); } catch (e) { toast('render failed: ' + e.message, 8000); setHint('render failed: ' + e.message); } }
+else load().catch(e => { toast('could not load the board: ' + e.message, 6000); });
+</script>
+</body>
+</html>

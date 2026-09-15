@@ -50,6 +50,24 @@ impl Session {
     fn path(&self) -> PathBuf {
         self.inner.path()
     }
+    /// Save the project to its path and serve it on a background thread; returns the URL.
+    fn serve(&self, port: u16, open: bool) -> PyResult<String> {
+        let path = self.inner.save(None).map_err(to_py)?;
+        let (tx, rx) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let res = flatland::serve::serve_with(&path, port, open, |p| {
+                let _ = tx.send(Ok(p));
+            });
+            if let Err(e) = res {
+                let _ = tx.send(Err(flatland::session::render_error(&e)));
+            }
+        });
+        match rx.recv() {
+            Ok(Ok(p)) => Ok(format!("http://127.0.0.1:{p}/")),
+            Ok(Err(e)) => Err(pyo3::exceptions::PyRuntimeError::new_err(e)),
+            Err(_) => Err(pyo3::exceptions::PyRuntimeError::new_err("server thread ended before listening")),
+        }
+    }
     #[getter]
     fn has_project(&self) -> bool {
         self.inner.has_project()

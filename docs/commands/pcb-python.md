@@ -53,6 +53,7 @@ keyword arguments map to the command's `--flags`:
 | `status()`, `pads(*refs)`, `check(strict=, rule=)` | `status --json`, `pads --json`, `check --json` |
 | `drc_add(set)`, `drc_waive(rule, *features, reason=)`, `drc_rule(name, feature=, check=, where=, severity=)` | `drc add`, `drc waive`, `drc rule` |
 | `route(passes=, keep=)`, `visualize(what, output=, width=, crop=)` | `route`, `visualize` |
+| `serve(port=7350, open=True)`, `changes()` | `serve`, `changes list --json` (see pcb-serve(1)): saves the board, opens the UI in a background thread, returns the URL; `changes()` is the pending change list as dicts |
 | `route_pin(from, to, layer=, width=, via=[(x,y),...], png=, dry_run=)`, `undo()` | `route pin`, `undo` |
 | `export_kicad(output=, drc=)` | `export kicad` |
 | `gerbers(force=)`, `bom(all=)`, `pnp(all=)` | `gerbers`, `bom`, `pnp` |

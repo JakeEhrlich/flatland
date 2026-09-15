@@ -25,5 +25,9 @@ pub mod kicad;
 pub mod sim;
 pub mod cli;
 pub mod session;
+pub mod changes;
+pub mod diff;
+pub mod scene;
+pub mod serve;
 
 pub use error::{Error, Result};

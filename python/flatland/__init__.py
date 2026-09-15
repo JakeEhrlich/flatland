@@ -215,6 +215,20 @@ class Pcb:
 
     # ---- checks, routing, outputs ----------------------------------------------------
 
+    def serve(self, port: int = 7350, *, open: bool = True) -> str:
+        """Save the board and open it in the local UI (background thread). Returns the URL.
+
+        Edits made there are recorded in build/changes.json next to the project;
+        read them with ``changes()`` or ``pcb changes``."""
+        return self._s.serve(port, open)
+
+    def changes(self) -> list[dict]:
+        """Pending changes recorded by the UI (see ``pcb changes``), as dicts."""
+        try:
+            return json.loads(self.run("changes", "list", "--json"))["changes"]
+        except Exception:
+            return []
+
     def status(self) -> dict:
         return self.run_json("status")
 

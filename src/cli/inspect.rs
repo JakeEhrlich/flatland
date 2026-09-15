@@ -222,6 +222,7 @@ const PAGES: &[(&str, &[&str], &str)] = &[
     ("pcb-assembly", &["bom", "pnp", "assembly", "jlcpcb", "lcsc", "cpl", "pick-and-place"], include_str!("../../docs/commands/pcb-assembly.md")),
     ("pcb-sim", &["sim", "simulate", "spice", "ngspice"], include_str!("../../docs/commands/pcb-sim.md")),
     ("pcb-python", &["python", "bindings", "api", "library", "in-memory"], include_str!("../../docs/commands/pcb-python.md")),
+    ("pcb-serve", &["serve", "ui", "changes", "diff", "target", "browser"], include_str!("../../docs/commands/pcb-serve.md")),
 ];
 
 #[derive(Args)]

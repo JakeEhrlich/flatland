@@ -625,6 +625,102 @@ fn gerber_verify() {
 }
 
 #[test]
+fn changes_apply_and_diff() {
+    // A change list recorded against pcb.json applies to pcb-target.json; `pcb diff`
+    // says whether a rebuilt board reached it, ignoring order and trace direction.
+    let p = Proj::new("changes");
+    p.ok(&["init", "chg", "--index", library().to_str().unwrap()]);
+    p.ok(&["outline", "rect", "30", "20"]);
+    p.ok(&["add", "R1", "resistor-0603", "--at", "5,10"]);
+    p.ok(&["add", "R2", "resistor-0603", "--at", "25,10"]);
+    p.ok(&["connect", "R1.1", "R2.1", "--net", "A"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.3", "4.125,10", "4.125,14", "24.125,14", "24.125,10"]);
+    let out = p.ok(&["changes"]);
+    assert!(out.contains("no pending changes"), "{out}");
+    let hash = {
+        let bytes = std::fs::read(p.dir.join("pcb.json")).unwrap();
+        blake3::hash(&bytes).to_hex().to_string()
+    };
+    std::fs::create_dir_all(p.build("")).unwrap();
+    std::fs::write(
+        p.build("changes.json"),
+        format!(
+            r#"{{"schema":"pcb-changes/1","base_blake3":"{hash}","base":"pcb.json","changes":[
+              {{"op":"move_part","refdes":"R2","at":[25,12],"rotation":90}},
+              {{"op":"set_trace_points","trace":0,"points":[[4.125,10],[4.125,15],[25,15],[25,12.875]]}},
+              {{"op":"add_via","at":[15,5],"net":"A"}},
+              {{"op":"note","text":"keep R2 near the edge","refdes":"R2","at":[25,12]}}]}}"#
+        ),
+    )
+    .unwrap();
+    let out = p.ok(&["changes"]);
+    assert!(out.contains("4 change(s)") && out.contains("pcb place R2 25,12 --rotation 90") && out.contains("pcb.place(\"R2\", (25, 12), rotation=90)") && out.contains("was: R2 at 25,10") && out.contains("note (part R2, at 25,12): keep R2"), "{out}");
+    let out = p.ok(&["changes", "apply"]);
+    assert!(out.contains("pcb-target.json with 3 change(s) applied (1 note(s)"), "{out}");
+    let out = p.fails(&["diff"]);
+    assert!(out.contains("part R2: 25,10 rot 0 top vs 25,12 rot 90 top") && out.contains("trace only in pcb.json") && out.contains("via only in pcb-target.json"), "{out}");
+    // Rebuild the board to match, drawing the trace the other way round: no differences.
+    p.ok(&["place", "R2", "25,12", "--rotation", "90"]);
+    p.ok(&["trace", "clear"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.3", "25,12.875", "25,15", "4.125,15", "4.125,10"]);
+    p.ok(&["via", "add", "--net", "A", "15,5"]);
+    let out = p.ok(&["diff"]);
+    assert!(out.contains("describe the same board"), "{out}");
+    // The project changed, so the recorded list is stale.
+    let out = p.ok(&["changes"]);
+    assert!(out.contains("STALE"), "{out}");
+    let out = p.fails(&["changes", "apply"]);
+    assert!(out.contains("recorded against a different pcb.json"), "{out}");
+    p.ok(&["changes", "clear"]);
+    let out = p.ok(&["changes"]);
+    assert!(out.contains("no pending changes"), "{out}");
+}
+
+#[test]
+fn serve_records_changes() {
+    // The UI server: the page carries the board, a posted change lands in the change
+    // list and in the returned scene, an impossible one is rejected, undo removes it.
+    use std::io::{Read, Write};
+    let p = Proj::new("serve");
+    p.ok(&["init", "srv", "--index", library().to_str().unwrap()]);
+    p.ok(&["outline", "rect", "30", "20"]);
+    p.ok(&["add", "R1", "resistor-0603", "--at", "5,10"]);
+    p.ok(&["add", "R2", "resistor-0603", "--at", "25,10"]);
+    p.ok(&["connect", "R1.1", "R2.1", "--net", "A"]);
+    let mut child = std::process::Command::new(env!("CARGO_BIN_EXE_pcb")).args(["serve", "--port", "0"]).current_dir(&p.dir).stdout(std::process::Stdio::piped()).stderr(std::process::Stdio::null()).spawn().unwrap();
+    let mut first = String::new();
+    {
+        let mut r = std::io::BufReader::new(child.stdout.as_mut().unwrap());
+        std::io::BufRead::read_line(&mut r, &mut first).unwrap();
+    }
+    let port: u16 = first.split("127.0.0.1:").nth(1).and_then(|s| s.split('/').next()).and_then(|s| s.parse().ok()).unwrap_or_else(|| panic!("no port in {first:?}"));
+    let http = |method: &str, path: &str, body: &str| -> String {
+        let mut s = std::net::TcpStream::connect(("127.0.0.1", port)).unwrap();
+        write!(s, "{method} {path} HTTP/1.1\r\nHost: x\r\nContent-Length: {}\r\n\r\n{body}", body.len()).unwrap();
+        let mut out = String::new();
+        s.read_to_string(&mut out).unwrap();
+        out.split("\r\n\r\n").nth(1).unwrap_or("").to_string()
+    };
+    let page = http("GET", "/", "");
+    assert!(page.contains("window.__BOARD__ = {") && page.contains("\"name\":\"srv\""), "page should carry the board");
+    let r = http("POST", "/api/change", r#"{"op":"move_part","refdes":"R2","at":[20,10],"rotation":0}"#);
+    let v: serde_json::Value = serde_json::from_str(&r).unwrap();
+    assert_eq!(v["changes"].as_array().unwrap().len(), 1, "{r}");
+    assert_eq!(v["scene"]["parts"][1]["at"], serde_json::json!([20.0, 10.0]), "{r}");
+    assert!(p.build("changes.json").exists());
+    let r = http("POST", "/api/change", r#"{"op":"delete_trace","trace":5}"#);
+    assert!(r.contains("no trace #5"), "{r}");
+    let r = http("GET", "/api/commands", "");
+    assert!(r.contains("pcb place R2 20,10 --rotation 0"), "{r}");
+    let r = http("POST", "/api/undo", "{}");
+    let v: serde_json::Value = serde_json::from_str(&r).unwrap();
+    assert_eq!(v["changes"].as_array().unwrap().len(), 0, "{r}");
+    assert!(!p.build("changes.json").exists());
+    let _ = child.kill();
+    let _ = child.wait();
+}
+
+#[test]
 fn free_text() {
     let p = Proj::new("text");
     p.ok(&["init", "text", "--layers", "F.Cu", "--index", library().to_str().unwrap()]);

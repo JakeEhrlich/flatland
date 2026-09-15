@@ -2,6 +2,7 @@
 //! inspects it, and (for mutations) writes it back atomically.
 
 pub mod assembly;
+mod changes_cmd;
 mod drc_cmd;
 mod edit;
 mod index_cmd;
@@ -112,6 +113,12 @@ pub enum Command {
     Schema(inspect::SchemaArgs),
     /// Print the manual page for a command family (`pcb docs` lists them).
     Docs(inspect::DocsArgs),
+    /// Pending changes recorded by the UI (`pcb serve`): list, apply to `pcb-target.json`, clear.
+    Changes(changes_cmd::ChangesArgs),
+    /// Compare two project files as boards (default: the project against `pcb-target.json`).
+    Diff(changes_cmd::DiffArgs),
+    /// Open the board in a local web UI to inspect it and record changes for the agent.
+    Serve(changes_cmd::ServeArgs),
 }
 
 pub fn run() -> Result<()> {
@@ -158,6 +165,9 @@ pub fn run_command(ctx: &Ctx, command: Command) -> Result<()> {
         Command::Sim(c) => sim_cmd::run_sim(&ctx, c),
         Command::Schema(a) => inspect::schema(&ctx, a),
         Command::Docs(a) => inspect::docs(&ctx, a),
+        Command::Changes(a) => changes_cmd::changes(&ctx, a),
+        Command::Diff(a) => changes_cmd::diff(&ctx, a),
+        Command::Serve(a) => changes_cmd::serve(&ctx, a),
     }
 }
 
