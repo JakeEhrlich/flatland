@@ -28,6 +28,7 @@ pub mod session;
 pub mod changes;
 pub mod diff;
 pub mod scene;
+pub mod hash;
 pub mod serve;
 
 pub use error::{Error, Result};

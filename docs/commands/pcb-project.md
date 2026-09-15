@@ -13,6 +13,7 @@ pcb status [--json]
 pcb check [--strict]
 pcb pads [REFDES...] [--json]
 pcb undo
+pcb hash [--short] [--canonical]
 pcb schema [project|index|component|footprint|simulation]
 pcb docs [TOPIC]
 ```
@@ -98,6 +99,24 @@ try-look-keep-or-revert loop that `pcb route pin --png crop` is made for.
 the named ones): pad name, pin(s), net, centre and copper extent in board
 coordinates. Use it to get exact coordinates for `pcb trace add` and to
 confirm which pad a pin lands on after rotation.
+
+## pcb hash
+
+Prints a semantic hash of the board, meant for revision names: blake3
+over a canonical text of what the fab makes and the assembler places.
+It covers the stackup, the design rules that shape copper, the outline,
+holes, every non-virtual part (refdes, component, parameters, placement
+and the resolved copper of its pads, so a library footprint change
+counts), the nets, and traces, vias, pours and copper-layer text. It
+does not cover silkscreen, solder mask or paste rules, labels, notes,
+locks, the project name, rule sets, simulations, routing settings, or
+the `routed` flag. Traces, vias, holes and pours describe a union, so
+their order does not matter, nor the direction a trace was drawn in, nor
+which vertex a closed ring starts from.
+
+`--short` prints the first 12 hex digits; `--canonical` prints the text
+the hash is taken over, to see exactly what a revision contains or why
+two differ. From Python: `pcb.hash(short=True)`.
 
 ## pcb schema
 

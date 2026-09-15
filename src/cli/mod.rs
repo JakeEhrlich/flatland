@@ -119,6 +119,8 @@ pub enum Command {
     Diff(changes_cmd::DiffArgs),
     /// Open the board in a local web UI to inspect it and record changes for the agent.
     Serve(changes_cmd::ServeArgs),
+    /// Semantic hash of the board (copper, drills, outline, parts; not silk, mask or notes) for revision names.
+    Hash(changes_cmd::HashArgs),
 }
 
 pub fn run() -> Result<()> {
@@ -168,6 +170,7 @@ pub fn run_command(ctx: &Ctx, command: Command) -> Result<()> {
         Command::Changes(a) => changes_cmd::changes(&ctx, a),
         Command::Diff(a) => changes_cmd::diff(&ctx, a),
         Command::Serve(a) => changes_cmd::serve(&ctx, a),
+        Command::Hash(a) => changes_cmd::hash(&ctx, a),
     }
 }
 

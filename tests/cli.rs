@@ -728,6 +728,44 @@ fn serve_records_changes() {
 }
 
 #[test]
+fn semantic_hash() {
+    // The hash names the copper, drills, outline and parts: it ignores draw order,
+    // trace direction, routed flags, labels, silk text and notes, and changes when
+    // copper or placement changes.
+    let p = Proj::new("hash");
+    p.ok(&["init", "h", "--index", library().to_str().unwrap()]);
+    p.ok(&["outline", "rect", "30", "20"]);
+    p.ok(&["add", "R1", "resistor-0603", "--at", "5,10", "-P", "value=10k"]);
+    p.ok(&["add", "R2", "resistor-0603", "--at", "25,10", "-P", "value=10k"]);
+    p.ok(&["connect", "R1.1", "R2.1", "--net", "A"]);
+    p.ok(&["connect", "R1.2", "R2.2", "--net", "GND"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.3", "4.125,10", "4.125,14", "24.125,14", "24.125,10"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "GND", "--width", "0.3", "5.875,10", "5.875,6", "25.875,6", "25.875,10"]);
+    p.ok(&["pour", "new", "gnd", "--layer", "B.Cu", "--net", "GND", "--follow-outline"]);
+    let h1 = p.ok(&["hash"]).trim().to_string();
+    assert_eq!(h1.len(), 64, "{h1}");
+    assert_eq!(p.ok(&["hash", "--short"]).trim(), &h1[..12]);
+    // Same copper written differently: traces in the other order, one reversed.
+    p.ok(&["trace", "clear"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "GND", "--width", "0.3", "25.875,10", "25.875,6", "5.875,6", "5.875,10"]);
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.3", "4.125,10", "4.125,14", "24.125,14", "24.125,10"]);
+    assert_eq!(p.ok(&["hash"]).trim(), h1, "trace order and direction must not count");
+    // Cosmetics: a moved label, a silk text, a note.
+    p.ok(&["label", "R1", "--at", "5,12"]);
+    p.ok(&["text", "add", "REV A", "--at", "15,2"]);
+    p.ok(&["rules", "set", "silk_text_size=1.2", "mask_expansion=0.08"]);
+    assert_eq!(p.ok(&["hash"]).trim(), h1, "silk and mask must not count:\n{}", p.ok(&["hash", "--canonical"]));
+    // Substance: a moved part, then a copper text.
+    p.ok(&["place", "R2", "25,11"]);
+    let h2 = p.ok(&["hash"]).trim().to_string();
+    assert_ne!(h2, h1);
+    p.ok(&["text", "add", "GND", "--at", "15,3", "--layer", "B.Cu", "--size", "2"]);
+    assert_ne!(p.ok(&["hash"]).trim(), h2);
+    let canon = p.ok(&["hash", "--canonical"]);
+    assert!(canon.contains("part R1 component resistor-0603 params [value=10k] at 5000000,10000000 rot 0 side top") && canon.contains("pour B.Cu net GND"), "{canon}");
+}
+
+#[test]
 fn free_text() {
     let p = Proj::new("text");
     p.ok(&["init", "text", "--layers", "F.Cu", "--index", library().to_str().unwrap()]);

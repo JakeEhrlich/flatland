@@ -155,3 +155,25 @@ pub fn diff(ctx: &Ctx, a: DiffArgs) -> Result<()> {
     }
     Err(Error::msg(format!("{} difference(s) between {na} and {nb}", lines.len())))
 }
+
+#[derive(Args)]
+pub struct HashArgs {
+    /// Print the first 12 hex digits only (for a revision name).
+    #[arg(long)]
+    pub short: bool,
+    /// Print the canonical text the hash is taken over.
+    #[arg(long)]
+    pub canonical: bool,
+}
+
+pub fn hash(ctx: &Ctx, a: HashArgs) -> Result<()> {
+    let loaded = ctx.load()?;
+    let board = ctx.board(&loaded)?;
+    let (text, hex) = crate::hash::semantic(&board);
+    if a.canonical {
+        print!("{text}");
+        return Ok(());
+    }
+    println!("{}", if a.short { &hex[..12] } else { &hex });
+    Ok(())
+}

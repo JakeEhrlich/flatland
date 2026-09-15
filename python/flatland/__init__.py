@@ -229,6 +229,11 @@ class Pcb:
         except Exception:
             return []
 
+    def hash(self, *, short: bool = False) -> str:
+        """Semantic hash of the board (see ``pcb hash``): copper, drills, outline and
+        parts, independent of silkscreen, mask, notes and the order things were drawn in."""
+        return self.run("hash", *(["--short"] if short else [])).strip()
+
     def status(self) -> dict:
         return self.run_json("status")
 
