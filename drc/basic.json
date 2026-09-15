@@ -61,7 +61,7 @@
     {
       "name": "pins-connected",
       "for": "pin",
-      "severity": "warning",
+      "severity": "error",
       "check": {
         "connected": true
       },
@@ -80,7 +80,7 @@
     {
       "name": "nets-routed",
       "for": "net",
-      "severity": "warning",
+      "severity": "error",
       "check": {
         "connected": true
       },

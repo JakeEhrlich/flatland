@@ -101,15 +101,16 @@ fn single_sided_board_end_to_end() {
     let text = p.fails(&["connect", "R1.1", "J1.+"]);
     assert!(text.contains("--merge"), "{text}");
 
+    // Before routing the only errors are the unrouted nets.
     let check = p.run(&["check"]).1;
-    assert!(check.contains("0 error(s)"), "{check}");
+    assert!(check.contains("error: nets-routed") && check.lines().filter(|l| l.starts_with("error:")).all(|l| l.contains("nets-routed")), "{check}");
 
     p.ok(&["visualize", "pcb"]);
     p.ok(&["visualize", "pcb", "--from-bottom", "--grid", "-o", p.build("bottom.png").to_str().unwrap()]);
     p.ok(&["visualize", "netlist"]);
     assert!(p.build("pcb.png").exists() && p.build("pcb.svg").exists() && p.build("bottom.png").exists() && p.build("netlist.png").exists());
 
-    let files = p.ok(&["gerbers"]);
+    let files = p.ok(&["gerbers", "--force"]);
     for f in ["B_Cu.gbl", "F_Mask.gts", "B_Mask.gbs", "F_Silkscreen.gto", "Edge_Cuts.gko", "PTH.drl", "NPTH.drl", "gerbers.zip"] {
         assert!(files.contains(f), "missing {f} in:\n{files}");
     }
@@ -212,7 +213,7 @@ fn two_layer_smd_board() {
     let text = p.fails(&["connect", "R1.3", "C1.1"]);
     assert!(text.contains("has no pin `3`"), "{text}");
 
-    let files = p.ok(&["gerbers"]);
+    let files = p.ok(&["gerbers", "--force"]);
     for f in ["F_Cu.gtl", "B_Cu.gbl", "F_Paste.gtp", "B_Paste.gbp", "F_Mask.gts", "B_Mask.gbs", "PTH.drl"] {
         assert!(files.contains(f), "missing {f} in:\n{files}");
     }
@@ -374,9 +375,12 @@ fn design_rules() {
     p.ok(&["add", "R2", "resistor-0603", "--at", "10,5"]);
     p.ok(&["connect", "R1.1", "R2.1", "--net", "A"]);
     p.ok(&["connect", "R1.2", "R2.2", "--net", "GND"]);
-    // Basic rules: unrouted nets are warnings, so gerbers still write.
-    let out = p.run(&["check"]).1;
-    assert!(out.contains("nets-routed") && out.contains("0 error(s)"), "{out}");
+    // Basic rules: an unrouted net is an error and blocks gerbers (a built board
+    // shipped with an open ground this way); `gerbers --force` is the escape.
+    let out = p.fails(&["check"]);
+    assert!(out.contains("error: nets-routed"), "{out}");
+    let out = p.fails(&["gerbers"]);
+    assert!(out.contains("not writing gerbers"), "{out}");
     // A GND trace hugging the A trace closer than the clearance is an error and blocks gerbers.
     p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "A", "--width", "0.3", "4.125,5", "4.125,6.5", "9.125,6.5", "9.125,5"]);
     p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "GND", "--width", "0.3", "5.875,5", "5.875,6.2", "10.875,6.2", "10.875,5"]);
@@ -488,7 +492,7 @@ fn gerber_pours_emit_in_priority_order() {
     // The island is declared first on purpose: emission order must not follow project order.
     p.ok(&["pour", "new", "vcc", "--layer", "F.Cu", "--net", "VCC", "--rect", "5,5", "--size", "12,20", "--priority", "1"]);
     p.ok(&["pour", "new", "gnd", "--layer", "F.Cu", "--net", "GND", "--follow-outline"]);
-    p.ok(&["gerbers"]);
+    p.ok(&["gerbers", "--force"]);
     let gtl = std::fs::read_to_string(p.build("gerbers/pours-F_Cu.gtl")).unwrap();
     // The first region drawn is the GND pour: it reaches the far edge of the board.
     let first = gtl.split("G36*").nth(1).unwrap();
@@ -548,7 +552,7 @@ fn free_text() {
     p.ok(&["connect", "R1.1", "R2.1", "--net", "A"]);
     p.ok(&["pour", "new", "gnd", "--layer", "F.Cu", "--net", "GND", "--follow-outline"]);
     let before = p.ok(&["pour", "list"]);
-    p.ok(&["gerbers"]);
+    p.ok(&["gerbers", "--force"]);
     let silk_before = std::fs::read_to_string(p.build("gerbers/text-F_Silkscreen.gto")).unwrap().matches("G36*").count();
     let cu_before = std::fs::read_to_string(p.build("gerbers/text-F_Cu.gtl")).unwrap().matches("G36*").count();
     let out = p.ok(&["text", "add", "hello 54v", "--at", "15,14", "--size", "2"]);
@@ -564,9 +568,10 @@ fn free_text() {
     let after = p.ok(&["pour", "list"]);
     let area = |s: &str| s.lines().next().unwrap().split("—").nth(1).unwrap().trim().split(' ').next().unwrap().parse::<f64>().unwrap();
     assert!(area(&after) < area(&before) - 10.0, "before {before} after {after}");
+    // Copper text must not raise anything beyond the (deliberately) unrouted net.
     let out = p.run(&["check"]).1;
-    assert!(out.contains("0 error(s)"), "{out}");
-    p.ok(&["gerbers"]);
+    assert!(out.lines().filter(|l| l.starts_with("error:")).all(|l| l.contains("nets-routed")), "{out}");
+    p.ok(&["gerbers", "--force"]);
     let silk = std::fs::read_to_string(p.build("gerbers/text-F_Silkscreen.gto")).unwrap().matches("G36*").count();
     assert!(silk > silk_before, "silk should carry the text strokes ({silk_before} -> {silk})");
     let cu = std::fs::read_to_string(p.build("gerbers/text-F_Cu.gtl")).unwrap().matches("G36*").count();
@@ -608,8 +613,8 @@ fn route_pin_and_undo() {
     let last = pts.last().unwrap();
     assert_eq!(last[0].as_f64().unwrap(), 24.125); // R2.1 centre
     let check = p.run(&["check"]).1;
-    assert!(check.contains("0 error(s)"), "{check}");
     assert!(!check.contains("net A is not fully routed"), "{check}");
+    assert!(check.lines().filter(|l| l.starts_with("error:")).all(|l| l.contains("nets-routed")), "{check}");
     // Already connected now.
     let out = p.fails(&["route", "pin", "R1.2", "R2.1"]);
     assert!(out.contains("already connected"), "{out}");
