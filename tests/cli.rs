@@ -302,13 +302,20 @@ fn jlcpcb_assembly_outputs() {
     assert!(full.contains("J1,1,solder-pads-2,solder-pads-2,SolderWirePads_2,,,,no"), "{full}");
 
     let cpl = p.ok(&["pnp"]);
-    assert!(cpl.contains("placement(s)"), "{cpl}");
+    assert!(cpl.contains("placement(s)") && cpl.contains("left out, as in the BOM: R9 (no LCSC number), J1 (assembly: false)") && cpl.contains("name the same 4 part(s)"), "{cpl}");
     let cpl = std::fs::read_to_string(p.build("assembly/blinky-cpl.csv")).unwrap();
     assert!(cpl.starts_with("Designator,Mid X,Mid Y,Layer,Rotation\n"), "{cpl}");
     assert!(cpl.contains("U1,10.0000,8.0000,Top,270\n"), "{cpl}"); // SOIC-8 rotation_offset for JLCPCB
     assert!(cpl.contains("R1,15.0000,8.0000,Top,90\n"), "{cpl}");
     assert!(cpl.contains("D1,4.0000,4.0000,Bottom,0\n"), "{cpl}");
-    assert!(!cpl.contains("J1") && !cpl.contains("V1"), "{cpl}");
+    // Exactly the BOM's designators: R9 (no LCSC number) and J1 (not assembled) are
+    // out of both files and listed for hand placement instead.
+    assert!(!cpl.contains("J1") && !cpl.contains("V1") && !cpl.contains("R9"), "{cpl}");
+    let hand = std::fs::read_to_string(p.build("assembly/reference/hand-placed.txt")).unwrap();
+    assert!(hand.contains("R9,1meg,0603,3.0000,3.0000,top,0,no LCSC number") && hand.contains("J1,") , "{hand}");
+    let out = p.ok(&["pnp", "--all"]);
+    assert!(out.contains("reference/blinky-cpl-all.csv"), "{out}");
+    assert!(std::fs::read_to_string(p.build("assembly/reference/blinky-cpl-all.csv")).unwrap().contains("R9,"));
     // An unplaced assembled part is an error (file still written).
     p.ok(&["unplace", "R2"]);
     let text = p.fails(&["pnp"]);

@@ -30,6 +30,7 @@
     "manufacturer": "JSCJ",
     "mpn": "CJ431",
     "assembly": true,
-    "rotation_offset": 0
+    "rotation_offset": 270,
+    "rotation_note": "SOT-23-3 shares its footprint with mosfet-2n7002, whose 270 offset JLCPCB's placement preview confirmed (grit order, 2026-09-15); same package, same reel zero orientation. Check the preview on this part's first order."
   }
 }

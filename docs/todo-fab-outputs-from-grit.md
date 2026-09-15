@@ -1,5 +1,8 @@
 # Fab-output consistency to move into flatland (from the grit board, 2026-09-15)
 
+Status (2026-09-15): items 1, 2, 3 (the check), 4 and 6 are in the tool;
+see the notes under each. Open: `pcb rename` (item 3).
+
 The grit generator (`/Users/jake/mips32/boards/grit/pcb/build.py`,
 `outputs()`) post-processes `pcb bom` / `pcb pnp` output because JLCPCB
 rejected the files as written.  Each item below is a measure that belongs
@@ -22,6 +25,10 @@ that diffs the two designator sets would also do.
 
 Reference: `consistent_cpl()` in grit's build.py.
 
+**Done.** `pcb pnp` applies the BOM's filter, prints what it left out and
+writes `build/assembly/reference/hand-placed.txt` with their positions;
+it ends with "BOM and placement list name the same N part(s)".
+
 ## 2. Mid X / Mid Y is the part's centre, not the footprint origin (`pnp`)
 
 **What went wrong.**  JLCPCB places at Mid X/Y.  The tool writes the
@@ -32,6 +39,8 @@ footprint origin, which for the pin headers and the DB9 is pin 1: up to
 holes, pegs or mounting holes), or a footprint-declared centre if one
 exists.  Reference: `centre_cpl()` in grit's build.py (parses `pcb pads`
 and rewrites the CSV).
+
+**Done** (2026-09-12): Mid X/Y is the centre of the plated pads' bounding box.
 
 ## 3. Reference designators with one prefix per part class (BOM review)
 
@@ -53,6 +62,9 @@ designators do not share an alphabetic prefix would catch it before
 upload.  A `pcb rename` (bulk designator remap with a mapping file) would
 make adopting the scheme on an existing project one command.
 
+**Check done** (2026-09-13): the JLCPCB profiles carry `bom-prefixes` and
+`designator-format` (warnings). `pcb rename` is still open.
+
 ## 4. The upload set should be obvious
 
 Only two files go to JLCPCB.  Grit keeps `grit-bom.csv` and
@@ -61,7 +73,29 @@ Only two files go to JLCPCB.  Grit keeps `grit-bom.csv` and
 `build/assembly/reference`.  `pcb bom --all` could default to a
 different directory or name pattern so the upload pair stands alone.
 
+**Done:** `--all` outputs go to `build/assembly/reference/<name>-bom-all.csv`
+and `<name>-cpl-all.csv`; `hand-placed.txt` lives there too.
+
 ## 5. Related, already written up
 
 `docs/checks-from-grit-audit.md` (E2 there is item 2 here; E3 covers
 inert waivers; G1 the netlist compare).
+
+## 6. Rotation offsets in the library (`pnp`)
+
+JLCPCB's placement preview (2026-09-15) showed `dcjack-pj-002ah-smt`
+from `library-jlcpcb` 90 degrees clockwise of its pads: its
+`metadata.rotation_offset` wants +90.  Grit corrects it in a CPL
+post-process (`ROTATION_FIX` in build.py) because a board generator
+should not edit the shared library.  Every library part's offset needs
+the same check against the preview once; the offsets grit verified for
+its own parts (DIP sockets, SOIC, TSSOP, SOT-23, SOT-23-5, pin headers
+270; DB9 270; through-hole DIP switch 0; LEDs, 0603/0805 passives 0)
+could seed a table.
+
+**Done for what the library has:** `dcjack-pj-002ah-smt` carries
+`rotation_offset: 90` with the preview noted; `cj431-sot23` now carries
+the SOT-23 270 that `mosfet-2n7002` (same footprint) had verified. SOIC
+270 and passive/LED 0 were already in place. `library-jlcpcb` has no
+DIP, TSSOP, SOT-23-5, pin-header or DB9 parts yet; seed those with the
+values above when they are added.

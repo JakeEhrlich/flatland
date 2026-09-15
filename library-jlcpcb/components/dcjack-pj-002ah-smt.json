@@ -34,7 +34,7 @@
     "manufacturer": "CUI Devices",
     "mpn": "PJ-002AH-SMT-TR",
     "assembly": true,
-    "rotation_offset": 0,
-    "rotation_note": "footprint has the plug entering from -y; JLCPCB's reel zero-orientation is unverified -- check the placement preview on the first order and record the offset here"
+    "rotation_offset": 90,
+    "rotation_note": "JLCPCB's placement preview (grit order, 2026-09-15) showed the reel zero orientation 90 degrees clockwise of this footprint (plug entering from -y), so the CPL rotation is the footprint rotation plus 90"
   }
 }

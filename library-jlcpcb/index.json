@@ -50,7 +50,7 @@
     },
     "cj431-sot23": {
       "url": "components/cj431-sot23.json",
-      "blake3": "351f5b9578b1bfa96a1b19bbda2f1aeb76560239e46dce79b5095263afc4c445",
+      "blake3": "1b9cdbbe27bb25a2ecdba5f56b4ba0701f20328835a793826af269399b74eb30",
       "description": "JSCJ CJ431 adjustable shunt reference 2.495 V (TL431 equivalent), SOT-23 with pins 1=REF 2=CATHODE 3=ANODE (note: NOT the TI pinout); Ika min 1 mA (LCSC C3113, JLCPCB basic)"
     },
     "lm358-soic8": {
@@ -145,7 +145,7 @@
     },
     "dcjack-pj-002ah-smt": {
       "url": "components/dcjack-pj-002ah-smt.json",
-      "blake3": "eb51169d8f52d2e942af64684764674b78fa4ce55468add00f930a215fbb3cf9",
+      "blake3": "29c59d269f662d4d9c4105061f65a461fce28af2b8d8b5c5ee22e1db093971d8",
       "description": "CUI PJ-002AH-SMT-TR DC power jack, 5.5 mm barrel / 2.0 mm centre pin, 24 V 5 A, SMT with two plastic locating pegs (needs two non-plated holes; check peg length against the board thickness when the back is a heatsink). LCSC C22434687"
     },
     "led-xinglight-2835-yellowwhite": {

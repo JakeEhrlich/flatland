@@ -155,7 +155,9 @@ pub fn bom(ctx: &Ctx, a: BomArgs) -> Result<()> {
             }
         }
     }
-    let path = a.output.unwrap_or_else(|| loaded.build_dir().join("assembly").join(format!("{}-bom.csv", board.project.name.replace(' ', "_"))));
+    // The upload pair stands alone in build/assembly; everything else goes to reference/.
+    let name = board.project.name.replace(' ', "_");
+    let path = a.output.unwrap_or_else(|| if a.all { loaded.build_dir().join("assembly").join("reference").join(format!("{name}-bom-all.csv")) } else { loaded.build_dir().join("assembly").join(format!("{name}-bom.csv")) });
     write_out(&path, &text)?;
     let n: usize = groups.values().map(|v| v.len()).sum();
     println!("{} part(s) in {} line item(s)", n, groups.len());
@@ -183,8 +185,19 @@ pub fn pnp(ctx: &Ctx, a: PnpArgs) -> Result<()> {
         Format::Jlcpcb => text.push_str("Designator,Mid X,Mid Y,Layer,Rotation\n"),
         Format::Csv => text.push_str("Designator,X,Y,Side,Rotation,Footprint,Value,LCSC\n"),
     }
+    // The placement list must name exactly the parts the BOM names: JLCPCB rejects
+    // a designator in one file and not the other. Same filter as `bom`.
+    let mut left_out: Vec<(String, &str)> = Vec::new();
+    let mut hand: String = String::from("# parts not in the BOM or placement list: place these by hand\n# refdes,value,footprint,x,y,side,rotation,why\n");
     for p in &all {
-        if !p.assemble && !a.all {
+        let why = if !p.assemble { Some("assembly: false") } else if p.lcsc.is_none() && a.format == Format::Jlcpcb { Some("no LCSC number") } else { None };
+        if let (Some(why), false) = (why, a.all) {
+            left_out.push((p.inst.refdes.clone(), why));
+            if let Some(pl) = &p.inst.instance.placement {
+                hand.push_str(&format!("{},{},{},{:.4},{:.4},{},{},{why}\n", p.inst.refdes, csv_field(&p.value), csv_field(&p.footprint), pl.at.x.mm(), pl.at.y.mm(), pl.side, fmt_deg(pl.rotation)));
+            } else {
+                hand.push_str(&format!("{},{},{},,,,,{why} (unplaced)\n", p.inst.refdes, csv_field(&p.value), csv_field(&p.footprint)));
+            }
             continue;
         }
         let Some(pl) = &p.inst.instance.placement else {
@@ -223,9 +236,23 @@ pub fn pnp(ctx: &Ctx, a: PnpArgs) -> Result<()> {
         }
         rows += 1;
     }
-    let path = a.output.unwrap_or_else(|| loaded.build_dir().join("assembly").join(format!("{}-cpl.csv", board.project.name.replace(' ', "_"))));
+    let name = board.project.name.replace(' ', "_");
+    let path = a.output.unwrap_or_else(|| if a.all { loaded.build_dir().join("assembly").join("reference").join(format!("{name}-cpl-all.csv")) } else { loaded.build_dir().join("assembly").join(format!("{name}-cpl.csv")) });
     write_out(&path, &text)?;
     println!("{rows} placement(s); origin is the board frame origin (same as the gerbers), y up, rotation counter-clockwise");
+    if !left_out.is_empty() {
+        let list: Vec<String> = left_out.iter().map(|(r, why)| format!("{r} ({why})")).collect();
+        println!("left out, as in the BOM: {}", list.join(", "));
+        let side = loaded.build_dir().join("assembly").join("reference").join("hand-placed.txt");
+        if let Some(d) = side.parent() {
+            std::fs::create_dir_all(d).map_err(|e| Error::io(format!("could not create `{}`", d.display()), e))?;
+        }
+        std::fs::write(&side, &hand).map_err(|e| Error::io(format!("could not write `{}`", side.display()), e))?;
+        println!("their positions are in {}", side.display());
+    }
+    if a.format == Format::Jlcpcb && !a.all {
+        println!("BOM and placement list name the same {rows} part(s)");
+    }
     if !unplaced.is_empty() {
         return Err(Error::with_help(
             format!("these parts are not placed: {}", unplaced.join(", ")),
