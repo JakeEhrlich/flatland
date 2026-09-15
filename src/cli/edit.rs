@@ -1507,8 +1507,17 @@ pub fn run_trace(ctx: &Ctx, c: TraceCmd) -> Result<()> {
             for n in &notes {
                 println!("{n}");
             }
-            if trimmed_ends == 0 && removed == 0 {
-                println!("nothing to trim: every trace end lands on copper of its net");
+            // Stretches of a trace that run inside its own net's fill add nothing:
+            // cut them away too (routed and hand-drawn alike).
+            let original = std::mem::replace(&mut loaded.project.traces, traces.clone());
+            let (covered_cut, covered_gone) = crate::route::clip_covered_traces(ctx, &mut loaded, false)?;
+            if covered_cut + covered_gone > 0 {
+                println!("fill covers {covered_gone} trace(s) entirely (removed) and stretches of {covered_cut} more (cut back to what the fill does not cover)");
+                traces = loaded.project.traces.clone();
+            }
+            loaded.project.traces = original;
+            if trimmed_ends == 0 && removed == 0 && covered_cut + covered_gone == 0 {
+                println!("nothing to trim: every trace end lands on copper of its net and no trace runs inside its fill");
                 return Ok(());
             }
             println!("{}trimmed {trimmed_ends} end(s), removed {removed} trace(s); pours refill the space on the next build", if dry_run { "dry run: would have " } else { "" });

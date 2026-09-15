@@ -20,10 +20,11 @@ pcb route --import FILE.ses
 1. Deletes previously autorouted traces and vias (`routed: true`), unless
    `--keep`. Hand-drawn copper is kept.
 2. Writes a Specctra design file `build/<name>.dsn` describing layers,
-   outline, keepouts (non-plated holes), planes (pours with a net), every
-   placed footprint with its pads, nets and net classes with widths /
-   clearances / via, and hand-drawn traces and vias as *protected*
-   wiring. Stops here with `--dsn-only`.
+   outline, keepouts (non-plated holes), every placed footprint with its
+   pads, nets and net classes with widths / clearances / via, and
+   hand-drawn traces and vias as *protected* wiring. A pour's net is an
+   ordinary net to the router (see `--planes`). Stops here with
+   `--dsn-only`.
 3. If every net is already one island, stops ("nothing to route").
 4. Runs freerouting in batch mode:
    `freerouting -de build/<name>.dsn -do build/<name>.ses -mp N -dct 0 -da -dl`
@@ -91,10 +92,24 @@ fewest 45°-multiple segments whose corridor is free.
 `--keep-redundant`
 : After import every router-drawn segment is removed in turn and kept only
   if its net would fall apart without it. That strips the links freerouting
-  draws between the pads of a pour's net on a board with no planes (one
-  copper layer), the pieces of protected hand wiring it echoes back, and
-  links between the solder tabs of one pin. This flag keeps them all.
-  Hand-drawn traces are never touched.
+  draws between the pads of a pour's net, the pieces of protected hand
+  wiring it echoes back, and links between the solder tabs of one pin.
+  What survives is then cut back to the stretches the fill does not cover:
+  a ground trace that crosses a clearance channel into a pocket keeps that
+  crossing (extended a trace width into the fill on each side) and loses
+  the rest. This flag keeps everything as routed. Hand-drawn traces are
+  never touched here; `pcb trace trim` applies the same cut to them.
+
+`--planes`
+: Hand every pour with a net to the router as a `plane`. The router then
+  treats that net as solid copper across the layer, never draws it, and
+  keeps other nets clear of nothing but the pads, so it can wall a pad of
+  the plane's net in with other traces; the real fill cannot reach such a
+  pad and `pcb check` fails with the net in two islands. Routing the net
+  like any other (the default) makes the router reach every pad itself,
+  with a trace or a via, and the fill swallows whatever it covers. Planes
+  remain useful on a dense multi-layer board where routing the ground net
+  costs too much.
 
 `--freerouting PATH`
 : A `.jar` (run with Java) or the app's launcher executable. Precedence:
@@ -124,11 +139,12 @@ match with `pcb trace add --chamfer`.
 * Pads: exact polygons (SMD pads on the top layer, mirrored by the router
   for bottom-side parts; through-hole pads on all layers). Plated holes
   with a net are exported as one-pin parts named `HOLE<n>`.
-* Pours with a net are `plane`s on multi-layer boards: the router keeps
-  other nets clear of them and treats them as connecting their own net. On
-  a single-layer board pours are *not* exported, so the router draws that
-  net as traces (otherwise its other traces would carve the fill into
-  islands); the pour then merges with those traces.
+* Pours are not exported unless `--planes`: the router draws a pour's net
+  as traces and vias like any other, and the pour then merges with them
+  (the covered stretches are cut away on import). With `--planes` a pour
+  with a net is a `plane` on a multi-layer board, which the router treats
+  as connecting its own net without checking that the fill can reach each
+  pad.
 * A pin with several solder tabs is one router pin whose padstack holds
   every tab.
 * Keepouts: non-plated holes and unassigned plated holes, grown by

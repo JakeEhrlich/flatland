@@ -5,6 +5,7 @@ use crate::cli::{Ctx, Loaded};
 use crate::dsn;
 use crate::error::{Error, Result};
 use crate::store;
+use crate::units::{Length, Point};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
@@ -108,7 +109,7 @@ pub fn run(ctx: &Ctx, a: RouteArgs) -> Result<()> {
     let ses_to_import: PathBuf = if let Some(p) = &a.import {
         p.clone()
     } else {
-        let text = dsn::emit::emit(&board)?;
+        let text = dsn::emit::emit(&board, a.planes)?;
         std::fs::write(&dsn_path, &text).map_err(|e| Error::io(format!("could not write `{}`", dsn_path.display()), e))?;
         println!("wrote {}", dsn_path.display());
         if a.dsn_only {
@@ -227,6 +228,10 @@ pub fn run(ctx: &Ctx, a: RouteArgs) -> Result<()> {
             let total: usize = dropped.iter().map(|(_, n)| n).sum();
             let per: Vec<String> = dropped.iter().map(|(n, c)| format!("{n} {c}")).collect();
             println!("dropped {total} redundant router segment(s) ({}): pours, hand wiring or multi-tab pins already make those connections (keep them with --keep-redundant)", per.join(", "));
+        }
+        let (clipped, removed) = clip_covered_traces(ctx, &mut loaded, true)?;
+        if clipped + removed > 0 {
+            println!("fill covers {removed} router trace(s) entirely (removed) and stretches of {clipped} more (cut back to what the fill does not cover)");
         }
     }
     loaded.save()?;
@@ -372,6 +377,197 @@ fn prune_redundant_traces(ctx: &Ctx, loaded: &mut Loaded, before: &[(String, Vec
         }
     }
     Ok(dropped)
+}
+
+/// Cut every trace back to the stretches its own net's fill does not cover.
+/// A trace running through the fill adds no copper (the fill already covers
+/// it), but it clutters the design and blocks later routes; the stretches
+/// that cross a clearance channel or reach into a pocket are the ones that
+/// matter and stay, each extended a full trace width into the fill so the
+/// joint is face to face. Only routed traces unless `routed_only` is false.
+/// Returns (traces cut, traces removed entirely); if connectivity would
+/// suffer (it should not: only copper the fill also covers is removed) the
+/// traces are left alone.
+pub fn clip_covered_traces(ctx: &Ctx, loaded: &mut Loaded, routed_only: bool) -> Result<(usize, usize)> {
+    let board = ctx.board(loaded)?;
+    let before = board.connectivity()?;
+    let pours = board.pours()?;
+    let mut out: Vec<crate::schema::Trace> = Vec::new();
+    let mut pieces_made: Vec<usize> = Vec::new();
+    let (mut clipped, mut removed) = (0usize, 0usize);
+    for t in &loaded.project.traces {
+        let Some(net) = t.net.as_deref() else { out.push(t.clone()); continue };
+        if (routed_only && !t.routed) || t.points.len() < 2 {
+            out.push(t.clone());
+            continue;
+        }
+        let fill: crate::geom::Rings = pours.iter().filter(|p| p.pour.layer == t.layer && p.pour.net.as_deref() == Some(net)).flat_map(|p| p.copper.iter().cloned()).collect();
+        if fill.is_empty() {
+            out.push(t.clone());
+            continue;
+        }
+        // Where the centreline may run so that the whole cross-section lies in the fill.
+        let core = crate::geom::offset(&fill, -Length::from_nm(t.width.nm() / 2 + 5_000));
+        match uncovered_pieces(&t.points, t.width, &core) {
+            None => out.push(t.clone()),
+            Some(pieces) if pieces.is_empty() => removed += 1,
+            Some(pieces) => {
+                clipped += 1;
+                for pts in pieces {
+                    let mut t2 = t.clone();
+                    t2.points = pts;
+                    pieces_made.push(out.len());
+                    out.push(t2);
+                }
+            }
+        }
+    }
+    if clipped + removed == 0 {
+        return Ok((0, 0));
+    }
+    let saved = std::mem::replace(&mut loaded.project.traces, out);
+    let board = ctx.board(loaded)?;
+    let after = board.connectivity()?;
+    let islands = |conn: &[(String, Vec<Vec<String>>)], net: &str| conn.iter().find(|(m, _)| m == net).map_or(1, |(_, j)| j.len());
+    let worse = before.iter().any(|(n, i)| islands(&after, n) > i.len());
+    if worse {
+        loaded.project.traces = saved;
+        return Ok((0, 0));
+    }
+    // A piece left in a pad's thermal ring parallels the spokes; drop every
+    // piece the net does not need.
+    for i in pieces_made.into_iter().rev() {
+        let t = loaded.project.traces.remove(i);
+        let net = t.net.clone().unwrap_or_default();
+        let conn = ctx.board(loaded)?.connectivity()?;
+        if islands(&conn, &net) > islands(&before, &net) {
+            loaded.project.traces.insert(i, t);
+        }
+    }
+    Ok((clipped, removed))
+}
+
+/// Split a polyline into the stretches whose centreline is not inside `core`
+/// (a polygon set), each stretch extended by `width` into the covered part.
+/// `None` when nothing is covered; `Some(empty)` when everything is.
+fn uncovered_pieces(points: &[Point], width: Length, core: &[crate::geom::Ring]) -> Option<Vec<Vec<Point>>> {
+    let inside = |x: f64, y: f64| {
+        let p = Point::nm((x * 1e6).round() as i64, (y * 1e6).round() as i64);
+        core.iter().filter(|r| crate::geom::contains(r, p)).count() % 2 == 1
+    };
+    let xy: Vec<(f64, f64)> = points.iter().map(|p| (p.x.mm(), p.y.mm())).collect();
+    let mut cum = vec![0.0f64];
+    for w in xy.windows(2) {
+        cum.push(cum.last().unwrap() + ((w[1].0 - w[0].0).powi(2) + (w[1].1 - w[0].1).powi(2)).sqrt());
+    }
+    let total = *cum.last().unwrap();
+    if total <= 0.0 {
+        return None;
+    }
+    let at = |s: f64| -> (f64, f64) {
+        let s = s.clamp(0.0, total);
+        let mut i = 0;
+        while i + 2 < cum.len() && cum[i + 1] < s {
+            i += 1;
+        }
+        let len = cum[i + 1] - cum[i];
+        let f = if len > 0.0 { (s - cum[i]) / len } else { 0.0 };
+        (xy[i].0 + (xy[i + 1].0 - xy[i].0) * f, xy[i].1 + (xy[i + 1].1 - xy[i].1) * f)
+    };
+    let inside_at = |s: f64| {
+        let (x, y) = at(s);
+        inside(x, y)
+    };
+    // Sample, then bisect each transition to a micron.
+    let step = (width.mm() / 4.0).clamp(0.005, 0.1);
+    let mut samples: Vec<f64> = cum.clone();
+    let mut s = 0.0;
+    while s < total {
+        samples.push(s);
+        s += step;
+    }
+    samples.push(total);
+    samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    samples.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
+    let flags: Vec<bool> = samples.iter().map(|s| inside_at(*s)).collect();
+    if flags.iter().all(|f| !*f) {
+        return None;
+    }
+    // Covered intervals in arc length.
+    let mut covered: Vec<(f64, f64)> = Vec::new();
+    let mut start: Option<f64> = if flags[0] { Some(0.0) } else { None };
+    for i in 1..samples.len() {
+        if flags[i] != flags[i - 1] {
+            let (mut lo, mut hi) = (samples[i - 1], samples[i]);
+            for _ in 0..24 {
+                let mid = 0.5 * (lo + hi);
+                if inside_at(mid) == flags[i - 1] {
+                    lo = mid;
+                } else {
+                    hi = mid;
+                }
+                if hi - lo < 1e-4 {
+                    break;
+                }
+            }
+            let x = 0.5 * (lo + hi);
+            if flags[i] {
+                start = Some(x);
+            } else if let Some(a) = start.take() {
+                covered.push((a, x));
+            }
+        }
+    }
+    if let Some(a) = start {
+        covered.push((a, total));
+    }
+    if covered.is_empty() {
+        return None;
+    }
+    // Complement, extended by a trace width into the fill, merged.
+    let margin = width.mm();
+    let mut keep: Vec<(f64, f64)> = Vec::new();
+    let mut cursor = 0.0;
+    for (a, b) in &covered {
+        if *a > cursor {
+            keep.push(((cursor - margin).max(0.0), (*a + margin).min(total)));
+        }
+        cursor = *b;
+    }
+    if cursor < total {
+        keep.push(((cursor - margin).max(0.0), total));
+    }
+    let mut merged: Vec<(f64, f64)> = Vec::new();
+    for (a, b) in keep {
+        match merged.last_mut() {
+            Some(last) if a <= last.1 => last.1 = last.1.max(b),
+            _ => merged.push((a, b)),
+        }
+    }
+    let mut pieces: Vec<Vec<Point>> = Vec::new();
+    for (a, b) in merged {
+        if b - a < 0.001 {
+            continue;
+        }
+        let mut pts: Vec<(f64, f64)> = vec![at(a)];
+        for (i, s) in cum.iter().enumerate() {
+            if *s > a && *s < b {
+                pts.push(xy[i]);
+            }
+        }
+        pts.push(at(b));
+        let mut out: Vec<Point> = Vec::new();
+        for (x, y) in pts {
+            let p = Point::nm((x * 1e6).round() as i64, (y * 1e6).round() as i64);
+            if out.last().map_or(true, |q| (q.x.nm() - p.x.nm()).abs() > 500 || (q.y.nm() - p.y.nm()).abs() > 500) {
+                out.push(p);
+            }
+        }
+        if out.len() >= 2 {
+            pieces.push(out);
+        }
+    }
+    Some(pieces)
 }
 
 fn read_all(mut r: impl std::io::Read) -> String {

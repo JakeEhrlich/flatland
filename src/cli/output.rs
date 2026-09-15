@@ -156,6 +156,10 @@ pub struct RouteArgs {
     /// Keep every router-drawn segment, even ones a pour, hand wiring or a multi-tab pin already makes redundant.
     #[arg(long)]
     pub keep_redundant: bool,
+    /// Hand pours to the router as planes (it then never draws their nets and may wall a pad in);
+    /// by default a pour's net is routed like any other and the fill swallows what it covers.
+    #[arg(long)]
+    pub planes: bool,
 }
 
 pub fn route(ctx: &Ctx, a: RouteArgs) -> Result<()> {

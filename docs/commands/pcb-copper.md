@@ -92,6 +92,11 @@ Traces have round joins and **flat ends**: the copper stops exactly at the
 last point. End a trace at or inside a pad; a round cap would poke out of
 any pad narrower than the trace.
 
+`pcb trace trim` also cuts every trace back to the stretches its own
+net's fill does not cover, keeping a trace width of overlap into the fill
+at each cut; a trace that lies wholly inside the fill goes. Connectivity
+is verified before anything is saved.
+
 `pcb trace trim` shortens every trace end that lands on nothing of its own
 net — an overshoot past the last pad, a stub left by editing, a router
 wire whose other end was deleted — back to the point where the trace body

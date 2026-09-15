@@ -70,7 +70,7 @@ fn padstack_key(pad: &BoardPad, local_ring: &Ring) -> String {
     format!("{shape}[{kind}]Pad_{}x{}_{:08x}_um", um(pad.size[0]), um(pad.size[1]), h.finish() as u32)
 }
 
-pub fn emit(board: &Board) -> Result<String> {
+pub fn emit(board: &Board, planes: bool) -> Result<String> {
     let outline = board
         .outline
         .as_ref()
@@ -110,11 +110,15 @@ pub fn emit(board: &Board) -> Result<String> {
             let _ = writeln!(s, "    (keepout \"\" (polygon {} 0{}))", quote(&t.layer), ring_coords(&r));
         }
     }
-    // Pours become planes — but only on multi-layer boards. On a single
-    // layer the router must draw the pour's net as traces (a plane would
-    // make it skip the net while its other traces carve the fill into
-    // islands); the pour then merges with those traces.
-    if n > 1 {
+    // A pour's net is an ordinary net to the router unless planes are asked
+    // for: a `plane` tells the router the net is solid copper across the
+    // layer, so it never draws that net and freely walls a pad of it in with
+    // other traces (a built board shipped with its timing capacitor's ground
+    // pad in such a pocket). Routed as a net, every pad gets a trace or a via,
+    // and the pour then swallows whatever it covers. Planes are still an
+    // option on dense multi-layer boards where routing the ground net is too
+    // expensive.
+    if planes && n > 1 {
         for p in board.pours()? {
             if let Some(net) = &p.pour.net {
                 let _ = writeln!(s, "    (plane {} (polygon {} 0{}))", quote(net), quote(&p.pour.layer), ring_coords(&p.outline));

@@ -542,6 +542,50 @@ fn trim_traces() {
 }
 
 #[test]
+fn covered_traces() {
+    // A trace running inside its own net's fill adds nothing: `trace trim` cuts
+    // it back to the stretches outside the fill (plus a trace width of overlap)
+    // and removes it entirely when the fill covers all of it.
+    let p = Proj::new("covered");
+    p.ok(&["init", "cov", "--index", library().to_str().unwrap()]);
+    p.ok(&["outline", "rect", "30", "20"]);
+    p.ok(&["add", "R1", "resistor-0603", "--at", "5,10"]);
+    p.ok(&["add", "R2", "resistor-0603", "--at", "25,10"]);
+    p.ok(&["connect", "R1.1", "R2.1", "--net", "GND"]);
+    p.ok(&["connect", "R1.2", "R2.2", "--net", "A"]);
+    // A hand trace joins the GND pads; the fill covers only the left half.
+    p.ok(&["trace", "add", "--layer", "F.Cu", "--net", "GND", "--width", "0.3", "4.125,10", "4.125,13", "24.125,13", "24.125,10"]);
+    p.ok(&["pour", "new", "gnd", "--layer", "F.Cu", "--net", "GND", "--rect", "0,0", "--size", "15,20"]);
+    let out = p.ok(&["trace", "trim"]);
+    assert!(out.contains("stretches of 1 more"), "{out}");
+    let list = p.ok(&["trace", "list"]);
+    // The stretch inside the fill (x < 15) is gone except for one trace width
+    // of overlap; the stretch outside stays whole and still reaches R2.1.
+    let gnd: Vec<&str> = list.lines().filter(|l| l.contains("net GND")).collect();
+    assert_eq!(gnd.len(), 1, "the stub left in R1.1's thermal ring parallels its spokes and goes too:\n{list}");
+    let line = gnd[0].to_string();
+    assert!(line.contains("24.125,10"), "{line}");
+    let first = line.split("w 0.3mm ").nth(1).unwrap().split(" ->").next().unwrap();
+    let x: f64 = first.split(',').next().unwrap().parse().unwrap();
+    assert!(x > 14.0 && x < 15.0, "cut should land a trace width inside the fill: {line}");
+    let status = p.ok(&["status"]);
+    assert!(status.lines().any(|l| l.contains("GND") && l.contains("routed")), "{status}");
+    // Whole trace inside the fill: removed.
+    p.ok(&["pour", "remove", "gnd"]);
+    p.ok(&["pour", "new", "gnd", "--layer", "F.Cu", "--net", "GND", "--follow-outline"]);
+    // (The end inside R2.1's thermal ring is uncovered, so the trace is cut
+    // there first and the stub then dropped as redundant.)
+    let out = p.ok(&["trace", "trim"]);
+    assert!(out.contains("fill covers"), "{out}");
+    let list = p.ok(&["trace", "list"]);
+    assert!(!list.contains("net GND"), "{list}");
+    // GND is whole through the fill alone; only the never-routed net A remains open.
+    let out = p.run(&["check"]).1;
+    assert!(!out.contains("net GND"), "{out}");
+    assert!(out.lines().filter(|l| l.starts_with("error:")).all(|l| l.contains("net A")), "{out}");
+}
+
+#[test]
 fn free_text() {
     let p = Proj::new("text");
     p.ok(&["init", "text", "--layers", "F.Cu", "--index", library().to_str().unwrap()]);
