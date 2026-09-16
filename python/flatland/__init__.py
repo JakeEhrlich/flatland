@@ -270,9 +270,13 @@ class Pcb:
         return self.run(*argv)
 
     def route(self, *, passes: int | None = None, keep: bool = False, dsn_only: bool = False,
-              keep_redundant: bool = False) -> str:
+              keep_redundant: bool = False, planes: bool = False, timeout: int | None = None,
+              import_ses: str | os.PathLike | None = None) -> str:
+        """Autoroute with freerouting (`pcb route`): pour nets are routed like any other unless
+        ``planes``; ``import_ses`` imports a session file instead of running the router."""
         return self.run("route", *_flag("passes", passes), *_flag("keep", keep), *_flag("dsn-only", dsn_only),
-                        *_flag("keep-redundant", keep_redundant))
+                        *_flag("keep-redundant", keep_redundant), *_flag("planes", planes), *_flag("timeout", timeout),
+                        *_flag("import", None if import_ses is None else os.fspath(import_ses)))
 
     def visualize(self, what: str = "pcb", *, output: str | os.PathLike | None = None, width: int | None = None,
                   crop: tuple[Point, Point] | None = None) -> str:
