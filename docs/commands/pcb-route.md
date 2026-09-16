@@ -101,7 +101,9 @@ fewest 45°-multiple segments whose corridor is free.
   never touched here; `pcb trace trim` applies the same cut to them.
 
 `--planes`
-: Hand every pour with a net to the router as a `plane`. The router then
+: Hand every pour with a net to the router as a `plane`, and declare a
+  layer whose netted pour covers the outline as a power layer so the
+  router keeps signal traces off it. The router then
   treats that net as solid copper across the layer, never draws it, and
   keeps other nets clear of nothing but the pads, so it can wall a pad of
   the plane's net in with other traces; the real fill cannot reach such a

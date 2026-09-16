@@ -766,6 +766,31 @@ fn semantic_hash() {
 }
 
 #[test]
+fn dsn_declares_via_sizes_and_plane_layers() {
+    // Hand vias of a size other than the rule need their own padstack in the DSN
+    // (freerouting rejects wiring that names an undeclared one), and with --planes
+    // a layer carrying an outline-following pour is a power layer.
+    let p = Proj::new("dsn4");
+    p.ok(&["init", "four", "--layers", "F.Cu,In1.Cu,In2.Cu,B.Cu", "--index", library().to_str().unwrap()]);
+    p.ok(&["outline", "rect", "30", "20"]);
+    p.ok(&["add", "R1", "resistor-0603", "--at", "5,10"]);
+    p.ok(&["add", "R2", "resistor-0603", "--at", "25,10"]);
+    p.ok(&["connect", "R1.1", "R2.1", "--net", "A"]);
+    p.ok(&["connect", "R1.2", "R2.2", "--net", "GND"]);
+    // The rule via is 0.4/0.8; this one is smaller.
+    p.ok(&["via", "add", "--net", "GND", "--drill", "0.3", "--diameter", "0.6", "10,5"]);
+    p.ok(&["pour", "new", "gnd", "--layer", "In1.Cu", "--net", "GND", "--follow-outline"]);
+    p.ok(&["route", "--dsn-only"]);
+    let dsn = std::fs::read_to_string(p.build("four.dsn")).unwrap();
+    assert!(dsn.contains("(via Via[0-3]_800:400_um Via[0-3]_600:300_um)"), "{dsn}");
+    assert!(dsn.contains("(padstack Via[0-3]_600:300_um") && dsn.contains("(via Via[0-3]_600:300_um 10000 5000 (net GND) (type protect))"), "{dsn}");
+    assert!(dsn.contains("(layer In1.Cu (type signal)"), "without --planes every layer is a signal layer:\n{dsn}");
+    p.ok(&["route", "--dsn-only", "--planes"]);
+    let dsn = std::fs::read_to_string(p.build("four.dsn")).unwrap();
+    assert!(dsn.contains("(layer In1.Cu (type power)") && dsn.contains("(layer F.Cu (type signal)") && dsn.contains("(plane GND (polygon In1.Cu"), "{dsn}");
+}
+
+#[test]
 fn free_text() {
     let p = Proj::new("text");
     p.ok(&["init", "text", "--layers", "F.Cu", "--index", library().to_str().unwrap()]);

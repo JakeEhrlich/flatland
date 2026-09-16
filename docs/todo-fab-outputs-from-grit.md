@@ -1,7 +1,7 @@
 # Fab-output consistency to move into flatland (from the grit board, 2026-09-15)
 
-Status (2026-09-15): items 1, 2, 3 (the check), 4 and 6 are in the tool;
-see the notes under each. Open: `pcb rename` (item 3).
+Status (2026-09-16): items 1, 2, 3 (the check), 4, 6, 7 and 8 are in the
+tool; see the notes under each. Open: `pcb rename` (item 3).
 
 The grit generator (`/Users/jake/mips32/boards/grit/pcb/build.py`,
 `outputs()`) post-processes `pcb bom` / `pcb pnp` output because JLCPCB
@@ -99,3 +99,41 @@ the SOT-23 270 that `mosfet-2n7002` (same footprint) had verified. SOIC
 270 and passive/LED 0 were already in place. `library-jlcpcb` has no
 DIP, TSSOP, SOT-23-5, pin-header or DB9 parts yet; seed those with the
 values above when they are added.
+
+## 7. `pcb route`: declare every via size in the DSN (found on flint, 2026-09-16)
+
+A board whose hand wiring uses a via other than the project's default
+(flint's supply-entry pads had 0.4/0.8 mm vias next to the 0.2/0.5 mm
+rule) makes freerouting 2.2.4 reject the DSN outright:
+
+    WARN  Wiring: via padstack 'Via[0-3]_800:400_um' not found at 'GND'
+    ERROR There was a parse error while reading DSN file at '(pcb': DSN structure parsing failed
+
+then a NullPointerException in RouterSettings.applyBoardSpecificOptimizations
+and exit status 0 with no .ses (`pcb route` reports "freerouting exited
+... without writing ...ses").  The wiring section references a padstack
+the library section never defines.  `dsn::emit` should emit one padstack
+per distinct (drill, diameter) among the project's vias (and the
+`(via ...)` list should name them all), not only the rules' via.
+Workaround on flint: all vias at the project size.
+
+**Done** (2026-09-16): `dsn::emit` declares a padstack for every distinct
+(diameter, drill) among the project's vias and lists them all in `(via ...)`.
+
+## 8. `pcb route --planes`: mark plane layers `(type power)` (found on flint, 2026-09-16)
+
+`dsn::emit` writes `(layer X (type signal))` for every layer whatever
+`planes` is, so freerouting routes signals across the layers that carry
+the outline-following pours: on flint (4 layers, GND on In1.Cu, VCC on
+In2.Cu) it put 167 of 267 traces on the two plane layers, the ground
+pour ended up as 19 islands and every plane-layer via/pad reported
+pour overlaps.  grit's build.py worked around it by rewriting the DSN
+(`(layer In1.Cu (type signal)` -> `(type power)`) between `--dsn-only`
+and its own freerouting launch.  With `planes`, a layer whose pour
+follows the outline should be emitted as `(type power)` (freerouting
+then keeps signal traces off it), and `Pcb.route(planes=True)` becomes
+usable for a plane board without a hand-launched router.
+
+**Done** (2026-09-16): with `--planes` (or `Pcb.route(planes=True)`) a layer
+whose netted pour covers at least 90 % of the outline is written as
+`(type power)`; other layers stay `(type signal)`.

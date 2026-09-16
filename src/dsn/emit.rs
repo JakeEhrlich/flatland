@@ -87,8 +87,23 @@ pub fn emit(board: &Board, planes: bool) -> Result<String> {
     s.push_str("  (structure\n");
     // Route with 45° corners rather than free angles.
     s.push_str("    (snap_angle fortyfive_degree)\n");
+    // With planes, a layer whose netted pour follows the outline is a power
+    // layer: freerouting keeps signal traces off it (otherwise it routes across
+    // the plane and carves the fill into islands).
+    let plane_layers: Vec<String> = if planes && n > 1 {
+        let outline_area = geom::signed_area(outline).abs();
+        board
+            .pours()?
+            .iter()
+            .filter(|p| p.pour.net.is_some() && geom::signed_area(&p.outline).abs() >= 0.9 * outline_area)
+            .map(|p| p.pour.layer.clone())
+            .collect()
+    } else {
+        vec![]
+    };
     for (i, l) in layers.iter().enumerate() {
-        let _ = writeln!(s, "    (layer {} (type signal) (property (index {i})))", quote(l));
+        let kind = if plane_layers.contains(l) { "power" } else { "signal" };
+        let _ = writeln!(s, "    (layer {} (type {kind}) (property (index {i})))", quote(l));
     }
     let _ = writeln!(s, "    (boundary (path pcb 0{}))", ring_coords(outline));
     // Non-plated holes and unassigned plated holes are keepouts.
@@ -132,6 +147,11 @@ pub fn emit(board: &Board, planes: bool) -> Result<String> {
         let d = c.via_diameter.unwrap_or(rules.via_diameter);
         let h = c.via_drill.unwrap_or(rules.via_drill);
         via_names.insert(via_name(d, h, n), (d, h));
+    }
+    // Every via size the board already uses needs a padstack too: protected
+    // wiring that names an undeclared padstack makes freerouting reject the file.
+    for v in &board.project.vias {
+        via_names.insert(via_name(v.diameter, v.drill, n), (v.diameter, v.drill));
     }
     // Freerouting needs a via rule even on a single-sided board (it cannot use it there).
     let _ = writeln!(s, "    (via {})", via_names.keys().map(|v| quote(v)).collect::<Vec<_>>().join(" "));
