@@ -96,14 +96,15 @@ fn find_java(explicit: Option<&Path>, configured: Option<&str>) -> Result<PathBu
 pub fn run(ctx: &Ctx, a: RouteArgs) -> Result<()> {
     let mut loaded = ctx.load()?;
     if !a.keep && a.import.is_none() {
-        // Routed traces are regenerated; hand-drawn ones are kept and protected.
-        loaded.project.traces.retain(|t| !t.routed);
-        loaded.project.vias.retain(|v| !v.routed);
+        // Routed traces are regenerated, and so is the plane fanout; hand-drawn
+        // copper is kept and protected.
+        loaded.project.traces.retain(|t| !t.routed && !t.fanout);
+        loaded.project.vias.retain(|v| !v.routed && !v.fanout);
     }
     if a.import.is_none() {
         // Plane nets: freerouting never drops a via from an SMD pad to a plane,
         // so draw those first, as wiring the router must keep.
-        let fan = fanout_plane_pads(ctx, &mut loaded, None, true)?;
+        let fan = fanout_plane_pads(ctx, &mut loaded, None)?;
         if fan.vias > 0 || !fan.skipped.is_empty() {
             println!("fanout: {} via(s) with stubs for SMD pads on plane net(s) {}", fan.vias, fan.nets.join(", "));
             if !fan.skipped.is_empty() {
@@ -205,14 +206,20 @@ pub fn run(ctx: &Ctx, a: RouteArgs) -> Result<()> {
     let session = dsn::ses::parse_session(&ses_to_import, &text, board.layers())?;
     // freerouting echoes protected (hand-drawn) wiring back in the session;
     // do not store those again as routed copies.
+    // The session's coordinates are rounded to its resolution, so compare within 10 µm.
+    let close = |a: Point, b: Point| (a.x.nm() - b.x.nm()).abs() <= 10_000 && (a.y.nm() - b.y.nm()).abs() <= 10_000;
     let hand: Vec<&crate::schema::Trace> = loaded.project.traces.iter().collect();
     let same = |a: &crate::schema::Trace, b: &crate::schema::Trace| {
-        a.layer == b.layer && a.net == b.net && a.width == b.width && (a.points == b.points || a.points.iter().rev().eq(b.points.iter()))
+        a.layer == b.layer
+            && a.net == b.net
+            && (a.width.nm() - b.width.nm()).abs() <= 10_000
+            && a.points.len() == b.points.len()
+            && (a.points.iter().zip(&b.points).all(|(p, q)| close(*p, *q)) || a.points.iter().rev().zip(&b.points).all(|(p, q)| close(*p, *q)))
     };
     let new_traces: Vec<crate::schema::Trace> = session.traces.into_iter().filter(|t| !hand.iter().any(|h| same(h, t))).collect();
     // The same for vias the router echoes back.
     let hand_vias: Vec<crate::schema::Via> = loaded.project.vias.iter().cloned().collect();
-    let new_vias: Vec<crate::schema::Via> = session.vias.into_iter().filter(|v| !hand_vias.iter().any(|h| h.at == v.at && h.net == v.net)).collect();
+    let new_vias: Vec<crate::schema::Via> = session.vias.into_iter().filter(|v| !hand_vias.iter().any(|h| close(h.at, v.at) && h.net == v.net)).collect();
     let (nt, nv) = (new_traces.len(), new_vias.len());
     // freerouting models wire ends as round caps and may stop a wide wire just
     // short of a narrow pad (the cap reaches it, the flat end does not) or
@@ -405,7 +412,7 @@ pub struct Fanout {
 /// clearance, at alternating distances for neighbouring pads so the mask
 /// openings keep a dam, and only where it clears every other net's copper,
 /// every other via and the board edge; pads with no clear spot are skipped.
-pub fn fanout_plane_pads(ctx: &Ctx, loaded: &mut Loaded, nets: Option<&[String]>, mark_routed: bool) -> Result<Fanout> {
+pub fn fanout_plane_pads(ctx: &Ctx, loaded: &mut Loaded, nets: Option<&[String]>) -> Result<Fanout> {
     use crate::geom;
     let board = ctx.board(loaded)?;
     let rules = board.rules().clone();
@@ -514,8 +521,8 @@ pub fn fanout_plane_pads(ctx: &Ctx, loaded: &mut Loaded, nets: Option<&[String]>
             match placed {
                 Some((at, circle)) => {
                     via_circles.push(circle);
-                    new_vias.push(crate::schema::Via { at, net: Some(net.clone()), drill: via_h, diameter: via_d, layers: vec![], routed: mark_routed });
-                    new_traces.push(crate::schema::Trace { layer: layer.clone(), net: Some(net.clone()), width, points: vec![pad.center, at], routed: mark_routed });
+                    new_vias.push(crate::schema::Via { at, net: Some(net.clone()), drill: via_h, diameter: via_d, layers: vec![], routed: false, fanout: true });
+                    new_traces.push(crate::schema::Trace { layer: layer.clone(), net: Some(net.clone()), width, points: vec![pad.center, at], routed: false, fanout: true });
                     out.vias += 1;
                     fan_index += 1;
                 }

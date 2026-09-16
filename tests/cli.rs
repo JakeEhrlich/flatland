@@ -797,13 +797,34 @@ fn dsn_declares_via_sizes_and_plane_layers() {
     let dsn = std::fs::read_to_string(p.build("four.dsn")).unwrap();
     assert!(dsn.contains("(layer In1.Cu (type signal)") && !dsn.contains("(plane GND"), "{dsn}");
     p.ok(&["trace", "remove", "2"]);
+    // The project's edge clearance reaches the router as a keepout ring on every layer.
+    p.ok(&["rules", "set", "edge_clearance=0.5"]);
+    p.ok(&["route", "--dsn-only"]);
+    let dsn = std::fs::read_to_string(p.build("four.dsn")).unwrap();
+    assert!(dsn.matches("(keepout \"\" (polygon In2.Cu").count() >= 1, "{dsn}");
+    // The pin router keeps off plane layers too.
+    let out = p.fails(&["route", "pin", "R1.1", "R2.1", "--layer", "In1.Cu"]);
+    assert!(out.contains("In1.Cu is a plane layer (GND)"), "{out}");
+    let out = p.ok(&["route", "pin", "R1.1", "R2.1"]);
+    assert!(!out.contains("In1.Cu"), "{out}");
+    p.ok(&["trace", "clear", "--net", "A"]);
+    let vias = p.ok(&["via", "list"]);
+    assert_eq!(vias.matches("(fanout)").count(), 2, "{vias}");
     if freerouting_available() {
-        let out = p.ok(&["route", "--timeout", "180"]);
-        assert!(out.contains("fanout: 2 via(s)") && out.contains("all nets routed"), "{out}");
+        for _ in 0..2 {
+            let out = p.ok(&["route", "--timeout", "180"]);
+            assert!(out.contains("fanout: 2 via(s)") && out.contains("all nets routed"), "{out}");
+        }
+        // Twice through the router: the echoed fanout vias are not imported again.
+        let vias = p.ok(&["via", "list"]);
+        assert_eq!(vias.matches("net GND").count(), 3, "{vias}");
         let traces = p.ok(&["trace", "list"]);
         assert!(!traces.contains("In1.Cu"), "no routed trace may lie on a plane layer:\n{traces}");
+        assert_eq!(traces.matches("(fanout)").count(), 2, "{traces}");
         let status = p.ok(&["status"]);
         assert!(status.lines().any(|l| l.contains("GND") && l.contains("routed")), "{status}");
+        let out = p.ok(&["check"]);
+        assert!(!out.contains("holes-overlap"), "{out}");
     }
 }
 

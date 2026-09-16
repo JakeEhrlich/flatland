@@ -106,7 +106,7 @@ pub fn parse_session(path: &Path, text: &str, layers: &[String]) -> Result<Sessi
             }
             pts.dedup();
             if pts.len() >= 2 {
-                traces.push(Trace { layer, net: Some(net_name.clone()), width, points: pts, routed: true });
+                traces.push(Trace { layer, net: Some(net_name.clone()), width, points: pts, routed: true, fanout: false });
             }
         }
         for via in net.children("via") {
@@ -122,7 +122,7 @@ pub fn parse_session(path: &Path, text: &str, layers: &[String]) -> Result<Sessi
                 },
             };
             let all = lays.len() >= layers.len() || lays.is_empty();
-            vias.push(Via { at: Point::new(scale.len(x), scale.len(y)), net: Some(net_name.clone()), drill, diameter: dia, layers: if all { vec![] } else { lays }, routed: true });
+            vias.push(Via { at: Point::new(scale.len(x), scale.len(y)), net: Some(net_name.clone()), drill, diameter: dia, layers: if all { vec![] } else { lays }, routed: true, fanout: false });
         }
     }
     Ok(Session { traces, vias })

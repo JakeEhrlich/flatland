@@ -61,6 +61,17 @@ impl Session {
             }
         }
     }
+    /// Run one command and return what it printed together with its error, if
+    /// any, instead of folding the output into the error's help text: a caller
+    /// that wants the JSON `pcb check --json` printed even when the check failed.
+    pub fn run_captured(&self, argv: &[String]) -> Result<(String, Option<String>)> {
+        let mut full = vec!["pcb".to_string()];
+        full.extend(argv.iter().cloned());
+        let cli = Cli::try_parse_from(&full).map_err(|e| Error::msg(e.to_string().trim_end().to_string()))?;
+        let ctx = self.ctx();
+        let (result, output) = capture(|| crate::cli::run_command(&ctx, cli.command));
+        Ok((output, result.err().map(|e| render_error(&e))))
+    }
     pub fn project(&self) -> Result<Project> {
         self.store.borrow().project.clone().ok_or_else(|| Error::with_help("no project in this session yet", "run `init <name>` first, or open a project file"))
     }

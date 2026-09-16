@@ -1,6 +1,7 @@
 # Fixes forward from the flint board (mips32, 2026-09-16)
 
-Status (2026-09-16): all six are in the tool; see the notes under each.
+Status (2026-09-16, later): items 1–9 and the check() follow-up are in the
+tool; see the notes under each.
 
 flint is a 100 x 100 mm, 4-layer board (ground on In1.Cu, 5 V on In2.Cu
 as pours that follow the outline; everything else routed): a PLCC-84
@@ -94,6 +95,19 @@ errors; return the list either way and let the caller decide.
 **Done.** `check(include_waived=False)` drops waived findings; the list is
 returned whether or not there are errors.
 
+*Follow-up (2026-09-16, flint):* `Pcb.check()` still raises `PcbError`
+whenever the board has errors (a placed, unrouted board always does:
+`nets-routed`), because `run_json("check", "--json")` propagates the
+CLI's non-zero exit; the findings inside that error's "output before the
+error" text still include the waived ones, so a script parsing them sees
+the 46 phantom `pins-connected` again.  Wanted: `check()` returns the
+list on errors too (the caller reads severities), and the waived filter
+applies on that path.
+
+**Done.** `check()` reads the command's output directly
+(`Session.run_captured`), so a failing check returns its findings, and the
+waived filter applies to them; the wrapped help text is never parsed.
+
 ## 5. Rotation for reference labels
 
 Per-pin names on headers are free text placed by the build script, and
@@ -118,6 +132,54 @@ documented build so the two are rebuilt together.
 **Done.** `build.rs` stamps `pcb --version` and `flatland.__version__` with
 the crate version and `git describe`; creating a `Pcb` warns when the
 `pcb` on PATH differs; pcb-python(1) BUILDING lists both builds.
+
+## 7. Fanout vias come back twice from the session
+
+After `pcb route` on flint (65794a9): every fanout via the tool drew
+before writing the DSN is imported a second time from the session
+(freerouting echoes protected wiring), so 6 pairs of vias sit on the
+same spot and `check` reports a `holes-overlap` error per pair; all 155
+vias are also marked `routed: true`, the fanout ones included.  grit's
+build.py had a `dedupe_vias()` for the same thing with its hand vias;
+flint's copies it (`via list`, drop repeated positions).  Wanted: the
+session import skips a via (and a wire) that coincides with copper the
+project already has, and the fanout copper keeps a `fanout`/hand mark
+rather than `routed` so a later `pcb route --keep` treats it as
+protected and a plain `pcb route` redraws it knowingly.
+
+**Done.** Session echoes are matched within 10 µm against every trace and
+via present (positions the router rounds to its resolution no longer slip
+through); fanout copper is marked `fanout` rather than `routed`, a plain
+`pcb route` redraws it, `--keep` keeps it.
+
+## 8. `pcb route pin` on a plane board
+
+Closing a connection freerouting left (flint: one or two per run, which
+one varies) with `pcb route pin J11.36 U1.35` put the trace on In1.Cu,
+the ground plane layer, carving the plane exactly as item 1 prevents for
+the autorouter.  Wanted: the pin router treats `Board::plane_layers()`
+as unavailable (a `--layer` naming one is an error), so a plane board
+stays a plane board through hand-finishing too.  Workaround in flint's
+build.py: `--layer B.Cu`, then `F.Cu`.
+
+**Done.** `pcb route pin` refuses `--layer` on a plane layer and tries only
+the other layers by default.
+
+## 9. The edge clearance rule never reaches freerouting
+
+flint's rules say `edge_clearance=0.5`; freerouting drew a DIN trace
+along the top edge at 0.2 mm (`error: copper-to-edge: trace DIN22 at
+63.88,85 is closer than 0.2mm to the board edge`), because the DSN's
+boundary is the outline itself and the router keeps only its own
+default from it.  Wanted: emit the boundary inset by `edge_clearance`
+(or a keepout ring between the outline and that inset on every layer),
+and have `pcb route pin` keep `edge_clearance` from the outline as well
+(it keeps the net's clearance today).  flint's build.py removes such
+traces after import and closes them with `route pin`.
+
+**Done.** The DSN carries a keepout ring between the outline and its inset
+by `edge_clearance` on every layer (`pcb route pin` already kept the
+larger of `edge_clearance` and the net's clearance).
 
 ## Where flint stands
 

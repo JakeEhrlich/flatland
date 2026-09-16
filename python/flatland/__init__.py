@@ -282,20 +282,13 @@ class Pcb:
         """Design-check findings as dicts (rule, severity, message, at, features). Never raises on
         findings, whatever their severity; look at `severity`. Waived findings are left out, as on the
         command line, unless ``include_waived`` (they then carry a ``waived`` reason)."""
+        # A failing check exits non-zero but has printed its findings: take the output as
+        # it is, not through the error's (wrapped) help text.
+        output, error = self._s.run_captured(["check", *_flag("strict", strict), *_flag("rule", rule), "--json"])
         try:
-            findings = self.run_json("check", *_flag("strict", strict), *_flag("rule", rule))
-        except PcbError as e:
-            # A failing check still prints its findings; the JSON is the message body.
-            text = str(e)
-            start = text.find("[")
-            findings = None
-            if start >= 0:
-                try:
-                    findings = json.loads(text[start:text.rfind("]") + 1])
-                except ValueError:
-                    pass
-            if findings is None:
-                raise
+            findings = json.loads(output)
+        except ValueError:
+            raise PcbError(error or output)
         if not include_waived:
             findings = [f for f in findings if not f.get("waived")]
         return findings

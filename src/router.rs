@@ -577,14 +577,20 @@ pub fn route_pin(board: &Board, req: &Request) -> Result<Outcome> {
     let class = board.project.nets.get(&net).and_then(|n| n.class.as_deref());
     let (class_w, clearance) = rules.class(class);
     let width = req.width.unwrap_or(class_w);
+    // Plane layers are not for traces: a hand-finished connection must not carve
+    // the plane the autorouter was kept off.
+    let planes = board.plane_layers()?;
     let layers: Vec<String> = match &req.layer {
         Some(l) => {
             if !board.layers().contains(l) {
                 return Err(Error::with_help(format!("no copper layer `{l}`"), format!("layers are {}", board.layers().join(", "))));
             }
+            if let Some((_, pn)) = planes.iter().find(|(pl, _)| pl == l) {
+                return Err(Error::with_help(format!("{l} is a plane layer ({pn})"), "traces stay off planes; route on another layer"));
+            }
             vec![l.clone()]
         }
-        None => board.layers().to_vec(),
+        None => board.layers().iter().filter(|l| !planes.iter().any(|(pl, _)| pl == *l)).cloned().collect(),
     };
     let via_d = rules.via_diameter;
     let start = island(board, from, &net)?;
@@ -713,7 +719,7 @@ pub fn route_pin(board: &Board, req: &Request) -> Result<Outcome> {
                     let pulled = pull(&grid, &grid.layers[run_layer], &run);
                     pieces.push((run_layer, pulled.iter().map(|&(x, y)| grid.centre(x, y)).collect()));
                     let (px, py) = *run.last().unwrap();
-                    vias.push(Via { at: grid.centre(px, py), net: Some(net.clone()), drill: rules.via_drill, diameter: rules.via_diameter, layers: vec![], routed: false });
+                    vias.push(Via { at: grid.centre(px, py), net: Some(net.clone()), drill: rules.via_drill, diameter: rules.via_diameter, layers: vec![], routed: false, fanout: false });
                     run = vec![(x, y)];
                     run_layer = l;
                 } else {
@@ -731,7 +737,7 @@ pub fn route_pin(board: &Board, req: &Request) -> Result<Outcome> {
             let layer_name = grid.layers[li].name.clone();
             match traces.last_mut() {
                 Some(t) if t.layer == layer_name && t.points.last() == pts.first() => t.points.extend(pts.into_iter().skip(1)),
-                _ => traces.push(Trace { layer: layer_name, net: Some(net.clone()), width, points: pts, routed: false }),
+                _ => traces.push(Trace { layer: layer_name, net: Some(net.clone()), width, points: pts, routed: false, fanout: false }),
             }
         }
         // Land on the pad centres when the route starts/ends inside the pads themselves.

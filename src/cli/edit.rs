@@ -1412,7 +1412,7 @@ pub fn run_trace(ctx: &Ctx, c: TraceCmd) -> Result<()> {
             };
             let (class_width, _) = board.rules().class(net.as_deref().and_then(|n| loaded.project.nets.get(n)).and_then(|n| n.class.as_deref()));
             let width = width.unwrap_or(class_width);
-            loaded.project.traces.push(Trace { layer: layer.clone(), net: net.clone(), width, points: points.clone(), routed: false });
+            loaded.project.traces.push(Trace { layer: layer.clone(), net: net.clone(), width, points: points.clone(), routed: false, fanout: false });
             validate(ctx, &loaded)?;
             loaded.save()?;
             println!("trace on {layer} net {} width {width}, {} points", net.as_deref().unwrap_or("(none)"), points.len());
@@ -1547,7 +1547,7 @@ pub fn run_trace(ctx: &Ctx, c: TraceCmd) -> Result<()> {
         TraceCmd::List => {
             for (i, t) in loaded.project.traces.iter().enumerate() {
                 let pts: Vec<String> = t.points.iter().map(|p| p.to_string()).collect();
-                println!("#{i}: {} net {} w {} {}{}", t.layer, t.net.as_deref().unwrap_or("-"), t.width, pts.join(" -> "), if t.routed { " (routed)" } else { "" });
+                println!("#{i}: {} net {} w {} {}{}", t.layer, t.net.as_deref().unwrap_or("-"), t.width, pts.join(" -> "), if t.routed { " (routed)" } else if t.fanout { " (fanout)" } else { "" });
             }
             Ok(())
         }
@@ -1608,6 +1608,7 @@ pub fn run_via(ctx: &Ctx, c: ViaCmd) -> Result<()> {
                 diameter: diameter.unwrap_or(r.via_diameter),
                 layers: vec![],
                 routed: false,
+                fanout: false,
             });
             validate(ctx, &loaded)?;
             loaded.save()
@@ -1620,7 +1621,7 @@ pub fn run_via(ctx: &Ctx, c: ViaCmd) -> Result<()> {
             loaded.save()
         }
         ViaCmd::Fanout { net, dry_run } => {
-            let fan = crate::route::fanout_plane_pads(ctx, &mut loaded, if net.is_empty() { None } else { Some(&net) }, false)?;
+            let fan = crate::route::fanout_plane_pads(ctx, &mut loaded, if net.is_empty() { None } else { Some(&net) })?;
             if fan.nets.is_empty() {
                 println!("no plane nets: a plane is a layer whose only copper is one outline-following pour with a net (or name nets with --net)");
                 return Ok(());
@@ -1637,7 +1638,7 @@ pub fn run_via(ctx: &Ctx, c: ViaCmd) -> Result<()> {
         }
         ViaCmd::List => {
             for (i, v) in loaded.project.vias.iter().enumerate() {
-                println!("#{i}: at {} net {} drill {} dia {}", v.at, v.net.as_deref().unwrap_or("-"), v.drill, v.diameter);
+                println!("#{i}: at {} net {} drill {} dia {}{}", v.at, v.net.as_deref().unwrap_or("-"), v.drill, v.diameter, if v.routed { " (routed)" } else if v.fanout { " (fanout)" } else { "" });
             }
             Ok(())
         }

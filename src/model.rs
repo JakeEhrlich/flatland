@@ -372,17 +372,19 @@ impl Board {
     /// clipped away from exposed copper: footprint graphics and reference
     /// designators minus every solder-mask opening on that side, grown by
     /// half the silk width plus 0.1 mm.
-    /// Layers that are planes: more than one copper layer, and the layer's
-    /// only copper is one netted pour that follows the outline (no hand
-    /// traces, no copper text). Returns (layer, net).
+    /// Layers that are planes: an inner layer whose only copper is one netted
+    /// pour that follows the outline (no hand traces, no copper text). Outer
+    /// layers are never planes, whatever they carry: parts sit on them and the
+    /// router needs them. Returns (layer, net).
     pub fn plane_layers(&self) -> Result<Vec<(String, String)>> {
-        if self.layers().len() < 2 {
+        let n = self.layers().len();
+        if n < 3 {
             return Ok(vec![]);
         }
         let Some(outline) = &self.outline else { return Ok(vec![]) };
         let outline_area = geom::signed_area(outline).abs();
         let mut out: Vec<(String, String)> = Vec::new();
-        for layer in self.layers() {
+        for layer in &self.layers()[1..n - 1] {
             let netted: Vec<&PourResult> = self.pours()?.iter().filter(|p| &p.pour.layer == layer && p.pour.net.is_some()).collect();
             if netted.len() != 1 || geom::signed_area(&netted[0].outline).abs() < 0.9 * outline_area {
                 continue;

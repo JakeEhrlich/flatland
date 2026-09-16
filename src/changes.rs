@@ -192,7 +192,7 @@ pub fn apply_one(project: &mut Project, c: &Change) -> Result<()> {
             if points.len() < 2 {
                 return Err(Error::msg("a trace needs two points"));
             }
-            project.traces.push(Trace { layer: layer.clone(), net: net.clone(), width: *width, points: points.clone(), routed: false });
+            project.traces.push(Trace { layer: layer.clone(), net: net.clone(), width: *width, points: points.clone(), routed: false, fanout: false });
         }
         Change::DeleteTrace { trace } => {
             if *trace >= project.traces.len() {
@@ -206,7 +206,7 @@ pub fn apply_one(project: &mut Project, c: &Change) -> Result<()> {
         }
         Change::AddVia { at, net, drill, diameter } => {
             let r = &project.design_rules;
-            project.vias.push(Via { at: *at, net: net.clone(), drill: drill.unwrap_or(r.via_drill), diameter: diameter.unwrap_or(r.via_diameter), layers: vec![], routed: false });
+            project.vias.push(Via { at: *at, net: net.clone(), drill: drill.unwrap_or(r.via_drill), diameter: diameter.unwrap_or(r.via_diameter), layers: vec![], routed: false, fanout: false });
         }
         Change::DeleteVia { via } => {
             if *via >= project.vias.len() {

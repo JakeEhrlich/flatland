@@ -370,6 +370,9 @@ pub struct Trace {
     /// Set on traces produced by the autorouter (cleared by `route --clear`).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub routed: bool,
+    /// Drawn by the plane fanout (`pcb route` redraws these; `--keep` keeps them).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub fanout: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -384,6 +387,9 @@ pub struct Via {
     pub layers: Vec<String>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub routed: bool,
+    /// Drawn by the plane fanout (`pcb route` redraws these; `--keep` keeps them).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub fanout: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]

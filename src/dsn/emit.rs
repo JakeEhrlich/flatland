@@ -110,6 +110,18 @@ pub fn emit(board: &Board, planes: bool) -> Result<String> {
             }
         }
     }
+    // The router keeps its own clearance from the boundary, not the project's
+    // `edge_clearance`: a keepout ring between the outline and the outline
+    // inset by that clearance, on every layer, makes it honour ours.
+    if rules.edge_clearance.nm() > 0 {
+        let inset = geom::offset(&[outline.clone()], -rules.edge_clearance);
+        let ring = geom::difference(&[outline.clone()], &inset)?;
+        for r in geom::fracture(&ring) {
+            for l in layers {
+                let _ = writeln!(s, "    (keepout \"\" (polygon {} 0{}))", quote(l), ring_coords(&r));
+            }
+        }
+    }
     // Copper text belongs to no net: keep the router off it.
     for t in board.project.texts.iter().filter(|t| layers.iter().any(|l| *l == t.layer)) {
         let grown = geom::offset(&board.text_copper(t), rules.clearance);

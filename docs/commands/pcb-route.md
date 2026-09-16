@@ -113,9 +113,12 @@ fewest 45°-multiple segments whose corridor is free.
 
 ## PLANE LAYERS
 
-A layer of a multi-layer board whose only copper is one netted pour that
-follows the outline (no hand traces, no copper text on it) is a plane
-layer, and `pcb route` treats it as one without being asked:
+An inner layer whose only copper is one netted pour that follows the
+outline (no hand traces, no copper text on it) is a plane layer, and
+`pcb route` treats it as one without being asked. Outer layers are never
+planes, whatever they carry: parts sit on them and the router needs them,
+so a two-layer board with a ground fill on the back is routed as before
+(the fill's net like any other, the fill absorbing what it covers).
 
 1. Before the DSN is written, every SMD pad of the plane's net that no
    via or trace of that net touches gets a **fanout**: a short stub
@@ -128,8 +131,16 @@ layer, and `pcb route` treats it as one without being asked:
    (`pcb via fanout` does the same on demand; see pcb-copper(1).)
 2. The layer is declared `(type power)` with a `(plane <net> ...)`, so
    freerouting keeps signal traces off it and does not route the net.
-3. After routing, the fanout vias and stubs stay; the pour then connects
-   every via.
+3. After routing, the fanout vias and stubs stay, marked `fanout` (not
+   `routed`: `via list` and `trace list` show them); the pour then
+   connects every via. A plain `pcb route` deletes and redraws them with
+   the router's output; `--keep` keeps them as they are. Wiring the
+   router echoes back is matched against everything present within
+   10 µm, so nothing is imported twice.
+
+`pcb route pin` keeps off plane layers as well: naming one with
+`--layer` is an error, and without `--layer` only the other layers are
+tried.
 
 Freerouting on its own never drops a via from a pad to a plane, and
 routed as signal layers the planes end up carved into islands by the
@@ -176,7 +187,9 @@ match with `pcb trace add --chamfer`.
 * A pin with several solder tabs is one router pin whose padstack holds
   every tab.
 * Keepouts: non-plated holes and unassigned plated holes, grown by
-  `clearance`.
+  `clearance`; and a ring between the outline and the outline inset by
+  `edge_clearance`, on every layer, so the router honours the project's
+  edge clearance rather than its own default.
 
 ## OUTPUT AND STATE
 

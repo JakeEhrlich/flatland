@@ -33,6 +33,10 @@ impl Session {
     fn run(&self, argv: Vec<String>) -> PyResult<String> {
         self.inner.run(&argv).map_err(to_py)
     }
+    /// Run one command; returns (output, error text or None) without merging the two.
+    fn run_captured(&self, argv: Vec<String>) -> PyResult<(String, Option<String>)> {
+        self.inner.run_captured(&argv).map_err(to_py)
+    }
     /// The project as JSON text (`pcb.json` contents).
     fn project_json(&self) -> PyResult<String> {
         self.inner.project_json().map_err(to_py)

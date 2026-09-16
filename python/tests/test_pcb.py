@@ -72,3 +72,21 @@ def test_jlc_board(tmp_path):
     pads = pcb.pads("R1")
     assert len(pads) == 2
     assert "2 part(s)" in pcb.bom()
+
+
+def test_check_returns_findings_on_errors_and_drops_waived(tmp_path):
+    pcb = Pcb.new("w", path=tmp_path / "pcb.json", layers=["F.Cu", "B.Cu"], indexes=[LIB])
+    pcb.outline_rect(20, 16)
+    pcb.add("R1", "resistor-0603", value="10k", at=(5, 5))
+    pcb.add("R2", "resistor-0603", value="10k", at=(10, 5))
+    pcb.connect("R1.1", "R2.1", net="A")
+    pcb.connect("R1.2", "R2.2", net="GND")
+    # Unrouted nets are errors: check() must still return the list, not raise.
+    findings = pcb.check()
+    assert any(f["rule"] == "nets-routed" and f["severity"] == "error" for f in findings)
+    # A waived finding is left out unless asked for.
+    pcb.drc_waive("nets-routed", "net GND", reason="not yet")
+    names = [f["message"] for f in pcb.check()]
+    assert not any("GND" in m for m in names), names
+    allf = pcb.check(include_waived=True)
+    assert any(f.get("waived") for f in allf)
