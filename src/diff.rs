@@ -93,8 +93,8 @@ pub fn diff(a: &Project, b: &Project, a_name: &str, b_name: &str) -> Vec<String>
                 if ia.parameters != ib.parameters {
                     out.push(format!("part {r}: parameters {} vs {}", json(&ia.parameters), json(&ib.parameters)));
                 }
-                let pa = ia.placement.as_ref().map(|p| (p.at, p.rotation.rem_euclid(360.0), p.side, p.label_at, p.label_size, p.label_hidden));
-                let pb = ib.placement.as_ref().map(|p| (p.at, p.rotation.rem_euclid(360.0), p.side, p.label_at, p.label_size, p.label_hidden));
+                let pa = ia.placement.as_ref().map(|p| (p.at, p.rotation.rem_euclid(360.0), p.side, p.label_at, p.label_size, p.label_hidden, p.label_rotation.map(|r| r.to_bits())));
+                let pb = ib.placement.as_ref().map(|p| (p.at, p.rotation.rem_euclid(360.0), p.side, p.label_at, p.label_size, p.label_hidden, p.label_rotation.map(|r| r.to_bits())));
                 if pa != pb {
                     let show = |p: &Option<crate::schema::Placement>| p.as_ref().map(|p| format!("{} rot {} {}", p.at, p.rotation, p.side)).unwrap_or_else(|| "unplaced".into());
                     out.push(format!("part {r}: {} vs {}", show(&ia.placement), show(&ib.placement)));

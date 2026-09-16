@@ -281,6 +281,9 @@ pub struct Placement {
     /// Leave the label off the silkscreen entirely.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub label_hidden: bool,
+    /// Label rotation in degrees counter-clockwise, relative to the part.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label_rotation: Option<f64>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]

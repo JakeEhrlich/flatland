@@ -784,10 +784,45 @@ fn dsn_declares_via_sizes_and_plane_layers() {
     let dsn = std::fs::read_to_string(p.build("four.dsn")).unwrap();
     assert!(dsn.contains("(via Via[0-3]_800:400_um Via[0-3]_600:300_um)"), "{dsn}");
     assert!(dsn.contains("(padstack Via[0-3]_600:300_um") && dsn.contains("(via Via[0-3]_600:300_um 10000 5000 (net GND) (type protect))"), "{dsn}");
-    assert!(dsn.contains("(layer In1.Cu (type signal)"), "without --planes every layer is a signal layer:\n{dsn}");
-    p.ok(&["route", "--dsn-only", "--planes"]);
-    let dsn = std::fs::read_to_string(p.build("four.dsn")).unwrap();
+    // In1.Cu carries nothing but the outline-following GND pour: a plane layer, no flag
+    // needed, and every SMD GND pad got a fanout via with a stub before the DSN was written.
     assert!(dsn.contains("(layer In1.Cu (type power)") && dsn.contains("(layer F.Cu (type signal)") && dsn.contains("(plane GND (polygon In1.Cu"), "{dsn}");
+    let vias = p.ok(&["via", "list"]);
+    assert_eq!(vias.matches("net GND").count(), 3, "hand via plus two fanout vias:\n{vias}");
+    let status = p.ok(&["status"]);
+    assert!(status.lines().any(|l| l.contains("GND") && l.contains("routed")), "fanout must connect the pads to the plane:\n{status}");
+    // A hand trace on the plane layer makes it an ordinary layer again.
+    p.ok(&["trace", "add", "--layer", "In1.Cu", "--net", "A", "--width", "0.3", "4.125,10", "4.125,12"]);
+    p.ok(&["route", "--dsn-only"]);
+    let dsn = std::fs::read_to_string(p.build("four.dsn")).unwrap();
+    assert!(dsn.contains("(layer In1.Cu (type signal)") && !dsn.contains("(plane GND"), "{dsn}");
+    p.ok(&["trace", "remove", "2"]);
+    if freerouting_available() {
+        let out = p.ok(&["route", "--timeout", "180"]);
+        assert!(out.contains("fanout: 2 via(s)") && out.contains("all nets routed"), "{out}");
+        let traces = p.ok(&["trace", "list"]);
+        assert!(!traces.contains("In1.Cu"), "no routed trace may lie on a plane layer:\n{traces}");
+        let status = p.ok(&["status"]);
+        assert!(status.lines().any(|l| l.contains("GND") && l.contains("routed")), "{status}");
+    }
+}
+
+#[test]
+fn label_rotation_and_version() {
+    let p = Proj::new("labelrot");
+    p.ok(&["init", "lr", "--index", library().to_str().unwrap()]);
+    p.ok(&["outline", "rect", "20", "20"]);
+    p.ok(&["add", "R1", "resistor-0603", "--at", "10,10", "--rotation", "90"]);
+    let out = p.ok(&["label", "R1", "--rotation", "90"]);
+    assert!(out.contains("rot 90"), "{out}");
+    // Relative to the part: the silk text ends up at 180 degrees, so its strokes run
+    // along x and the label's bounding box is wider than it is tall.
+    let canon = p.ok(&["hash", "--canonical"]);
+    assert!(!canon.contains("label"), "labels never reach the hash:\n{canon}");
+    let out = p.ok(&["label", "R1", "--reset"]);
+    assert!(!out.contains("rot"), "{out}");
+    let v = p.ok(&["--version"]);
+    assert!(v.starts_with("pcb 0.") && v.contains("(git "), "{v}");
 }
 
 #[test]

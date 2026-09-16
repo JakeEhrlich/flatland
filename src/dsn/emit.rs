@@ -90,17 +90,9 @@ pub fn emit(board: &Board, planes: bool) -> Result<String> {
     // With planes, a layer whose netted pour follows the outline is a power
     // layer: freerouting keeps signal traces off it (otherwise it routes across
     // the plane and carves the fill into islands).
-    let plane_layers: Vec<String> = if planes && n > 1 {
-        let outline_area = geom::signed_area(outline).abs();
-        board
-            .pours()?
-            .iter()
-            .filter(|p| p.pour.net.is_some() && geom::signed_area(&p.outline).abs() >= 0.9 * outline_area)
-            .map(|p| p.pour.layer.clone())
-            .collect()
-    } else {
-        vec![]
-    };
+    // A layer whose only copper is one outline-following netted pour is a
+    // plane layer whatever the flags: the router must not run signals across it.
+    let plane_layers: Vec<String> = board.plane_layers()?.into_iter().map(|(l, _)| l).collect();
     for (i, l) in layers.iter().enumerate() {
         let kind = if plane_layers.contains(l) { "power" } else { "signal" };
         let _ = writeln!(s, "    (layer {} (type {kind}) (property (index {i})))", quote(l));
@@ -133,9 +125,12 @@ pub fn emit(board: &Board, planes: bool) -> Result<String> {
     // and the pour then swallows whatever it covers. Planes are still an
     // option on dense multi-layer boards where routing the ground net is too
     // expensive.
-    if planes && n > 1 {
-        for p in board.pours()? {
-            if let Some(net) = &p.pour.net {
+    // Plane layers are always planes (their nets reach SMD pads through the
+    // fanout vias `pcb route` draws first); with --planes every other netted
+    // pour is one too.
+    for p in board.pours()? {
+        if let Some(net) = &p.pour.net {
+            if plane_layers.contains(&p.pour.layer) || (planes && n > 1) {
                 let _ = writeln!(s, "    (plane {} (polygon {} 0{}))", quote(net), quote(&p.pour.layer), ring_coords(&p.outline));
             }
         }
@@ -341,8 +336,11 @@ pub fn emit(board: &Board, planes: bool) -> Result<String> {
     s.push_str("  )\n");
 
     // ---- existing hand-drawn wiring, protected.
-    let fixed_traces: Vec<_> = board.project.traces.iter().filter(|t| !t.routed).collect();
-    let fixed_vias: Vec<_> = board.project.vias.iter().filter(|v| !v.routed).collect();
+    // Everything present when the DSN is written is wiring to keep: `pcb route`
+    // has already removed the router's previous output unless asked to keep it,
+    // and the fanout vias it drew for plane nets must survive the router.
+    let fixed_traces: Vec<_> = board.project.traces.iter().collect();
+    let fixed_vias: Vec<_> = board.project.vias.iter().collect();
     if !fixed_traces.is_empty() || !fixed_vias.is_empty() {
         s.push_str("  (wiring\n");
         for t in fixed_traces {

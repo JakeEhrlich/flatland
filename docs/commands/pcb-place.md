@@ -10,7 +10,7 @@ silkscreen labels on the board.
 ```
 pcb place REFDES [x,y] [-r DEG] [-s top|bottom] [--lock | --unlock]
 pcb unplace REFDES
-pcb label REFDES... [--at x,y [--absolute]] [--size MM] [--hide | --show] [--reset]
+pcb label REFDES... [--at x,y [--absolute]] [--size MM] [--rotation DEG] [--hide | --show] [--reset]
 ```
 
 ## DESCRIPTION
@@ -56,6 +56,10 @@ overrides it per part:
 `--size MM`
 : Text height for this part only. Stroke width stays `silk_width`; below
   about 0.6 mm the text stops being legible on a fabricated board.
+
+`--rotation DEG`
+: Turn the label, counter-clockwise, relative to the part (so `90` reads
+  along a standing header whatever the part's own rotation). `0` clears it.
 
 `--hide` / `--show`
 : Omit the label from the silkscreen (the render still shows the note).

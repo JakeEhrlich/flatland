@@ -252,7 +252,7 @@ function render() {
     const cg = el('g', { 'data-refdes': part.refdes }, g.court);
     for (const c of part.courtyard) el(c.closed ? 'polygon' : 'polyline', { points: polyPoints(c.points), class: 'courtyard' }, cg);
     if (part.label && !part.label.hidden) {
-      const t = el('text', { transform: `translate(${part.label.at[0]} ${part.label.at[1]}) scale(1,-1)`, 'font-size': part.label.size, 'text-anchor': 'middle', 'dominant-baseline': 'middle', fill: sideColor, 'font-family': 'Helvetica, Arial, sans-serif', 'data-refdes': part.refdes }, g.labels);
+      const t = el('text', { transform: `translate(${part.label.at[0]} ${part.label.at[1]}) rotate(${part.label.rotation || 0}) scale(1,-1)`, 'font-size': part.label.size, 'text-anchor': 'middle', 'dominant-baseline': 'middle', fill: sideColor, 'font-family': 'Helvetica, Arial, sans-serif', 'data-refdes': part.refdes }, g.labels);
       t.textContent = part.refdes;
       if (part.value) { const v = el('text', { transform: `translate(${part.label.at[0]} ${part.label.at[1] - part.label.size}) scale(1,-1)`, 'font-size': part.label.size * 0.8, 'text-anchor': 'middle', 'dominant-baseline': 'middle', fill: sideColor, 'font-family': 'Helvetica, Arial, sans-serif' }, g.labels); v.textContent = part.value; }
     }

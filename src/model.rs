@@ -92,6 +92,8 @@ pub struct PlacedInstance {
     pub courtyard: Vec<(Vec<Point>, bool)>,
     /// Refdes label centre on the board, `None` when unplaced or hidden.
     pub label_at: Option<Point>,
+    /// Label rotation in board terms (part rotation plus the label's own).
+    pub label_rotation: f64,
 }
 
 impl PlacedInstance {
@@ -370,6 +372,30 @@ impl Board {
     /// clipped away from exposed copper: footprint graphics and reference
     /// designators minus every solder-mask opening on that side, grown by
     /// half the silk width plus 0.1 mm.
+    /// Layers that are planes: more than one copper layer, and the layer's
+    /// only copper is one netted pour that follows the outline (no hand
+    /// traces, no copper text). Returns (layer, net).
+    pub fn plane_layers(&self) -> Result<Vec<(String, String)>> {
+        if self.layers().len() < 2 {
+            return Ok(vec![]);
+        }
+        let Some(outline) = &self.outline else { return Ok(vec![]) };
+        let outline_area = geom::signed_area(outline).abs();
+        let mut out: Vec<(String, String)> = Vec::new();
+        for layer in self.layers() {
+            let netted: Vec<&PourResult> = self.pours()?.iter().filter(|p| &p.pour.layer == layer && p.pour.net.is_some()).collect();
+            if netted.len() != 1 || geom::signed_area(&netted[0].outline).abs() < 0.9 * outline_area {
+                continue;
+            }
+            let busy = self.project.traces.iter().any(|t| &t.layer == layer && !t.routed) || self.project.texts.iter().any(|t| &t.layer == layer);
+            if busy {
+                continue;
+            }
+            out.push((layer.clone(), netted[0].pour.net.clone().unwrap()));
+        }
+        Ok(out)
+    }
+
     pub fn silkscreen(&self, side: Side) -> Result<Rings> {
         let rules = self.rules();
         let mut art: Rings = Vec::new();
@@ -385,7 +411,7 @@ impl Board {
             }
             art.extend(inst.silk_polys.iter().cloned());
             if let Some(at) = inst.label_at {
-                for stroke in crate::gerber::font::render(&inst.refdes, at, inst.label_size(rules), side == Side::Bottom) {
+                for stroke in crate::gerber::font::render_rotated(&inst.refdes, at, inst.label_size(rules), inst.label_rotation, side == Side::Bottom) {
                     art.extend(geom::stroke(&stroke, rules.silk_width));
                 }
             }
@@ -785,6 +811,7 @@ fn place_instance(
     let mut silk_polys = Vec::new();
     let mut courtyard = Vec::new();
     let mut label_at = None;
+    let mut label_rotation = 0.0;
     if let (Some(t), Some(fp)) = (transform, &component.footprint) {
         let side = inst.placement.as_ref().map(|p| p.side).unwrap_or_default();
         let fp = &fp.footprint;
@@ -871,6 +898,7 @@ fn place_instance(
         if !p.label_hidden {
             label_at = Some(t.apply(p.label_at.or(fp.label_at).unwrap_or(Point::ORIGIN)));
         }
+        label_rotation = p.rotation + p.label_rotation.unwrap_or(0.0);
     }
     Ok(PlacedInstance {
         refdes: refdes.to_string(),
@@ -882,5 +910,6 @@ fn place_instance(
         silk_polys,
         courtyard,
         label_at,
+        label_rotation,
     })
 }

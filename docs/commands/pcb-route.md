@@ -101,17 +101,41 @@ fewest 45°-multiple segments whose corridor is free.
   never touched here; `pcb trace trim` applies the same cut to them.
 
 `--planes`
-: Hand every pour with a net to the router as a `plane`, and declare a
-  layer whose netted pour covers the outline as a power layer so the
-  router keeps signal traces off it. The router then
-  treats that net as solid copper across the layer, never draws it, and
-  keeps other nets clear of nothing but the pads, so it can wall a pad of
-  the plane's net in with other traces; the real fill cannot reach such a
-  pad and `pcb check` fails with the net in two islands. Routing the net
-  like any other (the default) makes the router reach every pad itself,
-  with a trace or a via, and the fill swallows whatever it covers. Planes
-  remain useful on a dense multi-layer board where routing the ground net
-  costs too much.
+: Also hand every *other* pour with a net to the router as a `plane`
+  (pours that share a layer with traces). Plane layers proper need no
+  flag; see PLANE LAYERS. A plane on a shared layer makes the router treat
+  that net as solid copper across the layer, never draw it, and keep other
+  nets clear of nothing but the pads, so it can wall a pad of the net in
+  with other traces; the real fill cannot reach such a pad and `pcb check`
+  fails with the net in two islands. Routing the net like any other (the
+  default) makes the router reach every pad itself, with a trace or a via,
+  and the fill swallows whatever it covers.
+
+## PLANE LAYERS
+
+A layer of a multi-layer board whose only copper is one netted pour that
+follows the outline (no hand traces, no copper text on it) is a plane
+layer, and `pcb route` treats it as one without being asked:
+
+1. Before the DSN is written, every SMD pad of the plane's net that no
+   via or trace of that net touches gets a **fanout**: a short stub
+   outward from the part's centre and a via to the plane. The via sits
+   past the pad by at least the clearance, at alternating distances for
+   neighbouring pads so their mask openings keep a dam, and only where it
+   clears every other net's copper, every other via and the board edge.
+   A pad with no clear spot is reported and left for hand wiring.
+   Through-hole pads reach the plane through the fill and need nothing.
+   (`pcb via fanout` does the same on demand; see pcb-copper(1).)
+2. The layer is declared `(type power)` with a `(plane <net> ...)`, so
+   freerouting keeps signal traces off it and does not route the net.
+3. After routing, the fanout vias and stubs stay; the pour then connects
+   every via.
+
+Freerouting on its own never drops a via from a pad to a plane, and
+routed as signal layers the planes end up carved into islands by the
+signal traces, which is why both halves are done here. A plane board
+therefore routes with one `pcb route` (or `Pcb.route()`), no hand power
+vias in the build script.
 
 `--freerouting PATH`
 : A `.jar` (run with Java) or the app's launcher executable. Precedence:
@@ -141,12 +165,14 @@ match with `pcb trace add --chamfer`.
 * Pads: exact polygons (SMD pads on the top layer, mirrored by the router
   for bottom-side parts; through-hole pads on all layers). Plated holes
   with a net are exported as one-pin parts named `HOLE<n>`.
-* Pours are not exported unless `--planes`: the router draws a pour's net
-  as traces and vias like any other, and the pour then merges with them
-  (the covered stretches are cut away on import). With `--planes` a pour
-  with a net is a `plane` on a multi-layer board, which the router treats
-  as connecting its own net without checking that the fill can reach each
-  pad.
+* Plane layers (see PLANE LAYERS) are `(type power)` with a `(plane ...)`
+  for their net. Other pours are not exported unless `--planes`: the
+  router draws a pour's net as traces and vias like any other, and the
+  pour then merges with them (the covered stretches are cut away on
+  import).
+* Every via size the board uses has a padstack, and everything drawn
+  before the DSN is written (hand wiring, fanout vias, kept routes) is
+  protected wiring.
 * A pin with several solder tabs is one router pin whose padstack holds
   every tab.
 * Keepouts: non-plated holes and unassigned plated holes, grown by

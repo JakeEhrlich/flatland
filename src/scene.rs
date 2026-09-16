@@ -62,7 +62,7 @@ pub fn scene(board: &Board, project_path: &Path) -> Result<Value> {
             "rotation": placement.map(|p| p.rotation).unwrap_or(0.0),
             "side": placement.map(|p| p.side.to_string()).unwrap_or_else(|| "top".into()),
             "locked": placement.map(|p| p.locked).unwrap_or(false),
-            "label": inst.label_at.map(|at| json!({"at": pt(at), "size": round(inst.label_size(rules).mm()), "hidden": placement.map(|p| p.label_hidden).unwrap_or(false)})),
+            "label": inst.label_at.map(|at| json!({"at": pt(at), "size": round(inst.label_size(rules).mm()), "rotation": inst.label_rotation, "hidden": placement.map(|p| p.label_hidden).unwrap_or(false)})),
             "pads": pads,
             "silk": silk,
             "silk_polys": rings(&inst.silk_polys),

@@ -74,9 +74,16 @@ impl Session {
     }
 }
 
+/// The engine version this module was built from (crate version and git revision).
+#[pyfunction]
+fn engine_version() -> String {
+    flatland::VERSION.to_string()
+}
+
 #[pymodule]
 fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Session>()?;
+    m.add_function(wrap_pyfunction!(engine_version, m)?)?;
     m.add("PcbError", m.py().get_type::<PcbError>())?;
     Ok(())
 }

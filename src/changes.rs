@@ -170,7 +170,7 @@ pub fn apply_one(project: &mut Project, c: &Change) -> Result<()> {
     match c {
         Change::MovePart { refdes, at, rotation, side } => {
             let inst = project.components.get_mut(refdes).ok_or_else(|| Error::msg(format!("no instance named `{refdes}`")))?;
-            let mut p = inst.placement.clone().unwrap_or(Placement { at: Point::ORIGIN, rotation: 0.0, side: Side::Top, locked: false, label_at: None, label_size: None, label_hidden: false });
+            let mut p = inst.placement.clone().unwrap_or(Placement { at: Point::ORIGIN, rotation: 0.0, side: Side::Top, locked: false, label_at: None, label_size: None, label_hidden: false, label_rotation: None });
             p.at = *at;
             p.rotation = *rotation;
             if let Some(s) = side {

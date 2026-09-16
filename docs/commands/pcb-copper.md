@@ -20,10 +20,12 @@ pcb trace add --layer L [--net NET] [--width W] [--chamfer C] POINT POINT [POINT
 pcb trace clear [--routed-only] [--net NET]
 pcb trace trim [--net NET] [--dry-run]
 pcb trace list
+pcb trace remove INDEX
 
 pcb via add AT [--net NET] [--drill D] [--diameter D]
 pcb via remove INDEX
 pcb via list
+pcb via fanout [--net NET]... [--dry-run]
 ```
 
 ## POURS
@@ -133,6 +135,15 @@ created itself.
   join same-net copper on every layer for connectivity purposes.
 
 `remove INDEX`, `list`.
+
+`fanout [--net NET]... [--dry-run]`
+: A via with a short stub from every SMD pad of a plane net (default: the
+  nets of the board's plane layers, see pcb-route(1) PLANE LAYERS) that no
+  via or trace of that net already touches. The via goes outward from the
+  part's centre past the pad by the clearance, at alternating distances
+  for neighbouring pads so the mask openings keep a dam, only where it
+  clears other nets' copper, other vias and the board edge; pads with no
+  clear spot are listed. `pcb route` does this itself before routing.
 
 ## CONNECTIVITY
 

@@ -76,11 +76,24 @@ length, and it builds in a few seconds before simulations.
 
 ## BUILDING
 
+The CLI and the module are one source tree; build both when it changes,
+or the older one lacks the newer commands:
+
 ```
+cargo build --release                       # target/release/pcb
 cd python && python3 -m venv .venv && . .venv/bin/activate
 pip install maturin pytest
-maturin develop && pytest
+maturin develop && pytest                   # flatland._native
 ```
+
+Both carry the engine version with the git revision they were built
+from: `pcb --version`, `flatland.__version__` / `flatland.version()`.
+Creating a `Pcb` warns when a `pcb` binary on PATH reports a different
+version than the module.
+
+`check()` returns the findings as dicts whatever their severity and
+never raises on them; waived findings are left out, as on the command
+line, unless `check(include_waived=True)`.
 
 ## SEE ALSO
 

@@ -160,7 +160,7 @@ pub fn add(ctx: &Ctx, a: AddArgs) -> Result<()> {
             format!("pass them with `--param {}=<value>`", missing[0]),
         ));
     }
-    let placement = a.at.map(|at| Placement { at, rotation: a.rotation, side: a.side, locked: false, label_at: None, label_size: None, label_hidden: false });
+    let placement = a.at.map(|at| Placement { at, rotation: a.rotation, side: a.side, locked: false, label_at: None, label_size: None, label_hidden: false, label_rotation: None });
     loaded.project.components.insert(
         a.refdes.clone(),
         Instance { component: a.component.clone(), parameters, placement, note: a.note },
@@ -859,7 +859,7 @@ pub fn place(ctx: &Ctx, a: PlaceArgs) -> Result<()> {
         return Err(unknown_instance(&loaded.project, &a.refdes));
     }
     let inst = loaded.project.components.get_mut(&a.refdes).unwrap();
-    let mut placement = inst.placement.clone().unwrap_or(Placement { at: Point::ORIGIN, rotation: 0.0, side: Side::Top, locked: false, label_at: None, label_size: None, label_hidden: false });
+    let mut placement = inst.placement.clone().unwrap_or(Placement { at: Point::ORIGIN, rotation: 0.0, side: Side::Top, locked: false, label_at: None, label_size: None, label_hidden: false, label_rotation: None });
     if a.at.is_none() && a.rotation.is_none() && a.side.is_none() && !a.lock && !a.unlock {
         return Err(Error::with_help("nothing to change", "give a position `x,y`, `--rotation`, `--side`, `--lock` or `--unlock`"));
     }
@@ -923,6 +923,9 @@ pub struct LabelArgs {
     /// Text height in mm (overrides the `silk_text_size` rule).
     #[arg(long, value_parser = length)]
     pub size: Option<Length>,
+    /// Rotation in degrees counter-clockwise, relative to the part (a designator along a standing header).
+    #[arg(long, allow_negative_numbers = true)]
+    pub rotation: Option<f64>,
     /// Leave the label off the silkscreen.
     #[arg(long, conflicts_with = "show")]
     pub hide: bool,
@@ -930,14 +933,14 @@ pub struct LabelArgs {
     #[arg(long)]
     pub show: bool,
     /// Forget every override and use the footprint default again.
-    #[arg(long, conflicts_with_all = ["at", "size", "hide", "show"])]
+    #[arg(long, conflicts_with_all = ["at", "size", "rotation", "hide", "show"])]
     pub reset: bool,
 }
 
 pub fn label(ctx: &Ctx, a: LabelArgs) -> Result<()> {
     let mut loaded = ctx.load()?;
-    if a.at.is_none() && a.size.is_none() && !a.hide && !a.show && !a.reset {
-        return Err(Error::with_help("nothing to change", "give `--at x,y`, `--size mm`, `--hide`, `--show` or `--reset`"));
+    if a.at.is_none() && a.size.is_none() && a.rotation.is_none() && !a.hide && !a.show && !a.reset {
+        return Err(Error::with_help("nothing to change", "give `--at x,y`, `--size mm`, `--rotation deg`, `--hide`, `--show` or `--reset`"));
     }
     for refdes in &a.refdes {
         if !loaded.project.components.contains_key(refdes) {
@@ -951,6 +954,7 @@ pub fn label(ctx: &Ctx, a: LabelArgs) -> Result<()> {
             p.label_at = None;
             p.label_size = None;
             p.label_hidden = false;
+            p.label_rotation = None;
         }
         if let Some(at) = a.at {
             p.label_at = Some(if a.absolute {
@@ -963,6 +967,9 @@ pub fn label(ctx: &Ctx, a: LabelArgs) -> Result<()> {
         }
         if let Some(sz) = a.size {
             p.label_size = Some(sz);
+        }
+        if let Some(r) = a.rotation {
+            p.label_rotation = if r == 0.0 { None } else { Some(r) };
         }
         if a.hide {
             p.label_hidden = true;
@@ -977,7 +984,7 @@ pub fn label(ctx: &Ctx, a: LabelArgs) -> Result<()> {
     for refdes in &a.refdes {
         let inst = board.instances.iter().find(|i| &i.refdes == refdes).unwrap();
         match inst.label_at {
-            Some(at) => println!("{refdes} label at {at} size {}", inst.label_size(board.rules())),
+            Some(at) => println!("{refdes} label at {at} size {}{}", inst.label_size(board.rules()), match inst.instance.placement.as_ref().and_then(|p| p.label_rotation) { Some(r) => format!(" rot {r}"), None => String::new() }),
             None => println!("{refdes} label hidden"),
         }
     }
@@ -1364,6 +1371,8 @@ pub enum TraceCmd {
         dry_run: bool,
     },
     List,
+    /// Remove one trace by index (see `trace list`).
+    Remove { index: usize },
 }
 
 pub fn run_trace(ctx: &Ctx, c: TraceCmd) -> Result<()> {
@@ -1542,6 +1551,15 @@ pub fn run_trace(ctx: &Ctx, c: TraceCmd) -> Result<()> {
             }
             Ok(())
         }
+        TraceCmd::Remove { index } => {
+            if index >= loaded.project.traces.len() {
+                return Err(Error::with_help(format!("no trace #{index}"), "`pcb trace list` numbers them"));
+            }
+            let t = loaded.project.traces.remove(index);
+            println!("removed trace #{index} ({} on {}, {} point(s)); later indices shift down by one", t.net.as_deref().unwrap_or("no net"), t.layer, t.points.len());
+            validate(ctx, &loaded)?;
+            loaded.save()
+        }
     }
 }
 
@@ -1559,6 +1577,15 @@ pub enum ViaCmd {
     },
     Remove { index: usize },
     List,
+    /// Draw a via with a short stub from every SMD pad of a plane net (default: the nets of
+    /// the board's plane layers) so the pad reaches the plane; `pcb route` does this itself.
+    Fanout {
+        /// Only these nets.
+        #[arg(long)]
+        net: Vec<String>,
+        #[arg(long)]
+        dry_run: bool,
+    },
 }
 
 pub fn run_via(ctx: &Ctx, c: ViaCmd) -> Result<()> {
@@ -1590,6 +1617,22 @@ pub fn run_via(ctx: &Ctx, c: ViaCmd) -> Result<()> {
                 return Err(Error::msg(format!("no via #{index}")));
             }
             loaded.project.vias.remove(index);
+            loaded.save()
+        }
+        ViaCmd::Fanout { net, dry_run } => {
+            let fan = crate::route::fanout_plane_pads(ctx, &mut loaded, if net.is_empty() { None } else { Some(&net) }, false)?;
+            if fan.nets.is_empty() {
+                println!("no plane nets: a plane is a layer whose only copper is one outline-following pour with a net (or name nets with --net)");
+                return Ok(());
+            }
+            println!("{}{} via(s) with stubs for SMD pads on {}", if dry_run { "dry run: would add " } else { "added " }, fan.vias, fan.nets.join(", "));
+            if !fan.skipped.is_empty() {
+                println!("no clear spot for: {}", fan.skipped.join(", "));
+            }
+            if dry_run {
+                return Ok(());
+            }
+            validate(ctx, &loaded)?;
             loaded.save()
         }
         ViaCmd::List => {

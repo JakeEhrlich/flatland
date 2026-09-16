@@ -100,6 +100,19 @@ pub fn run(ctx: &Ctx, a: RouteArgs) -> Result<()> {
         loaded.project.traces.retain(|t| !t.routed);
         loaded.project.vias.retain(|v| !v.routed);
     }
+    if a.import.is_none() {
+        // Plane nets: freerouting never drops a via from an SMD pad to a plane,
+        // so draw those first, as wiring the router must keep.
+        let fan = fanout_plane_pads(ctx, &mut loaded, None, true)?;
+        if fan.vias > 0 || !fan.skipped.is_empty() {
+            println!("fanout: {} via(s) with stubs for SMD pads on plane net(s) {}", fan.vias, fan.nets.join(", "));
+            if !fan.skipped.is_empty() {
+                println!("warning: no clear spot for a fanout via at {}; those pads stay unconnected until wired by hand", fan.skipped.join(", "));
+            }
+            // Keep them even if this run stops at the DSN or the router fails.
+            loaded.save()?;
+        }
+    }
     let board = ctx.board(&loaded)?;
     let build = loaded.build_dir();
     std::fs::create_dir_all(&build).map_err(|e| Error::io(format!("could not create `{}`", build.display()), e))?;
@@ -192,13 +205,13 @@ pub fn run(ctx: &Ctx, a: RouteArgs) -> Result<()> {
     let session = dsn::ses::parse_session(&ses_to_import, &text, board.layers())?;
     // freerouting echoes protected (hand-drawn) wiring back in the session;
     // do not store those again as routed copies.
-    let hand: Vec<&crate::schema::Trace> = loaded.project.traces.iter().filter(|t| !t.routed).collect();
+    let hand: Vec<&crate::schema::Trace> = loaded.project.traces.iter().collect();
     let same = |a: &crate::schema::Trace, b: &crate::schema::Trace| {
         a.layer == b.layer && a.net == b.net && a.width == b.width && (a.points == b.points || a.points.iter().rev().eq(b.points.iter()))
     };
     let new_traces: Vec<crate::schema::Trace> = session.traces.into_iter().filter(|t| !hand.iter().any(|h| same(h, t))).collect();
     // The same for vias the router echoes back.
-    let hand_vias: Vec<crate::schema::Via> = loaded.project.vias.iter().filter(|v| !v.routed).cloned().collect();
+    let hand_vias: Vec<crate::schema::Via> = loaded.project.vias.iter().cloned().collect();
     let new_vias: Vec<crate::schema::Via> = session.vias.into_iter().filter(|v| !hand_vias.iter().any(|h| h.at == v.at && h.net == v.net)).collect();
     let (nt, nv) = (new_traces.len(), new_vias.len());
     // freerouting models wire ends as round caps and may stop a wide wire just
@@ -377,6 +390,142 @@ fn prune_redundant_traces(ctx: &Ctx, loaded: &mut Loaded, before: &[(String, Vec
         }
     }
     Ok(dropped)
+}
+
+pub struct Fanout {
+    pub vias: usize,
+    pub nets: Vec<String>,
+    pub skipped: Vec<String>,
+}
+
+/// Draw a via (with a short stub) from every SMD pad of a plane net that
+/// does not already touch a via or trace of its net, so the pad reaches the
+/// plane. `nets`: only these (default: the nets of the board's plane layers).
+/// The via goes outward from the part's centre, past the pad by the
+/// clearance, at alternating distances for neighbouring pads so the mask
+/// openings keep a dam, and only where it clears every other net's copper,
+/// every other via and the board edge; pads with no clear spot are skipped.
+pub fn fanout_plane_pads(ctx: &Ctx, loaded: &mut Loaded, nets: Option<&[String]>, mark_routed: bool) -> Result<Fanout> {
+    use crate::geom;
+    let board = ctx.board(loaded)?;
+    let rules = board.rules().clone();
+    let planes = board.plane_layers()?;
+    let mut target_nets: Vec<String> = match nets {
+        Some(n) => n.to_vec(),
+        None => planes.iter().map(|(_, n)| n.clone()).collect(),
+    };
+    target_nets.sort();
+    target_nets.dedup();
+    let mut out = Fanout { vias: 0, nets: target_nets.clone(), skipped: vec![] };
+    if target_nets.is_empty() {
+        return Ok(out);
+    }
+    let Some(outline) = board.outline.clone() else { return Ok(out) };
+    let layers: Vec<String> = board.layers().to_vec();
+    // Other-net copper per layer (pours excluded: they re-fill around the via).
+    let mut obstacles: Vec<(String, Option<String>, Vec<geom::Ring>)> = Vec::new();
+    for layer in &layers {
+        for (net, ring) in board.copper_on_layer(layer) {
+            obstacles.push((layer.clone(), net, vec![ring]));
+        }
+    }
+    let mut via_circles: Vec<geom::Ring> = board.project.vias.iter().map(|v| geom::circle(v.at, v.diameter)).collect();
+    let mask_rings: Vec<(String, String, geom::Ring)> = board.all_pads().filter(|p| p.plated).flat_map(|p| geom::offset(&[p.copper.clone()], rules.mask_expansion).into_iter().map(move |r| (p.refdes.clone(), p.pad_name.clone(), r))).collect();
+    let dam = Length::from_mm(0.15);
+    let mut new_vias: Vec<crate::schema::Via> = Vec::new();
+    let mut new_traces: Vec<crate::schema::Trace> = Vec::new();
+    for inst in &board.instances {
+        let Some(pl) = inst.instance.placement.as_ref() else { continue };
+        let mut fan_index = 0usize;
+        for pad in &inst.pads {
+            let Some(net) = pad.net.clone() else { continue };
+            if pad.pad_type != crate::schema::PadType::Smd || !target_nets.contains(&net) {
+                continue;
+            }
+            let Some(layer) = pad.layers.first().cloned() else { continue };
+            // A pad on a layer that carries this net's pour reaches it through the fill.
+            if board.pours()?.iter().any(|p| p.pour.layer == layer && p.pour.net.as_deref() == Some(net.as_str())) {
+                continue;
+            }
+            // Already reached by a via or a trace of its net?
+            let touched = board.project.vias.iter().chain(new_vias.iter()).any(|v| v.net.as_deref() == Some(net.as_str()) && geom::overlaps(&[geom::circle(v.at, v.diameter)], &[pad.copper.clone()]))
+                || board.project.traces.iter().any(|t| t.net.as_deref() == Some(net.as_str()) && t.layer == layer && geom::overlaps(&geom::stroke_flat(&t.points, t.width), &[pad.copper.clone()]));
+            if touched {
+                continue;
+            }
+            let (class_w, clearance) = rules.class(board.project.nets.get(&net).and_then(|n| n.class.as_deref()));
+            let (via_d, via_h) = match board.project.nets.get(&net).and_then(|n| n.class.as_deref()).and_then(|c| rules.net_classes.get(c)) {
+                Some(c) => (c.via_diameter.unwrap_or(rules.via_diameter), c.via_drill.unwrap_or(rules.via_drill)),
+                None => (rules.via_diameter, rules.via_drill),
+            };
+            let width = Length::from_nm(class_w.nm().min(pad.size[0].nm().min(pad.size[1].nm())));
+            let (cx, cy) = (pad.center.x.mm(), pad.center.y.mm());
+            let (mut ux, mut uy) = (cx - pl.at.x.mm(), cy - pl.at.y.mm());
+            let len = (ux * ux + uy * uy).sqrt();
+            if len < 1e-6 {
+                ux = 1.0;
+                uy = 0.0;
+            } else {
+                ux /= len;
+                uy /= len;
+            }
+            let ext = pad.copper.iter().map(|p| (p.x.mm() - cx) * ux + (p.y.mm() - cy) * uy).fold(0.0f64, f64::max);
+            let margin = clearance.mm().max(0.25);
+            let mut base = ext + via_d.mm() / 2.0 + margin;
+            if fan_index % 2 == 1 {
+                base += via_d.mm() + 2.0 * rules.mask_expansion.mm() + dam.mm();
+            }
+            let step = via_d.mm() / 2.0 + 0.2;
+            let edge_keep = geom::offset(&[outline.clone()], -(Length::from_nm(via_d.nm() / 2) + rules.edge_clearance));
+            let mut placed = None;
+            for k in 0..5 {
+                let d = base + k as f64 * step;
+                let at = Point::mm(cx + ux * d, cy + uy * d);
+                if !edge_keep.iter().any(|r| geom::contains(r, at)) {
+                    continue;
+                }
+                let circle = geom::circle(at, via_d);
+                let grown = geom::offset(&[circle.clone()], clearance);
+                let stub = geom::stroke_flat(&[pad.center, at], width);
+                let stub_grown = geom::offset(&stub, clearance);
+                let mut ok = true;
+                for (l, onet, rings) in &obstacles {
+                    if onet.as_deref() == Some(net.as_str()) {
+                        continue;
+                    }
+                    if geom::overlaps(&grown, rings) || (*l == layer && geom::overlaps(&stub_grown, rings)) {
+                        ok = false;
+                        break;
+                    }
+                }
+                if ok {
+                    let hole_keep = geom::offset(&[circle.clone()], Length::from_nm(clearance.nm().max(300_000)));
+                    ok = !via_circles.iter().any(|c| geom::overlaps(&hole_keep, &[c.clone()]));
+                }
+                if ok {
+                    let mask_keep = geom::offset(&[circle.clone()], rules.mask_expansion + dam);
+                    ok = !mask_rings.iter().any(|(r, p, ring)| !(*r == inst.refdes && *p == pad.pad_name) && geom::overlaps(&mask_keep, &[ring.clone()]));
+                }
+                if ok {
+                    placed = Some((at, circle));
+                    break;
+                }
+            }
+            match placed {
+                Some((at, circle)) => {
+                    via_circles.push(circle);
+                    new_vias.push(crate::schema::Via { at, net: Some(net.clone()), drill: via_h, diameter: via_d, layers: vec![], routed: mark_routed });
+                    new_traces.push(crate::schema::Trace { layer: layer.clone(), net: Some(net.clone()), width, points: vec![pad.center, at], routed: mark_routed });
+                    out.vias += 1;
+                    fan_index += 1;
+                }
+                None => out.skipped.push(format!("{}.{}", inst.refdes, pad.pad_name)),
+            }
+        }
+    }
+    loaded.project.vias.extend(new_vias);
+    loaded.project.traces.extend(new_traces);
+    Ok(out)
 }
 
 /// Cut every trace back to the stretches its own net's fill does not cover.

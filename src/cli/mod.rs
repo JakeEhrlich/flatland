@@ -17,7 +17,7 @@ use clap::{Parser, Subcommand};
 use std::path::{Path, PathBuf};
 
 #[derive(Parser)]
-#[command(name = "pcb", version, about = "Agent-oriented PCB design tools", long_about = None)]
+#[command(name = "pcb", version = crate::VERSION, about = "Agent-oriented PCB design tools", long_about = None)]
 #[command(propagate_version = true)]
 pub struct Cli {
     /// Project file (defaults to the nearest `pcb.json`, or `$PCB_PROJECT`).

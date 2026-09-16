@@ -9,6 +9,9 @@
 
 #![allow(clippy::result_large_err, clippy::too_many_arguments)]
 
+/// Crate version plus the git revision it was built from.
+pub const VERSION: &str = env!("FLATLAND_VERSION");
+
 pub mod error;
 pub mod units;
 pub mod geom;

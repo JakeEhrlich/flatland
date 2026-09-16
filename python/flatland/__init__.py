@@ -20,9 +20,35 @@ import json
 import os
 from typing import Any, Iterable, Sequence
 
-from ._native import PcbError, Session
+from ._native import PcbError, Session, engine_version as version
 
-__all__ = ["Pcb", "PcbError", "Session"]
+__all__ = ["Pcb", "PcbError", "Session", "version"]
+__version__ = version()
+
+_checked_binary = False
+
+
+def _warn_if_binary_differs() -> None:
+    """The `pcb` binary on PATH and this module are built from the same source tree;
+    a command that exists in one and not the other is a stale build, so say so once."""
+    global _checked_binary
+    if _checked_binary:
+        return
+    _checked_binary = True
+    import shutil
+    import subprocess
+    import warnings
+    exe = shutil.which("pcb")
+    if not exe:
+        return
+    try:
+        out = subprocess.run([exe, "--version"], capture_output=True, text=True, timeout=5).stdout.strip()
+    except Exception:
+        return
+    theirs = out.split(" ", 1)[1] if " " in out else out
+    if theirs and theirs != __version__:
+        warnings.warn(f"flatland module is {__version__} but `pcb` at {exe} is {theirs}; rebuild the older one "
+                      f"(`cargo build --release` / `cd python && maturin develop`)", stacklevel=3)
 
 Point = tuple[float, float]
 
@@ -55,6 +81,7 @@ class Pcb:
     """A project held in memory. Nothing is written until `save()`."""
 
     def __init__(self, session: Session):
+        _warn_if_binary_differs()
         self._s = session
 
     # ---- lifecycle -----------------------------------------------------------------
@@ -177,11 +204,14 @@ class Pcb:
         return self.run(*argv)
 
     def label(self, *refdes: str, at: Point | None = None, absolute: bool = False,
-              size: float | None = None, hide: bool = False, show: bool = False, reset: bool = False) -> str:
+              size: float | None = None, rotation: float | None = None, hide: bool = False, show: bool = False,
+              reset: bool = False) -> str:
+        """Place, size, rotate (degrees CCW relative to the part), hide or reset reference labels."""
         argv = ["label", *refdes]
         if at is not None:
             argv += ["--at", _pt(at)]
-        argv += _flag("absolute", absolute) + _flag("size", size) + _flag("hide", hide) + _flag("show", show) + _flag("reset", reset)
+        argv += (_flag("absolute", absolute) + _flag("size", size) + _flag("rotation", rotation) + _flag("hide", hide)
+                 + _flag("show", show) + _flag("reset", reset))
         return self.run(*argv)
 
     # ---- copper ----------------------------------------------------------------------
@@ -209,6 +239,14 @@ class Pcb:
         """Free text on silkscreen (default) or a copper layer, stroked with the built-in font."""
         return self.run("text", "add", text, "--at", _pt(at), "--layer", layer, *_flag("size", size),
                         *_flag("rotation", rotation), *_flag("width", width))
+
+    def via_fanout(self, *nets: str, dry_run: bool = False) -> str:
+        """A via with a stub from every SMD pad of a plane net (see `pcb via fanout`); `route()` does
+        this itself for the board's plane layers."""
+        argv = ["via", "fanout"]
+        for n in nets:
+            argv += ["--net", n]
+        return self.run(*argv, *_flag("dry-run", dry_run))
 
     def trim_traces(self, *, net: str | None = None, dry_run: bool = False) -> str:
         return self.run("trace", "trim", *_flag("net", net), *_flag("dry-run", dry_run))
@@ -240,20 +278,27 @@ class Pcb:
     def pads(self, *refdes: str) -> list[dict]:
         return self.run_json("pads", *refdes)
 
-    def check(self, *, strict: bool = False, rule: str | None = None) -> list[dict]:
-        """Design-check findings (never raises on findings; look at `severity`)."""
+    def check(self, *, strict: bool = False, rule: str | None = None, include_waived: bool = False) -> list[dict]:
+        """Design-check findings as dicts (rule, severity, message, at, features). Never raises on
+        findings, whatever their severity; look at `severity`. Waived findings are left out, as on the
+        command line, unless ``include_waived`` (they then carry a ``waived`` reason)."""
         try:
-            return self.run_json("check", *_flag("strict", strict), *_flag("rule", rule))
+            findings = self.run_json("check", *_flag("strict", strict), *_flag("rule", rule))
         except PcbError as e:
             # A failing check still prints its findings; the JSON is the message body.
             text = str(e)
             start = text.find("[")
+            findings = None
             if start >= 0:
                 try:
-                    return json.loads(text[start:text.rfind("]") + 1])
+                    findings = json.loads(text[start:text.rfind("]") + 1])
                 except ValueError:
                     pass
-            raise
+            if findings is None:
+                raise
+        if not include_waived:
+            findings = [f for f in findings if not f.get("waived")]
+        return findings
 
     def drc_add(self, ruleset: str | os.PathLike) -> str:
         return self.run("drc", "add", os.fspath(ruleset))
